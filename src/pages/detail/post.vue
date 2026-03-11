@@ -1,0 +1,634 @@
+<template>
+	<view class="page">
+
+		<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
+
+			<!-- 作者信息行 -->
+			<view class="author-section">
+				<view class="av" :style="{ background: post.color }">
+					<text class="av-t">{{ post.author[0] }}</text>
+				</view>
+				<view class="author-meta">
+					<view class="author-top">
+						<text class="author-name">{{ post.author }}</text>
+						<view class="model-badge" :style="{ background: post.modelColor + '18', borderColor: post.modelColor + '50' }">
+							<view class="model-dot" :style="{ background: post.modelColor }" />
+							<text class="model-name" :style="{ color: post.modelColor }">{{ post.model }}</text>
+						</view>
+					</view>
+					<text class="post-time">{{ post.time }}</text>
+				</view>
+				<view class="follow-btn" :class="{ following: isFollowing }" @tap="toggleFollow">
+					<text class="follow-text">{{ isFollowing ? '已关注' : '+ 关注' }}</text>
+				</view>
+			</view>
+
+			<!-- 核心数据大卡 -->
+			<view class="burn-hero">
+				<view class="burn-label-row">
+					<text class="burn-label">🔥 这次燃烧</text>
+					<text class="burn-date">{{ post.time }}</text>
+				</view>
+				<view class="burn-numbers">
+					<view class="burn-num-item">
+						<text class="burn-num-value cost">{{ post.cost }}</text>
+						<text class="burn-num-desc">人民币花费</text>
+					</view>
+					<view class="burn-num-divider" />
+					<view class="burn-num-item">
+						<text class="burn-num-value token">{{ post.tokens }}</text>
+						<text class="burn-num-desc">tokens 消耗</text>
+					</view>
+				</view>
+				<view class="burn-meta-row">
+					<view class="burn-meta-item">
+						<text class="meta-icon">🤖</text>
+						<text class="meta-text">{{ post.model }}</text>
+					</view>
+					<view class="burn-meta-item">
+						<text class="meta-icon">⏱</text>
+						<text class="meta-text">{{ post.duration }}</text>
+					</view>
+					<view class="burn-meta-item">
+						<text class="meta-icon">🔁</text>
+						<text class="meta-text">{{ post.rounds }} 轮对话</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 正文内容 -->
+			<view class="content-section">
+				<text class="content-text">{{ post.content }}</text>
+			</view>
+
+			<!-- 心情评价 -->
+			<view class="mood-section">
+				<text class="mood-label">这次觉得</text>
+				<view class="mood-tags">
+					<view
+						v-for="m in MOODS"
+						:key="m.key"
+						class="mood-tag"
+						:class="{ 'mood-active': post.mood === m.key }"
+						:style="post.mood === m.key ? { background: m.color + '15', borderColor: m.color + '60' } : {}"
+						@tap="setMood(m.key)"
+					>
+						<text class="mood-text" :style="post.mood === m.key ? { color: m.color } : {}">{{ m.label }}</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 互动数据 -->
+			<view class="stat-row">
+				<view class="stat-item">
+					<text class="stat-n">{{ post.likes }}</text>
+					<text class="stat-l">点赞</text>
+				</view>
+				<view class="stat-divider" />
+				<view class="stat-item">
+					<text class="stat-n">{{ post.resonates }}</text>
+					<text class="stat-l">我也是</text>
+				</view>
+				<view class="stat-divider" />
+				<view class="stat-item">
+					<text class="stat-n">{{ post.comments }}</text>
+					<text class="stat-l">评论</text>
+				</view>
+			</view>
+
+			<!-- 评论区 -->
+			<view class="comments-section">
+				<text class="comments-title">评论 {{ post.comments }}</text>
+
+				<view v-for="comment in comments" :key="comment.id" class="comment-item">
+					<view class="cmt-av" :style="{ background: comment.color }">
+						<text class="cmt-av-t">{{ comment.user[0] }}</text>
+					</view>
+					<view class="cmt-body">
+						<view class="cmt-head">
+							<text class="cmt-user">{{ comment.user }}</text>
+							<view v-if="comment.model" class="cmt-model-badge">
+								<text class="cmt-model-text">{{ comment.model }}</text>
+							</view>
+							<text class="cmt-time">{{ comment.time }}</text>
+						</view>
+						<!-- 如果评论者也有同类消费，展示出来 -->
+						<view v-if="comment.cost" class="cmt-burn-info">
+							<text class="cmt-burn-cost">{{ comment.cost }}</text>
+							<text class="cmt-burn-sep">·</text>
+							<text class="cmt-burn-tokens">{{ comment.tokens }}</text>
+						</view>
+						<text class="cmt-text">{{ comment.content }}</text>
+						<view class="cmt-actions">
+							<view class="cmt-like" @tap="likeComment(comment)">
+								<text :class="['cmt-like-ico', { liked: comment.liked }]">♥</text>
+								<text class="cmt-like-n">{{ comment.likes }}</text>
+							</view>
+							<text class="cmt-reply-btn" @tap="replyComment(comment)">回复</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="load-more" @tap="loadMore">
+					<text class="load-more-text">查看全部 {{ post.comments }} 条评论 ›</text>
+				</view>
+			</view>
+
+			<view class="scroll-bottom" />
+		</scroll-view>
+
+		<!-- 底部固定栏 -->
+		<view class="fixed-bottom iphonex-p">
+			<view class="comment-input" @tap="focusComment">
+				<text class="input-ph">说点什么，或者晒出你的用量...</text>
+			</view>
+			<view class="bottom-acts">
+				<view class="bact" @tap="toggleLike">
+					<text :class="['bact-ico', { liked: isLiked }]">♥</text>
+					<text class="bact-n">{{ post.likes }}</text>
+				</view>
+				<view class="bact resonate-bact" :class="{ resonated: isResonated }" @tap="toggleResonate">
+					<text class="bact-ico">😭</text>
+					<text class="bact-resonate-text">我也是</text>
+				</view>
+				<view class="bact" @tap="share">
+					<text class="bact-ico">↗</text>
+				</view>
+			</view>
+		</view>
+
+	</view>
+</template>
+
+<script setup lang="ts">
+	const isLiked = ref(false)
+	const isResonated = ref(false)
+	const isFollowing = ref(false)
+
+	const MOODS = [
+		{ key: 'worth', label: '值了 ✓', color: '#10B981' },
+		{ key: 'ok', label: '还行 😐', color: '#6B7280' },
+		{ key: 'regret', label: '后悔了 😭', color: '#EF4444' },
+		{ key: 'hooked', label: '上瘾了 🔥', color: '#F59E0B' }
+	]
+
+	const post = reactive({
+		id: 'p1',
+		author: '林晓珊',
+		color: '#7C3AED',
+		time: '今天 14:32',
+		model: 'Claude Opus',
+		modelColor: '#7C3AED',
+		cost: '¥128.50',
+		tokens: '2,340,000',
+		duration: '约 3 小时',
+		rounds: 47,
+		content: `帮甲方改了 7 版 PPT，最后还是用了最开始那版。
+
+中间经历了：加颜色→去颜色→换字体→改排版→加图→去图→回到原版。
+
+钱花了，但经验攒了——我学到了什么叫"甲方的想法只有甲方知道"。下次我先让 AI 帮我生成 10 版，让甲方自己选，省得我来回改。
+
+顺便一提，Claude Opus 的审美真的不错，配色建议每次都比我强。`,
+		mood: 'worth',
+		likes: 284,
+		comments: 47,
+		resonates: 163
+	})
+
+	const comments = ref([
+		{
+			id: 'c1', user: '王建明', color: '#0891B2', time: '1小时前',
+			model: 'GPT-4o',
+			cost: '¥89.20', tokens: '1,560,000',
+			content: '我也是！帮客户改方案，来回改了9版，最后客户说"就用第一版吧"。我直接关电脑了。',
+			likes: 67, liked: false
+		},
+		{
+			id: 'c2', user: '张晴', color: '#D97706', time: '2小时前',
+			model: null, cost: null, tokens: null,
+			content: '所以现在我的策略是第一版故意做差，让甲方改，然后第三版放出精品。成功率提升了80%。',
+			likes: 124, liked: true
+		},
+		{
+			id: 'c3', user: '陈佳慧', color: '#059669', time: '3小时前',
+			model: 'Claude Sonnet',
+			cost: '¥34.80', tokens: '640,000',
+			content: '¥128 的课程费，比很多付费课便宜，而且是实战学的。算值了。',
+			likes: 89, liked: false
+		},
+		{
+			id: 'c4', user: '刘明远', color: '#DC2626', time: '昨天',
+			model: null, cost: null, tokens: null,
+			content: '甲方确实只有甲方自己知道自己想要什么，而且他们自己也不知道。AI 来了也没用。',
+			likes: 201, liked: false
+		}
+	])
+
+	const setMood = (mood: string) => {
+		post.mood = post.mood === mood ? '' : mood
+	}
+
+	const toggleLike = () => {
+		isLiked.value = !isLiked.value
+		post.likes += isLiked.value ? 1 : -1
+	}
+
+	const toggleResonate = () => {
+		isResonated.value = !isResonated.value
+		post.resonates += isResonated.value ? 1 : -1
+	}
+
+	const toggleFollow = () => {
+		isFollowing.value = !isFollowing.value
+	}
+
+	const likeComment = (c: any) => {
+		c.liked = !c.liked
+		c.likes += c.liked ? 1 : -1
+	}
+
+	const replyComment = (_c: any) => {
+		uni.showToast({ title: '回复功能开发中', icon: 'none' })
+	}
+
+	const loadMore = () => {
+		uni.showToast({ title: '加载更多评论...', icon: 'none' })
+	}
+
+	const focusComment = () => {
+		uni.showToast({ title: '评论功能开发中', icon: 'none' })
+	}
+
+	const share = () => {
+		uni.showToast({ title: '分享功能开发中', icon: 'none' })
+	}
+</script>
+
+<style lang="scss" scoped>
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background: #F7F8FA;
+	}
+
+	.main-scroll {
+		flex: 1;
+		overflow: hidden;
+
+		.scroll-bottom { height: 160rpx; }
+	}
+
+	/* 作者区 */
+	.author-section {
+		display: flex;
+		align-items: center;
+		gap: 14rpx;
+		padding: 24rpx 28rpx;
+		background: #fff;
+
+		.av {
+			width: 80rpx;
+			height: 80rpx;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+
+			.av-t { font-size: 30rpx; color: #fff; font-weight: 700; }
+		}
+
+		.author-meta {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			gap: 8rpx;
+
+			.author-top {
+				display: flex;
+				align-items: center;
+				gap: 10rpx;
+				flex-wrap: wrap;
+
+				.author-name { font-size: 30rpx; font-weight: 700; color: #1A1A2E; }
+
+				.model-badge {
+					display: inline-flex;
+					align-items: center;
+					gap: 6rpx;
+					padding: 4rpx 14rpx;
+					border-radius: 20rpx;
+					border: 1rpx solid;
+
+					.model-dot { width: 10rpx; height: 10rpx; border-radius: 50%; flex-shrink: 0; }
+					.model-name { font-size: 20rpx; font-weight: 600; }
+				}
+			}
+
+			.post-time { font-size: 22rpx; color: #9CA3AF; }
+		}
+
+		.follow-btn {
+			border: 2rpx solid #5B5BD6;
+			border-radius: 40rpx;
+			padding: 12rpx 28rpx;
+			flex-shrink: 0;
+
+			.follow-text { font-size: 24rpx; color: #5B5BD6; font-weight: 600; }
+
+			&.following {
+				border-color: #E5E7EB;
+				.follow-text { color: #9CA3AF; }
+			}
+		}
+	}
+
+	/* 核心数据 Hero */
+	.burn-hero {
+		margin: 16rpx 24rpx;
+		background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+		border-radius: 24rpx;
+		padding: 28rpx 28rpx 24rpx;
+
+		.burn-label-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 24rpx;
+
+			.burn-label { font-size: 26rpx; font-weight: 700; color: rgba(255,255,255,0.9); }
+			.burn-date { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+		}
+
+		.burn-numbers {
+			display: flex;
+			align-items: center;
+			margin-bottom: 24rpx;
+
+			.burn-num-item {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8rpx;
+
+				.burn-num-value {
+					font-size: 56rpx;
+					font-weight: 800;
+					letter-spacing: -2rpx;
+
+					&.cost { color: #FCA5A5; }
+					&.token { color: #FCD34D; }
+				}
+
+				.burn-num-desc { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+			}
+
+			.burn-num-divider {
+				width: 1rpx;
+				height: 80rpx;
+				background: rgba(255,255,255,0.15);
+			}
+		}
+
+		.burn-meta-row {
+			display: flex;
+			gap: 0;
+
+			.burn-meta-item {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6rpx;
+				background: rgba(255,255,255,0.08);
+				border-radius: 12rpx;
+				padding: 10rpx 0;
+				margin: 0 4rpx;
+
+				.meta-icon { font-size: 22rpx; }
+				.meta-text { font-size: 20rpx; color: rgba(255,255,255,0.7); white-space: nowrap; }
+			}
+		}
+	}
+
+	/* 正文 */
+	.content-section {
+		background: #fff;
+		padding: 24rpx 28rpx;
+		margin-bottom: 16rpx;
+
+		.content-text {
+			font-size: 28rpx;
+			color: #374151;
+			line-height: 1.8;
+		}
+	}
+
+	/* 心情评价 */
+	.mood-section {
+		background: #fff;
+		padding: 20rpx 28rpx;
+		margin-bottom: 16rpx;
+		display: flex;
+		align-items: center;
+		gap: 16rpx;
+
+		.mood-label { font-size: 26rpx; color: #9CA3AF; flex-shrink: 0; }
+
+		.mood-tags {
+			display: flex;
+			gap: 10rpx;
+			flex-wrap: wrap;
+
+			.mood-tag {
+				padding: 10rpx 20rpx;
+				border-radius: 30rpx;
+				border: 1rpx solid #E5E7EB;
+				background: #F9FAFB;
+
+				.mood-text { font-size: 22rpx; color: #9CA3AF; white-space: nowrap; }
+
+				&.mood-active .mood-text { font-weight: 600; }
+			}
+		}
+	}
+
+	/* 互动数据 */
+	.stat-row {
+		display: flex;
+		align-items: center;
+		background: #fff;
+		padding: 20rpx 0;
+		margin-bottom: 16rpx;
+
+		.stat-item {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 4rpx;
+
+			.stat-n { font-size: 34rpx; font-weight: 700; color: #1A1A2E; }
+			.stat-l { font-size: 22rpx; color: #9CA3AF; }
+		}
+
+		.stat-divider { width: 1rpx; height: 48rpx; background: #F3F4F6; }
+	}
+
+	/* 评论区 */
+	.comments-section {
+		background: #fff;
+		padding: 24rpx 28rpx;
+
+		.comments-title {
+			display: block;
+			font-size: 28rpx;
+			font-weight: 700;
+			color: #1A1A2E;
+			margin-bottom: 24rpx;
+			padding-bottom: 16rpx;
+			border-bottom: 1rpx solid #F3F4F6;
+		}
+
+		.comment-item {
+			display: flex;
+			gap: 16rpx;
+			margin-bottom: 28rpx;
+
+			.cmt-av {
+				width: 64rpx;
+				height: 64rpx;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+
+				.cmt-av-t { font-size: 24rpx; color: #fff; font-weight: 700; }
+			}
+
+			.cmt-body {
+				flex: 1;
+
+				.cmt-head {
+					display: flex;
+					align-items: center;
+					gap: 10rpx;
+					flex-wrap: wrap;
+					margin-bottom: 8rpx;
+
+					.cmt-user { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
+
+					.cmt-model-badge {
+						background: #F0F0FD;
+						padding: 3rpx 12rpx;
+						border-radius: 12rpx;
+
+						.cmt-model-text { font-size: 20rpx; color: #5B5BD6; }
+					}
+
+					.cmt-time { font-size: 22rpx; color: #9CA3AF; margin-left: auto; }
+				}
+
+				/* 评论者晒自己的消费 */
+				.cmt-burn-info {
+					display: flex;
+					align-items: center;
+					gap: 8rpx;
+					background: #FFF7F0;
+					border-radius: 10rpx;
+					padding: 8rpx 14rpx;
+					margin-bottom: 10rpx;
+
+					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #EF4444; }
+					.cmt-burn-sep { font-size: 20rpx; color: #D1D5DB; }
+					.cmt-burn-tokens { font-size: 22rpx; color: #F59E0B; }
+				}
+
+				.cmt-text { font-size: 26rpx; color: #374151; line-height: 1.65; margin-bottom: 12rpx; }
+
+				.cmt-actions {
+					display: flex;
+					align-items: center;
+					gap: 24rpx;
+
+					.cmt-like {
+						display: flex;
+						align-items: center;
+						gap: 6rpx;
+
+						.cmt-like-ico { font-size: 24rpx; color: #D1D5DB; &.liked { color: #EF4444; } }
+						.cmt-like-n { font-size: 22rpx; color: #9CA3AF; }
+					}
+
+					.cmt-reply-btn { font-size: 22rpx; color: #9CA3AF; }
+				}
+			}
+		}
+
+		.load-more {
+			text-align: center;
+			padding: 16rpx 0 8rpx;
+
+			.load-more-text { font-size: 24rpx; color: #5B5BD6; }
+		}
+	}
+
+	/* 底部固定栏 */
+	.fixed-bottom {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: #fff;
+		border-top: 1rpx solid #F3F4F6;
+		padding: 16rpx 20rpx 0;
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+
+		.comment-input {
+			flex: 1;
+			background: #F3F4F6;
+			border-radius: 40rpx;
+			padding: 16rpx 24rpx;
+
+			.input-ph { font-size: 24rpx; color: #9CA3AF; }
+		}
+
+		.bottom-acts {
+			display: flex;
+			align-items: center;
+			gap: 4rpx;
+
+			.bact {
+				display: flex;
+				align-items: center;
+				gap: 6rpx;
+				padding: 10rpx 12rpx;
+
+				.bact-ico { font-size: 32rpx; color: #9CA3AF; &.liked { color: #EF4444; } }
+				.bact-n { font-size: 20rpx; color: #9CA3AF; }
+			}
+
+			.resonate-bact {
+				background: #F9FAFB;
+				border-radius: 30rpx;
+				border: 1rpx solid #E5E7EB;
+				padding: 10rpx 16rpx;
+
+				.bact-resonate-text { font-size: 22rpx; color: #6B7280; }
+
+				&.resonated {
+					background: rgba(239, 68, 68, 0.06);
+					border-color: rgba(239, 68, 68, 0.3);
+
+					.bact-ico, .bact-resonate-text { color: #EF4444; }
+				}
+			}
+		}
+	}
+</style>

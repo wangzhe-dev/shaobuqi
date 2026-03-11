@@ -1,14 +1,73 @@
 {
-	"pages": [{
+	"pages": [
+		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/community/index",
+			"style": {
+				"navigationBarTitleText": "烧榜",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/publish/index",
+			"style": {
+				"navigationBarTitleText": "发布内容",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/skill/index",
+			"style": {
+				"navigationBarTitleText": "Skill 广场",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"enablePullDownRefresh": false
 			}
 		},
 		{
 			"path": "pages/my/my",
 			"style": {
-				"navigationBarTitleText": "我的"
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/detail/post",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/detail/skill",
+			"style": {
+				"navigationBarTitleText": "Skill 详情",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/author/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/search/index",
+			"style": {
+				"navigationBarTitleText": "搜索",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
 			}
 		}
 	],
@@ -18,36 +77,45 @@
 		}
 	},
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#FF6E26",
-		"backgroundColor": "#F8F8F8",
-		// #ifdef H5
-		"navigationStyle": "custom",
-		// #endif
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "少不起",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F7F8FA",
 		"app-plus": {
-			// #ifdef H5
-			"titleNView": false,
-			// #endif
-			"background": "#efeff4",
+			"background": "#F7F8FA",
 			"scrollIndicator": "none",
 			"bounce": "none"
 		}
 	},
 	"tabBar": {
-		"color": "#ADB2C1",
-		"selectedColor": "#FF6E26",
+		"color": "#9CA3AF",
+		"selectedColor": "#5B5BD6",
 		"borderStyle": "white",
-		"backgroundColor": "#ffffff",
-		// #ifdef APP-PLUS
-		"iconWidth": "24px",
-		"fontSize": "10px",
-		// #endif
-		"list": [{
+		"backgroundColor": "#FFFFFF",
+		"list": [
+			{
 				"pagePath": "pages/index/index",
 				"iconPath": "static/images/tabbar/index.png",
 				"selectedIconPath": "static/images/tabbar/index-select.png",
 				"text": "首页"
+			},
+			{
+				"pagePath": "pages/community/index",
+				"iconPath": "static/images/tabbar/community.png",
+				"selectedIconPath": "static/images/tabbar/community-select.png",
+				"text": "烧榜"
+			},
+			{
+				"pagePath": "pages/publish/index",
+				"iconPath": "static/images/tabbar/publish.png",
+				"selectedIconPath": "static/images/tabbar/publish-select.png",
+				"text": "发布"
+			},
+			{
+				"pagePath": "pages/skill/index",
+				"iconPath": "static/images/tabbar/skill.png",
+				"selectedIconPath": "static/images/tabbar/skill-select.png",
+				"text": "Skill"
 			},
 			{
 				"pagePath": "pages/my/my",
