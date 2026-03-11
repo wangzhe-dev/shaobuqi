@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "sar-upload-preview": "../upload-preview/upload-preview",
+    "sar-icon": "../icon/icon"
+  }
+}

@@ -1,0 +1,1 @@
+.sar-form{position:relative;box-sizing:border-box;display:flex;flex-direction:column;background:var(--sar-form-bg)}.sar-form_card{border-radius:var(--sar-form-card-border-radius)}

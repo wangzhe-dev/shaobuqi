@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "sar-popup": "../popup/popup",
+    "sar-loading": "../loading/loading"
+  }
+}

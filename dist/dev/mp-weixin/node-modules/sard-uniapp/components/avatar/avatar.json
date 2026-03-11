@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "sar-icon": "../icon/icon"
+  }
+}

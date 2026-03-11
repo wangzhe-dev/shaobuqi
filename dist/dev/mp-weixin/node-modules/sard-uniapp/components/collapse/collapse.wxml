@@ -1,0 +1,1 @@
+<view class="{{e}}" style="{{f}}" bindtransitionend="{{g}}"><view wx:if="{{a}}" class="{{b}}" style="{{c}}" id="{{d}}"><slot></slot></view></view>

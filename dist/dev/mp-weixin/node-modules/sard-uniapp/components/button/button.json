@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "sar-loading": "../loading/loading",
+    "sar-icon": "../icon/icon"
+  }
+}

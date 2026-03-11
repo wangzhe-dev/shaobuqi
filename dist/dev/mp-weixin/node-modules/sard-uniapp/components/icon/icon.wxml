@@ -1,0 +1,1 @@
+<view class="{{d}}" style="{{e}}" bindtap="{{f}}"><image wx:if="{{a}}" class="{{b}}" src="{{c}}"/></view>

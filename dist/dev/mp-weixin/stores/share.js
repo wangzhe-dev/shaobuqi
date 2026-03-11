@@ -1,0 +1,1 @@
+"use strict";const e=require("../common/vendor.js"),r=require("../config.js"),i=e.defineStore("share",()=>{const i=e.ref(r.mpShareFriend),n=e.ref(r.mpShareTimeline);return{mpShareFriend:i,mpShareTimeline:n,setMpShareFriend:e=>{i.value=e},setMpShareTimeline:e=>{n.value=e}}});exports.useShareStore=i;
