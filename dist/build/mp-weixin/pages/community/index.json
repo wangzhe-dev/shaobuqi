@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "烧榜",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "tab-bar": "../../components/tab-bar/index"
+  }
+}

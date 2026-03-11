@@ -1,0 +1,1 @@
+"use strict";const e=require("../common/vendor.js"),s=e.defineStore("sysInfo",()=>{const s=e.ref({});return{systemInfo:s,setSystemInfo:()=>{s.value=e.index.getSystemInfoSync()}}});exports.useSysInfoStore=s;
