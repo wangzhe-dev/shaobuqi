@@ -1,1 +1,0 @@
-<view class="{{i}}" style="{{j}}" bindtap="{{k}}"><block wx:if="{{$slots.d}}"><slot></slot></block><block wx:else><image wx:if="{{a}}" src="{{b}}" mode="aspectFill" class="{{c}}"/><sar-icon wx:else u-i="9013fac2-0" bind:__l="__l" u-p="{{d||''}}"/></block><slot name="extra"></slot><view wx:if="{{e}}" class="{{g}}" bindtap="{{h}}">{{f}}</view></view>

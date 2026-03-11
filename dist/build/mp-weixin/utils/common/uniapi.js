@@ -1,1 +1,0 @@
-"use strict";const t=require("../../common/vendor.js"),e=require("./validate.js"),a=(e,a=1500)=>{t.index.showToast({title:e,duration:a,icon:"none"})},i=(e,a="复制成功")=>{t.index.setClipboardData({data:e,success:()=>{t.index.$tao.toast(a)}})},o={install(){t.index&&"object"==typeof t.index&&(t.index.$tao={toast:a,copy:i,validate:{...e.validate}})}};exports.uniapi=o;

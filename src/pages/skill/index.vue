@@ -21,19 +21,18 @@
 
 		<!-- 筛选 Tab -->
 		<view class="filter-tabs">
-			<view
-				v-for="tab in FILTER_TABS"
-				:key="tab"
-				class="tab-item"
-				:class="{ active: activeTab === tab }"
-				@tap="activeTab = tab"
-			>
-				<text class="tab-text">{{ tab }}</text>
-				<view v-if="activeTab === tab" class="tab-bar" />
+			<view class="tab-segment">
+				<uni-segmented-control
+					:current="activeTabIndex"
+					:values="FILTER_TABS"
+					style-type="text"
+					active-color="#5B5BD6"
+					@clickItem="onFilterTabChange"
+				/>
 			</view>
 			<view class="tab-right">
 				<view class="filter-btn" @tap="showFilter">
-					<text class="filter-icon">⚙</text>
+					<uni-icons type="gear" color="#6B7280" size="18" />
 					<view v-if="hasFilter" class="filter-dot" />
 				</view>
 			</view>
@@ -51,12 +50,21 @@
 				>
 					<!-- 顶部：分类标签 + 精选角标 -->
 					<view class="card-top-row">
-						<view class="cat-badge" :style="{ background: skill.catColor + '18', color: skill.catColor }">
-							<text class="cat-badge-text">{{ skill.catLabel }}</text>
-						</view>
-						<view v-if="skill.featured" class="featured-badge">
-							<text class="featured-text">⭐ 精选</text>
-						</view>
+						<uni-tag
+							class="cat-badge-ui"
+							:text="skill.catLabel"
+							circle
+							size="mini"
+							:custom-style="`color:${skill.catColor};border-color:${skill.catColor}22;background:${skill.catColor}18;`"
+						/>
+						<uni-tag
+							v-if="skill.featured"
+							class="featured-tag-ui"
+							text="⭐ 精选"
+							type="warning"
+							size="mini"
+							circle
+						/>
 					</view>
 
 					<!-- 主体：图标 + 信息 -->
@@ -70,12 +78,29 @@
 
 							<!-- 适用场景 -->
 							<view class="scenes-row">
-								<text v-for="scene in skill.scenes" :key="scene" class="scene-tag">✓ {{ scene }}</text>
+								<uni-tag
+									v-for="scene in skill.scenes"
+									:key="scene"
+									class="scene-tag-ui"
+									:text="scene"
+									type="success"
+									size="mini"
+									circle
+									inverted
+								/>
 							</view>
 
 							<!-- 标签 -->
 							<view class="tags-row">
-								<text v-for="tag in skill.tags" :key="tag" class="stag">{{ tag }}</text>
+								<uni-tag
+									v-for="tag in skill.tags"
+									:key="tag"
+									class="skill-tag-ui"
+									:text="tag"
+									size="mini"
+									circle
+									inverted
+								/>
 							</view>
 						</view>
 					</view>
@@ -94,8 +119,18 @@
 							<text class="stat-item">收藏 {{ skill.favorites }}</text>
 						</view>
 						<view class="btns-row">
-							<view class="collect-btn" @tap.stop="collectSkill(skill)">
-								<text :class="['collect-ico', { collected: skill.collected }]">★</text>
+							<view class="collect-fav-wrap" @tap.stop>
+								<uni-fav
+									class="collect-fav"
+									:checked="skill.collected"
+									:content-text="{ contentDefault: '收藏', contentFav: '已收藏' }"
+									bg-color="#F8FAFC"
+									fg-color="#6B7280"
+									bg-color-checked="#FEF3C7"
+									fg-color-checked="#B45309"
+									circle
+									@click="collectSkill(skill)"
+								/>
 							</view>
 							<view class="use-btn" @tap.stop="useSkill(skill)">
 								<text class="use-text">立即使用</text>
@@ -129,9 +164,17 @@
 	const activeCat = ref('all')
 	const activeTab = ref('最热')
 	const hasFilter = ref(false)
+	const activeTabIndex = computed(() => {
+		const currentIndex = FILTER_TABS.findIndex((tab) => tab === activeTab.value)
+		return currentIndex === -1 ? 0 : currentIndex
+	})
 
 	const showFilter = () => {
 		uni.showToast({ title: '筛选功能开发中', icon: 'none' })
+	}
+
+	const onFilterTabChange = (e: { currentIndex: number }) => {
+		activeTab.value = FILTER_TABS[e.currentIndex] ?? FILTER_TABS[0]
 	}
 
 	const skills = ref([
@@ -280,35 +323,29 @@
 		display: flex;
 		align-items: center;
 		background: #fff;
-		padding: 0 20rpx;
+		padding: 8rpx 20rpx 12rpx;
 		border-bottom: 1rpx solid #F3F4F6;
 		margin-bottom: 16rpx;
 		flex-shrink: 0;
 
-		.tab-item {
-			position: relative;
-			padding: 20rpx 16rpx 18rpx;
+		.tab-segment {
+			flex: 1;
+		}
 
-			.tab-text {
-				font-size: 28rpx;
-				color: #9CA3AF;
-			}
+		:deep(.segmented-control) {
+			height: auto;
+		}
 
-			&.active .tab-text {
-				color: #1A1A2E;
-				font-weight: 700;
-			}
+		:deep(.segmented-control__item) {
+			padding: 10rpx 0;
+		}
 
-			.tab-bar {
-				position: absolute;
-				bottom: 0;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 32rpx;
-				height: 4rpx;
-				border-radius: 2rpx;
-				background: #5B5BD6;
-			}
+		:deep(.segmented-control__text) {
+			font-size: 28rpx;
+		}
+
+		:deep(.segmented-control__item--text) {
+			padding: 8rpx 0 14rpx;
 		}
 
 		.tab-right {
@@ -377,26 +414,6 @@
 			align-items: center;
 			gap: 12rpx;
 			margin-bottom: 18rpx;
-
-			.cat-badge {
-				padding: 5rpx 16rpx;
-				border-radius: 20rpx;
-
-				.cat-badge-text {
-					font-size: 22rpx;
-					font-weight: 600;
-				}
-			}
-
-			.featured-badge {
-				.featured-text {
-					font-size: 22rpx;
-					color: #F59E0B;
-					background: rgba(245, 158, 11, 0.1);
-					padding: 5rpx 14rpx;
-					border-radius: 20rpx;
-				}
-			}
 		}
 
 		.card-body {
@@ -442,25 +459,12 @@
 					display: flex;
 					flex-wrap: wrap;
 					gap: 8rpx;
-
-					.scene-tag {
-						font-size: 22rpx;
-						color: #059669;
-					}
 				}
 
 				.tags-row {
 					display: flex;
 					flex-wrap: wrap;
 					gap: 8rpx;
-
-					.stag {
-						font-size: 20rpx;
-						color: #6B7280;
-						background: #F3F4F6;
-						padding: 4rpx 14rpx;
-						border-radius: 12rpx;
-					}
 				}
 			}
 		}
@@ -520,25 +524,6 @@
 				gap: 12rpx;
 				justify-content: flex-end;
 
-				.collect-btn {
-					width: 68rpx;
-					height: 68rpx;
-					border-radius: 50%;
-					border: 2rpx solid #E5E7EB;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					.collect-ico {
-						font-size: 30rpx;
-						color: #D1D5DB;
-
-						&.collected {
-							color: #F59E0B;
-						}
-					}
-				}
-
 				.use-btn {
 					flex: 1;
 					height: 68rpx;
@@ -555,6 +540,58 @@
 					}
 				}
 			}
+		}
+	}
+
+	.cat-badge-ui,
+	.featured-tag-ui,
+	.scene-tag-ui,
+	.skill-tag-ui {
+		:deep(.uni-tag) {
+			border-radius: 999rpx !important;
+		}
+	}
+
+	.cat-badge-ui {
+		:deep(.uni-tag) {
+			font-weight: 600;
+		}
+	}
+
+	.featured-tag-ui {
+		:deep(.uni-tag) {
+			background: rgba(245, 158, 11, 0.12) !important;
+			border-color: rgba(245, 158, 11, 0.18) !important;
+			color: #D97706 !important;
+		}
+	}
+
+	.scene-tag-ui {
+		:deep(.uni-tag) {
+			color: #059669 !important;
+			border-color: rgba(5, 150, 105, 0.12) !important;
+			background: rgba(5, 150, 105, 0.06) !important;
+		}
+	}
+
+	.skill-tag-ui {
+		:deep(.uni-tag) {
+			color: #6B7280 !important;
+			border-color: #E5E7EB !important;
+			background: #F3F4F6 !important;
+		}
+	}
+
+	.collect-fav {
+		:deep(.uni-fav) {
+			width: 144rpx;
+			height: 68rpx;
+			border-radius: 34rpx;
+		}
+
+		:deep(.uni-fav-text) {
+			font-size: 24rpx;
+			font-weight: 600;
 		}
 	}
 </style>

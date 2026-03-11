@@ -1,1 +1,0 @@
-<view wx:if="{{a}}" class="{{b}}" style="{{c}}" bindtap="{{d}}" bindtransitionend="{{e}}" catchtouchmove="{{f}}"><slot></slot></view>

@@ -1,1 +1,0 @@
-.sar-space,.sar-space__element{position:relative;box-sizing:border-box;display:flex;flex-direction:column}.sar-space_vertical{flex-direction:column}.sar-space_horizontal{flex-direction:row}.sar-space_small{gap:var(--sar-space-small-gap)}.sar-space_middle{gap:var(--sar-space-middle-gap)}.sar-space_large{gap:var(--sar-space-large-gap)}.sar-space_wrap{flex-wrap:wrap}

@@ -4,15 +4,14 @@
 		<!-- 顶部：时间筛选 + 总量 -->
 		<view class="top-bar">
 			<view class="period-tabs">
-				<view
-					v-for="p in PERIODS"
-					:key="p"
-					class="period-tab"
-					:class="{ active: period === p }"
-					@tap="period = p"
-				>
-					<text class="period-text">{{ p }}</text>
-				</view>
+				<uni-segmented-control
+					:current="periodIndex"
+					:values="PERIODS"
+					style-type="button"
+					active-color="#5B5BD6"
+					in-active-color="#EEF2FF"
+					@clickItem="onPeriodChange"
+				/>
 			</view>
 			<view class="top-total">
 				<text class="total-label">{{ period }}共燃</text>
@@ -129,13 +128,14 @@
 			<view class="section-label">
 				<text class="sl-text">全部记录</text>
 				<view class="sl-sort">
-					<text
-						v-for="s in SORT_MODES"
-						:key="s"
-						class="sl-sort-item"
-						:class="{ active: sortMode === s }"
-						@tap="sortMode = s"
-					>{{ s }}</text>
+					<uni-segmented-control
+						:current="sortModeIndex"
+						:values="SORT_MODES"
+						style-type="button"
+						active-color="#5B5BD6"
+						in-active-color="#F3F4F6"
+						@clickItem="onSortModeChange"
+					/>
 				</view>
 			</view>
 
@@ -239,6 +239,14 @@
 	const period = ref('今日')
 	const modelFilter = ref('all')
 	const sortMode = ref('烧得最多')
+	const periodIndex = computed(() => {
+		const currentIndex = PERIODS.findIndex((item) => item === period.value)
+		return currentIndex === -1 ? 0 : currentIndex
+	})
+	const sortModeIndex = computed(() => {
+		const currentIndex = SORT_MODES.findIndex((item) => item === sortMode.value)
+		return currentIndex === -1 ? 0 : currentIndex
+	})
 
 	const totalMap: Record<string, string> = { '今日': '48,203', '本周': '284,920', '本月': '1,203,480' }
 	const currentTotal = computed(() => totalMap[period.value])
@@ -335,6 +343,14 @@
 	const toSearch = () => {
 		uni.navigateTo({ url: '/pages/search/index' })
 	}
+
+	const onPeriodChange = (e: { currentIndex: number }) => {
+		period.value = PERIODS[e.currentIndex] ?? PERIODS[0]
+	}
+
+	const onSortModeChange = (e: { currentIndex: number }) => {
+		sortMode.value = SORT_MODES[e.currentIndex] ?? SORT_MODES[0]
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -356,24 +372,24 @@
 		flex-shrink: 0;
 
 		.period-tabs {
-			display: flex;
-			background: #F3F4F6;
-			border-radius: 16rpx;
-			padding: 4rpx;
-			gap: 0;
+			width: 320rpx;
 
-			.period-tab {
-				padding: 10rpx 24rpx;
+			:deep(.segmented-control) {
+				height: 56rpx;
+				border-radius: 16rpx;
+				overflow: hidden;
+			}
+
+			:deep(.segmented-control__item) {
 				border-radius: 12rpx;
+			}
 
-				.period-text { font-size: 25rpx; color: #9CA3AF; }
+			:deep(.segmented-control__text) {
+				font-size: 24rpx;
+			}
 
-				&.active {
-					background: #fff;
-					box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
-
-					.period-text { color: #1A1A2E; font-weight: 700; }
-				}
+			:deep(.segmented-control__item--button) {
+				border-color: #EEF2FF !important;
 			}
 		}
 
@@ -594,20 +610,20 @@
 		.sl-text { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
 
 		.sl-sort {
-			display: flex;
-			gap: 4rpx;
+			width: 304rpx;
 
-			.sl-sort-item {
+			:deep(.segmented-control) {
+				height: 52rpx;
+				border-radius: 14rpx;
+				overflow: hidden;
+			}
+
+			:deep(.segmented-control__text) {
 				font-size: 22rpx;
-				color: #9CA3AF;
-				padding: 6rpx 12rpx;
-				border-radius: 10rpx;
+			}
 
-				&.active {
-					background: rgba(91,91,214,0.08);
-					color: #5B5BD6;
-					font-weight: 600;
-				}
+			:deep(.segmented-control__item--button) {
+				border-color: #F3F4F6 !important;
 			}
 		}
 	}

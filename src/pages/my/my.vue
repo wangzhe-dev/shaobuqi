@@ -75,16 +75,13 @@
 
 		<!-- 内容 Tab -->
 		<view class="content-tabs">
-			<view
-				v-for="tab in TABS"
-				:key="tab.key"
-				class="tab-item"
-				:class="{ active: activeTab === tab.key }"
-				@tap="activeTab = tab.key"
-			>
-				<text class="tab-text">{{ tab.label }}</text>
-				<view v-if="activeTab === tab.key" class="tab-bar" />
-			</view>
+			<uni-segmented-control
+				:current="activeTabIndex"
+				:values="tabValues"
+				style-type="text"
+				active-color="#5B5BD6"
+				@clickItem="onContentTabChange"
+			/>
 		</view>
 
 		<!-- 内容区 -->
@@ -124,15 +121,14 @@
 			<!-- 我的收藏 -->
 			<view v-else-if="activeTab === 'favorites'">
 				<view class="fav-tabs">
-					<view
-						v-for="ft in FAV_TABS"
-						:key="ft.key"
-						class="fav-tab"
-						:class="{ active: favTab === ft.key }"
-						@tap="favTab = ft.key"
-					>
-						<text class="fav-tab-text">{{ ft.label }}</text>
-					</view>
+					<uni-segmented-control
+						:current="favTabIndex"
+						:values="favTabValues"
+						style-type="button"
+						active-color="#5B5BD6"
+						in-active-color="#EEF2FF"
+						@clickItem="onFavTabChange"
+					/>
 				</view>
 
 				<!-- 收藏的帖子 -->
@@ -254,6 +250,16 @@
 
 	const activeTab = ref('posts')
 	const favTab = ref('posts')
+	const tabValues = TABS.map((tab) => tab.label)
+	const favTabValues = FAV_TABS.map((tab) => tab.label)
+	const activeTabIndex = computed(() => {
+		const currentIndex = TABS.findIndex((tab) => tab.key === activeTab.value)
+		return currentIndex === -1 ? 0 : currentIndex
+	})
+	const favTabIndex = computed(() => {
+		const currentIndex = FAV_TABS.findIndex((tab) => tab.key === favTab.value)
+		return currentIndex === -1 ? 0 : currentIndex
+	})
 
 	const myBurnRecords = ref([
 		{
@@ -344,6 +350,14 @@
 
 	const changeAvatar = () => {
 		uni.showToast({ title: '修改头像功能开发中', icon: 'none' })
+	}
+
+	const onContentTabChange = (e: { currentIndex: number }) => {
+		activeTab.value = TABS[e.currentIndex]?.key ?? TABS[0].key
+	}
+
+	const onFavTabChange = (e: { currentIndex: number }) => {
+		favTab.value = FAV_TABS[e.currentIndex]?.key ?? FAV_TABS[0].key
 	}
 </script>
 
@@ -526,36 +540,25 @@
 
 	/* Tab */
 	.content-tabs {
-		display: flex;
 		background: #fff;
-		padding: 0 16rpx;
+		padding: 8rpx 16rpx 10rpx;
 		border-bottom: 1rpx solid #F3F4F6;
 		flex-shrink: 0;
 
-		.tab-item {
-			position: relative;
-			padding: 20rpx 20rpx 18rpx;
+		:deep(.segmented-control) {
+			height: auto;
+		}
 
-			.tab-text {
-				font-size: 28rpx;
-				color: #9CA3AF;
-			}
+		:deep(.segmented-control__item) {
+			padding: 10rpx 0;
+		}
 
-			&.active .tab-text {
-				color: #1A1A2E;
-				font-weight: 700;
-			}
+		:deep(.segmented-control__text) {
+			font-size: 28rpx;
+		}
 
-			.tab-bar {
-				position: absolute;
-				bottom: 0;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 36rpx;
-				height: 4rpx;
-				border-radius: 2rpx;
-				background: #5B5BD6;
-			}
+		:deep(.segmented-control__item--text) {
+			padding: 8rpx 0 14rpx;
 		}
 	}
 
@@ -691,27 +694,24 @@
 
 	/* 收藏 tab */
 	.fav-tabs {
-		display: flex;
 		padding: 16rpx 20rpx 0;
-		gap: 0;
 
-		.fav-tab {
-			padding: 12rpx 24rpx;
-			border-radius: 12rpx;
+		:deep(.segmented-control) {
+			height: 64rpx;
+			border-radius: 18rpx;
+			overflow: hidden;
+		}
 
-			.fav-tab-text {
-				font-size: 26rpx;
-				color: #9CA3AF;
-			}
+		:deep(.segmented-control__item) {
+			border-radius: 18rpx;
+		}
 
-			&.active {
-				background: rgba(91, 91, 214, 0.1);
+		:deep(.segmented-control__text) {
+			font-size: 26rpx;
+		}
 
-				.fav-tab-text {
-					color: #5B5BD6;
-					font-weight: 600;
-				}
-			}
+		:deep(.segmented-control__item--button) {
+			border-color: #EEF2FF !important;
 		}
 	}
 

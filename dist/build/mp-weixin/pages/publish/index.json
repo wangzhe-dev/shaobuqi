@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "发布内容",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "usingComponents": {
-    "tab-bar": "../../components/tab-bar/index"
-  }
-}
