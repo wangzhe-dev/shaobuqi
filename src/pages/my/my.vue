@@ -231,6 +231,7 @@
 			<view class="content-bottom" />
 		</scroll-view>
 
+		<tab-bar current="/pages/my/my" />
 	</view>
 </template>
 
@@ -562,7 +563,7 @@
 		flex: 1;
 		overflow: hidden;
 
-		.content-bottom { height: 40rpx; }
+		.content-bottom { height: 160rpx; }
 	}
 
 	/* 烧榜记录列表 */

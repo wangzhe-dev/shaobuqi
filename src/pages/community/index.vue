@@ -1,147 +1,234 @@
 <template>
 	<view class="page">
 
-		<!-- 搜索栏 -->
-		<view class="search-row" @tap="toSearch">
-			<view class="search-box">
-				<text class="search-icon">🔍</text>
-				<text class="search-ph">搜索用量、模型、吐槽...</text>
+		<!-- 顶部：时间筛选 + 总量 -->
+		<view class="top-bar">
+			<view class="period-tabs">
+				<view
+					v-for="p in PERIODS"
+					:key="p"
+					class="period-tab"
+					:class="{ active: period === p }"
+					@tap="period = p"
+				>
+					<text class="period-text">{{ p }}</text>
+				</view>
+			</view>
+			<view class="top-total">
+				<text class="total-label">{{ period }}共燃</text>
+				<text class="total-val">¥{{ currentTotal }}</text>
 			</view>
 		</view>
 
-		<!-- 模型 / 心情 标签横划 -->
-		<scroll-view scroll-x class="tags-scroll" :show-scrollbar="false">
-			<view class="tags-inner">
+		<!-- 模型筛选 -->
+		<scroll-view scroll-x class="model-filter-scroll" :show-scrollbar="false">
+			<view class="model-filter-row">
 				<view
-					v-for="tag in TAGS"
-					:key="tag.key"
-					class="tag-pill"
-					:class="{ active: activeTag === tag.key }"
-					@tap="activeTag = tag.key"
+					v-for="m in MODEL_FILTERS"
+					:key="m.key"
+					class="mf-pill"
+					:class="{ active: modelFilter === m.key }"
+					@tap="modelFilter = m.key"
 				>
-					<text v-if="tag.dot" class="tag-dot" :style="{ background: tag.dot }" />
-					<text class="tag-text">{{ tag.label }}</text>
+					<view v-if="m.dot" class="mf-dot" :style="{ background: m.dot }" />
+					<text class="mf-text">{{ m.label }}</text>
 				</view>
 			</view>
 		</scroll-view>
 
-		<!-- 排序行 -->
-		<view class="sort-row">
-			<view
-				v-for="s in SORT_MODES"
-				:key="s"
-				class="sort-item"
-				:class="{ active: sortMode === s }"
-				@tap="sortMode = s"
-			>
-				<text class="sort-text">{{ s }}</text>
-			</view>
-			<view class="sort-right">
-				<text class="total-tip">今日共燃烧 <text class="total-num">¥48,203</text></text>
-			</view>
-		</view>
-
-		<!-- 消费记录卡片流 -->
 		<scroll-view class="list-scroll" scroll-y :show-scrollbar="false">
-			<view class="list-inner">
 
+			<!-- 🏆 TOP 3 奖台 -->
+			<view class="podium-section">
+				<text class="podium-title">🏆 今日烧榜 TOP 3</text>
+				<view class="podium">
+					<!-- 亚军 #2 -->
+					<view class="podium-item podium-2" @tap="toPost(podiumData[1].id)">
+						<view class="podium-av" :style="{ background: podiumData[1].color }">
+							<text class="podium-av-t">{{ podiumData[1].author[0] }}</text>
+						</view>
+						<text class="podium-name">{{ podiumData[1].author }}</text>
+						<text class="podium-cost p2-cost">{{ podiumData[1].cost }}</text>
+						<view class="podium-block p2-block">
+							<text class="podium-medal">🥈</text>
+							<text class="podium-rank-label"># 2</text>
+						</view>
+					</view>
+
+					<!-- 冠军 #1 -->
+					<view class="podium-item podium-1" @tap="toPost(podiumData[0].id)">
+						<view class="crown">👑</view>
+						<view class="podium-av podium-av-lg" :style="{ background: podiumData[0].color }">
+							<text class="podium-av-t">{{ podiumData[0].author[0] }}</text>
+						</view>
+						<text class="podium-name">{{ podiumData[0].author }}</text>
+						<text class="podium-cost p1-cost">{{ podiumData[0].cost }}</text>
+						<view class="podium-block p1-block">
+							<text class="podium-medal">🥇</text>
+							<text class="podium-rank-label"># 1</text>
+						</view>
+					</view>
+
+					<!-- 季军 #3 -->
+					<view class="podium-item podium-3" @tap="toPost(podiumData[2].id)">
+						<view class="podium-av" :style="{ background: podiumData[2].color }">
+							<text class="podium-av-t">{{ podiumData[2].author[0] }}</text>
+						</view>
+						<text class="podium-name">{{ podiumData[2].author }}</text>
+						<text class="podium-cost p3-cost">{{ podiumData[2].cost }}</text>
+						<view class="podium-block p3-block">
+							<text class="podium-medal">🥉</text>
+							<text class="podium-rank-label"># 3</text>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<!-- 排行榜列表 #4 以下 -->
+			<view class="rank-list">
+				<view
+					v-for="(item, index) in rankList"
+					:key="item.id"
+					class="rank-row"
+					@tap="toPost(item.id)"
+				>
+					<!-- 排名 -->
+					<text class="rr-rank">#{{ index + 4 }}</text>
+
+					<!-- 头像 -->
+					<view class="rr-av" :style="{ background: item.color }">
+						<text class="rr-av-t">{{ item.author[0] }}</text>
+					</view>
+
+					<!-- 信息 -->
+					<view class="rr-info">
+						<view class="rr-top">
+							<text class="rr-author">{{ item.author }}</text>
+							<view class="rr-model-badge" :style="{ background: item.modelBg }">
+								<view class="rr-dot" :style="{ background: item.modelDot }" />
+								<text class="rr-model">{{ item.model }}</text>
+							</view>
+						</view>
+						<text class="rr-content line-1">{{ item.content }}</text>
+					</view>
+
+					<!-- 花费 + 心情 -->
+					<view class="rr-right">
+						<text class="rr-cost">{{ item.cost }}</text>
+						<text class="rr-mood">{{ item.mood }}</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 分割线 -->
+			<view class="list-divider">
+				<text class="divider-text">· 以上为今日 TOP 10 ·</text>
+			</view>
+
+			<!-- 全部记录流 -->
+			<view class="section-label">
+				<text class="sl-text">全部记录</text>
+				<view class="sl-sort">
+					<text
+						v-for="s in SORT_MODES"
+						:key="s"
+						class="sl-sort-item"
+						:class="{ active: sortMode === s }"
+						@tap="sortMode = s"
+					>{{ s }}</text>
+				</view>
+			</view>
+
+			<view class="full-feed">
 				<view
 					v-for="post in posts"
 					:key="post.id"
 					class="burn-card"
 					@tap="toPost(post.id)"
 				>
-					<!-- 卡片头部：作者 + 模型 badge -->
-					<view class="card-head">
-						<view class="av" :style="{ background: post.color }">
-							<text class="av-t">{{ post.author[0] }}</text>
+					<view class="bc-head">
+						<view class="bc-av" :style="{ background: post.color }">
+							<text class="bc-av-t">{{ post.author[0] }}</text>
 						</view>
-						<view class="head-meta">
-							<view class="head-top">
-								<text class="author-name">{{ post.author }}</text>
-								<view class="model-badge" :style="{ background: post.modelColor + '18', borderColor: post.modelColor + '40' }">
-									<view class="model-dot" :style="{ background: post.modelColor }" />
-									<text class="model-name" :style="{ color: post.modelColor }">{{ post.model }}</text>
+						<view class="bc-meta">
+							<view class="bc-top">
+								<text class="bc-author">{{ post.author }}</text>
+								<view class="bc-model-badge" :style="{ background: post.modelBg, borderColor: post.modelBg }">
+									<view class="bc-dot" :style="{ background: post.modelDot }" />
+									<text class="bc-model">{{ post.model }}</text>
 								</view>
 							</view>
-							<text class="post-time">{{ post.time }}</text>
+							<text class="bc-time">{{ post.time }}</text>
 						</view>
-						<text class="more-btn">···</text>
+						<text class="bc-more">···</text>
 					</view>
 
-					<!-- 核心数据：大数字展示 -->
-					<view class="burn-data-block">
-						<view class="data-left">
-							<text class="data-label">💰 花费</text>
-							<text class="data-num cost-num">{{ post.cost }}</text>
+					<view class="bc-data">
+						<view class="bc-data-left">
+							<text class="bc-data-label">💰 花费</text>
+							<text class="bc-cost">{{ post.cost }}</text>
 						</view>
-						<view class="data-divider" />
-						<view class="data-right">
-							<text class="data-label">📊 Token</text>
-							<text class="data-num token-num">{{ post.tokens }}</text>
+						<view class="bc-data-div" />
+						<view class="bc-data-right">
+							<text class="bc-data-label">📊 Token</text>
+							<text class="bc-tokens">{{ post.tokens }}</text>
 						</view>
 					</view>
 
-					<!-- 用途描述 -->
-					<text class="burn-content line-3">{{ post.content }}</text>
+					<text class="bc-content line-3">{{ post.content }}</text>
 
-					<!-- 心情标签 -->
-					<view class="mood-row">
+					<view class="bc-mood-row">
 						<view
-							class="mood-tag"
-							:class="{ 'mood-active': post.mood === m.key }"
-							:style="post.mood === m.key ? { background: m.color + '15', borderColor: m.color + '60', color: m.color } : {}"
 							v-for="m in MOODS"
 							:key="m.key"
+							class="bc-mood-tag"
+							:class="{ active: post.mood === m.key }"
+							:style="post.mood === m.key ? { background: m.color + '15', borderColor: m.color + '50', color: m.color } : {}"
 							@tap.stop="setMood(post, m.key)"
 						>
-							<text class="mood-text">{{ m.label }}</text>
+							<text class="bc-mood-text">{{ m.label }}</text>
 						</view>
 					</view>
 
-					<!-- 底部互动 -->
-					<view class="card-foot">
-						<view class="act" @tap.stop="like(post)">
-							<text :class="['act-ico', { liked: post.liked }]">♥</text>
-							<text class="act-n">{{ post.likes }}</text>
+					<view class="bc-foot">
+						<view class="bc-act" @tap.stop="like(post)">
+							<text class="bc-act-ico" :class="{ liked: post.liked }">♥</text>
+							<text class="bc-act-n">{{ post.likes }}</text>
 						</view>
-						<view class="act">
-							<text class="act-ico">💬</text>
-							<text class="act-n">{{ post.comments }}</text>
+						<view class="bc-act">
+							<text class="bc-act-ico">💬</text>
+							<text class="bc-act-n">{{ post.comments }}</text>
 						</view>
-						<view class="act resonate-act" :class="{ resonated: post.resonated }" @tap.stop="resonate(post)">
-							<text class="act-ico resonate-ico">😭</text>
-							<text class="act-resonate-text">{{ post.resonated ? '我也是' : '我也是' }}</text>
-							<text class="act-n">{{ post.resonates }}</text>
+						<view class="bc-resonate" :class="{ resonated: post.resonated }" @tap.stop="resonate(post)">
+							<text class="bc-resonate-ico">😭</text>
+							<text class="bc-resonate-text">我也是</text>
+							<text class="bc-act-n">{{ post.resonates }}</text>
 						</view>
-						<view class="act share-act" @tap.stop>
-							<text class="act-ico">↗</text>
+						<view class="bc-share" @tap.stop>
+							<text class="bc-act-ico">↗</text>
 						</view>
 					</view>
 				</view>
-
 			</view>
+
 			<view class="list-bottom" />
 		</scroll-view>
 
+		<tab-bar current="/pages/community/index" />
 	</view>
 </template>
 
 <script setup lang="ts">
-	const TAGS = [
+	const PERIODS = ['今日', '本周', '本月']
+	const MODEL_FILTERS = [
 		{ key: 'all', label: '全部', dot: '' },
 		{ key: 'claude', label: 'Claude', dot: '#7C3AED' },
 		{ key: 'gpt4o', label: 'GPT-4o', dot: '#10B981' },
 		{ key: 'gemini', label: 'Gemini', dot: '#2563EB' },
 		{ key: 'deepseek', label: 'DeepSeek', dot: '#F59E0B' },
-		{ key: 'worth', label: '值了 ✓', dot: '' },
-		{ key: 'regret', label: '后悔了 😭', dot: '' },
-		{ key: 'broke', label: '月底穷了 💸', dot: '' },
-		{ key: 'hooked', label: '上瘾了 🔥', dot: '' }
+		{ key: 'grok', label: 'Grok', dot: '#374151' }
 	]
-
-	const SORT_MODES = ['最新', '烧得最多', '最值']
-
+	const SORT_MODES = ['烧得最多', '最新', '最值']
 	const MOODS = [
 		{ key: 'worth', label: '值了 ✓', color: '#10B981' },
 		{ key: 'ok', label: '还行 😐', color: '#6B7280' },
@@ -149,65 +236,81 @@
 		{ key: 'hooked', label: '上瘾了 🔥', color: '#F59E0B' }
 	]
 
-	const activeTag = ref('all')
-	const sortMode = ref('最新')
+	const period = ref('今日')
+	const modelFilter = ref('all')
+	const sortMode = ref('烧得最多')
+
+	const totalMap: Record<string, string> = { '今日': '48,203', '本周': '284,920', '本月': '1,203,480' }
+	const currentTotal = computed(() => totalMap[period.value])
+
+	const podiumData = ref([
+		{ id: 'p3', author: '张晴', color: '#D97706', cost: '¥312.00', mood: '🔥' },
+		{ id: 'p7', author: '高远', color: '#7C3AED', cost: '¥178.50', mood: '😭' },
+		{ id: 'p1', author: '林晓珊', color: '#7C3AED', cost: '¥128.50', mood: '✓' }
+	])
+
+	const rankList = ref([
+		{
+			id: 'r4', author: '苏晓月', color: '#2563EB',
+			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.1)', modelDot: '#10B981',
+			cost: '¥89.20', mood: '😐',
+			content: '月底了，账单来了，GPT-4o $42、Claude $28、Gemini $8'
+		},
+		{
+			id: 'r5', author: '王建明', color: '#0891B2',
+			model: 'Claude Sonnet', modelBg: 'rgba(124,58,237,0.1)', modelDot: '#7C3AED',
+			cost: '¥56.20', mood: '✓',
+			content: '写技术文档反复改格式，改了12轮，最后发现把要求写清楚第一轮就出来了'
+		},
+		{
+			id: 'r6', author: '陈佳慧', color: '#059669',
+			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.1)', modelDot: '#10B981',
+			cost: '¥18.40', mood: '😭',
+			content: 'AI帮我把3000字周报压缩到500字，领导说下次多写点细节'
+		},
+		{
+			id: 'r7', author: '刘明远', color: '#DC2626',
+			model: 'DeepSeek', modelBg: 'rgba(245,158,11,0.1)', modelDot: '#F59E0B',
+			cost: '¥2.30', mood: '✓',
+			content: '换DeepSeek用了一周，效果差不多，便宜了80%，感觉发现了新大陆'
+		}
+	])
 
 	const posts = ref([
 		{
 			id: 'p1', author: '林晓珊', color: '#7C3AED', time: '今天 14:32',
-			model: 'Claude Opus', modelColor: '#7C3AED',
+			model: 'Claude Opus', modelBg: 'rgba(124,58,237,0.08)', modelDot: '#7C3AED',
 			cost: '¥128.50', tokens: '2,340,000',
 			content: '帮甲方改了7版 PPT，最后还是用了最开始那版。钱花了，但经验攒了，学到了什么叫"甲方的想法只有甲方知道"。',
-			mood: 'worth',
-			likes: 284, comments: 47, resonates: 163, liked: false, resonated: false
+			mood: 'worth', likes: 284, comments: 47, resonates: 163, liked: false, resonated: false
 		},
 		{
 			id: 'p2', author: '王建明', color: '#0891B2', time: '今天 11:08',
-			model: 'GPT-4o', modelColor: '#10B981',
+			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.08)', modelDot: '#10B981',
 			cost: '¥56.20', tokens: '890,000',
 			content: '写了一篇技术文档，反复让它改格式改措辞，改了12轮。最后发现直接把要求写清楚第一轮就出来了。这课交得值。',
-			mood: 'ok',
-			likes: 156, comments: 23, resonates: 89, liked: true, resonated: false
-		},
-		{
-			id: 'p3', author: '张晴', color: '#D97706', time: '今天 09:45',
-			model: 'Claude Sonnet', modelColor: '#7C3AED',
-			cost: '¥312.00', tokens: '5,680,000',
-			content: '月初说好只花100块，结果今天是月底，账单来了。我没有任何话说，只能继续充值。',
-			mood: 'hooked',
-			likes: 891, comments: 234, resonates: 567, liked: false, resonated: true
+			mood: 'ok', likes: 156, comments: 23, resonates: 89, liked: true, resonated: false
 		},
 		{
 			id: 'p4', author: '陈佳慧', color: '#059669', time: '昨天 23:17',
-			model: 'GPT-4o', modelColor: '#10B981',
+			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.08)', modelDot: '#10B981',
 			cost: '¥18.40', tokens: '320,000',
 			content: '用 AI 帮我把3000字的周报压缩到500字，领导说"写得不错，下次多写点细节"。我人傻了。',
-			mood: 'regret',
-			likes: 1203, comments: 312, resonates: 892, liked: false, resonated: false
+			mood: 'regret', likes: 1203, comments: 312, resonates: 892, liked: false, resonated: false
 		},
 		{
 			id: 'p5', author: '刘明远', color: '#DC2626', time: '昨天 20:33',
-			model: 'DeepSeek', modelColor: '#F59E0B',
+			model: 'DeepSeek', modelBg: 'rgba(245,158,11,0.08)', modelDot: '#F59E0B',
 			cost: '¥2.30', tokens: '1,230,000',
 			content: '换 DeepSeek 用了一周，效果差不多，但便宜了80%。感觉自己发现了新大陆，赶紧分享给大家。这才叫少不起！',
-			mood: 'worth',
-			likes: 2341, comments: 445, resonates: 1203, liked: false, resonated: false
+			mood: 'worth', likes: 2341, comments: 445, resonates: 1203, liked: false, resonated: false
 		},
 		{
 			id: 'p6', author: '苏晓月', color: '#2563EB', time: '前天',
-			model: 'Gemini 1.5 Pro', modelColor: '#2563EB',
+			model: 'Gemini 1.5 Pro', modelBg: 'rgba(37,99,235,0.08)', modelDot: '#2563EB',
 			cost: '¥0.00', tokens: '480,000',
 			content: 'Google 免费额度快用完了，但还没用完这个月的量。感觉白嫖到了就是赚到。疯狂用中。',
-			mood: 'worth',
-			likes: 445, comments: 78, resonates: 234, liked: false, resonated: false
-		},
-		{
-			id: 'p7', author: '高远', color: '#7C3AED', time: '3天前',
-			model: 'Claude Opus', modelColor: '#7C3AED',
-			cost: '¥890.00', tokens: '16,200,000',
-			content: '这个月 API 费用出来了。老板问这是什么钱，我说是"云计算费用"。他信了。我不敢再看账单了。',
-			mood: 'regret',
-			likes: 3201, comments: 678, resonates: 2103, liked: true, resonated: false
+			mood: 'worth', likes: 445, comments: 78, resonates: 234, liked: false, resonated: false
 		}
 	])
 
@@ -242,330 +345,435 @@
 		background: #F7F8FA;
 	}
 
-	/* 搜索栏 */
-	.search-row {
-		padding: 16rpx 24rpx 12rpx;
-		background: #fff;
-		flex-shrink: 0;
-
-		.search-box {
-			background: #F3F4F6;
-			border-radius: 20rpx;
-			padding: 16rpx 24rpx;
-			display: flex;
-			align-items: center;
-			gap: 12rpx;
-
-			.search-icon { font-size: 28rpx; }
-			.search-ph { font-size: 26rpx; color: #9CA3AF; }
-		}
-	}
-
-	/* 标签横划 */
-	.tags-scroll {
-		background: #fff;
-		flex-shrink: 0;
-
-		.tags-inner {
-			display: flex;
-			flex-wrap: nowrap;
-			width: max-content;
-			padding: 10rpx 20rpx 14rpx;
-			gap: 10rpx;
-		}
-
-		.tag-pill {
-			display: inline-flex;
-			align-items: center;
-			gap: 8rpx;
-			padding: 10rpx 22rpx;
-			border-radius: 40rpx;
-			background: #F3F4F6;
-			flex-shrink: 0;
-			white-space: nowrap;
-
-			.tag-dot {
-				width: 12rpx;
-				height: 12rpx;
-				border-radius: 50%;
-				flex-shrink: 0;
-			}
-
-			.tag-text {
-				font-size: 24rpx;
-				color: #6B7280;
-				white-space: nowrap;
-			}
-
-			&.active {
-				background: #5B5BD6;
-				.tag-text { color: #fff; font-weight: 600; }
-				.tag-dot { border: 2rpx solid rgba(255,255,255,0.6); }
-			}
-		}
-	}
-
-	/* 排序行 */
-	.sort-row {
+	/* 顶部时间筛选 */
+	.top-bar {
 		display: flex;
 		align-items: center;
-		gap: 4rpx;
+		justify-content: space-between;
 		padding: 14rpx 24rpx;
 		background: #fff;
 		border-bottom: 1rpx solid #F3F4F6;
 		flex-shrink: 0;
 
-		.sort-item {
-			padding: 8rpx 16rpx;
-			border-radius: 12rpx;
+		.period-tabs {
+			display: flex;
+			background: #F3F4F6;
+			border-radius: 16rpx;
+			padding: 4rpx;
+			gap: 0;
 
-			.sort-text {
-				font-size: 24rpx;
-				color: #9CA3AF;
-			}
+			.period-tab {
+				padding: 10rpx 24rpx;
+				border-radius: 12rpx;
 
-			&.active {
-				background: rgba(91, 91, 214, 0.08);
-				.sort-text { color: #5B5BD6; font-weight: 600; }
-			}
-		}
+				.period-text { font-size: 25rpx; color: #9CA3AF; }
 
-		.sort-right {
-			margin-left: auto;
+				&.active {
+					background: #fff;
+					box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
 
-			.total-tip {
-				font-size: 22rpx;
-				color: #9CA3AF;
-
-				.total-num {
-					color: #EF4444;
-					font-weight: 700;
+					.period-text { color: #1A1A2E; font-weight: 700; }
 				}
 			}
 		}
-	}
 
-	/* 列表 */
-	.list-scroll {
-		flex: 1;
-		overflow: hidden;
-
-		.list-inner {
-			padding: 16rpx 20rpx 0;
+		.top-total {
 			display: flex;
 			flex-direction: column;
-			gap: 16rpx;
-		}
+			align-items: flex-end;
 
-		.list-bottom { height: 40rpx; }
+			.total-label { font-size: 20rpx; color: #9CA3AF; }
+			.total-val { font-size: 28rpx; font-weight: 800; color: #EF4444; }
+		}
 	}
 
-	/* 消费记录卡片 */
-	.burn-card {
+	/* 模型筛选 */
+	.model-filter-scroll {
 		background: #fff;
-		border-radius: 20rpx;
-		padding: 24rpx;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+		flex-shrink: 0;
 
-		/* 卡片头部 */
-		.card-head {
+		.model-filter-row {
+			display: flex;
+			padding: 10rpx 20rpx 14rpx;
+			gap: 10rpx;
+			width: max-content;
+		}
+	}
+
+	.mf-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 7rpx;
+		padding: 8rpx 20rpx;
+		border-radius: 30rpx;
+		background: #F3F4F6;
+		flex-shrink: 0;
+
+		.mf-dot { width: 12rpx; height: 12rpx; border-radius: 50%; flex-shrink: 0; }
+		.mf-text { font-size: 24rpx; color: #6B7280; white-space: nowrap; }
+
+		&.active {
+			background: #1A1A2E;
+			.mf-text { color: #fff; font-weight: 600; }
+		}
+	}
+
+	.list-scroll { flex: 1; overflow: hidden; }
+
+	/* 奖台区域 */
+	.podium-section {
+		background: linear-gradient(180deg, #1E1B4B 0%, #F7F8FA 100%);
+		padding: 24rpx 24rpx 0;
+
+		.podium-title {
+			display: block;
+			font-size: 26rpx;
+			font-weight: 700;
+			color: rgba(255,255,255,0.9);
+			margin-bottom: 24rpx;
+			text-align: center;
+		}
+	}
+
+	.podium {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 0;
+
+		.podium-item {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 6rpx;
+			flex: 1;
+
+			.crown { font-size: 32rpx; margin-bottom: 4rpx; }
+
+			.podium-av {
+				width: 80rpx;
+				height: 80rpx;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: 3rpx solid rgba(255,255,255,0.4);
+
+				.podium-av-t { font-size: 30rpx; color: #fff; font-weight: 700; }
+
+				&.podium-av-lg {
+					width: 96rpx;
+					height: 96rpx;
+					border-color: #FBBF24;
+					box-shadow: 0 0 0 4rpx rgba(251,191,36,0.3);
+				}
+			}
+
+			.podium-name { font-size: 22rpx; color: rgba(255,255,255,0.85); font-weight: 600; }
+
+			.podium-cost {
+				font-weight: 800;
+				letter-spacing: -1rpx;
+
+				&.p1-cost { font-size: 34rpx; color: #FBBF24; }
+				&.p2-cost { font-size: 28rpx; color: #E5E7EB; }
+				&.p3-cost { font-size: 26rpx; color: #CD7C54; }
+			}
+
+			.podium-block {
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 16rpx 0 12rpx;
+				border-radius: 16rpx 16rpx 0 0;
+				gap: 4rpx;
+
+				.podium-medal { font-size: 28rpx; }
+				.podium-rank-label { font-size: 20rpx; font-weight: 700; }
+
+				&.p1-block { background: rgba(251,191,36,0.2); height: 130rpx; .podium-rank-label { color: #FBBF24; } }
+				&.p2-block { background: rgba(229,231,235,0.15); height: 96rpx; .podium-rank-label { color: #E5E7EB; } }
+				&.p3-block { background: rgba(205,124,84,0.15); height: 72rpx; .podium-rank-label { color: #CD7C54; } }
+			}
+		}
+	}
+
+	/* 排行榜列表 */
+	.rank-list {
+		background: #fff;
+		margin: 0 0 16rpx;
+		padding: 0 20rpx;
+
+		.rank-row {
 			display: flex;
 			align-items: center;
 			gap: 14rpx;
-			margin-bottom: 20rpx;
+			padding: 16rpx 0;
+			border-bottom: 1rpx solid #F9FAFB;
 
-			.av {
-				width: 72rpx;
-				height: 72rpx;
+			&:last-child { border-bottom: none; }
+
+			.rr-rank {
+				font-size: 22rpx;
+				font-weight: 700;
+				color: #D1D5DB;
+				width: 48rpx;
+				text-align: center;
+				flex-shrink: 0;
+			}
+
+			.rr-av {
+				width: 56rpx;
+				height: 56rpx;
 				border-radius: 50%;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				flex-shrink: 0;
 
-				.av-t { font-size: 28rpx; color: #fff; font-weight: 700; }
+				.rr-av-t { font-size: 22rpx; color: #fff; font-weight: 700; }
 			}
 
-			.head-meta {
+			.rr-info {
 				flex: 1;
-				display: flex;
-				flex-direction: column;
-				gap: 6rpx;
+				overflow: hidden;
 
-				.head-top {
+				.rr-top {
 					display: flex;
 					align-items: center;
-					gap: 10rpx;
-					flex-wrap: wrap;
+					gap: 8rpx;
+					margin-bottom: 5rpx;
 
-					.author-name {
-						font-size: 28rpx;
-						font-weight: 700;
-						color: #1A1A2E;
-					}
+					.rr-author { font-size: 26rpx; font-weight: 600; color: #1A1A2E; }
 
-					.model-badge {
-						display: inline-flex;
+					.rr-model-badge {
+						display: flex;
 						align-items: center;
-						gap: 6rpx;
-						padding: 4rpx 12rpx;
-						border-radius: 20rpx;
-						border: 1rpx solid;
+						gap: 5rpx;
+						padding: 2rpx 10rpx;
+						border-radius: 10rpx;
 
-						.model-dot {
-							width: 10rpx;
-							height: 10rpx;
-							border-radius: 50%;
-							flex-shrink: 0;
-						}
-
-						.model-name {
-							font-size: 20rpx;
-							font-weight: 600;
-							white-space: nowrap;
-						}
+						.rr-dot { width: 10rpx; height: 10rpx; border-radius: 50%; flex-shrink: 0; }
+						.rr-model { font-size: 19rpx; color: #6B7280; }
 					}
 				}
 
-				.post-time {
-					font-size: 22rpx;
-					color: #9CA3AF;
-				}
+				.rr-content { font-size: 22rpx; color: #9CA3AF; }
 			}
 
-			.more-btn {
-				font-size: 32rpx;
-				color: #C4C9D4;
-				letter-spacing: 2rpx;
-			}
-		}
-
-		/* 核心数据展示区 */
-		.burn-data-block {
-			display: flex;
-			align-items: center;
-			background: linear-gradient(135deg, #FFF7F0 0%, #FFF1F0 100%);
-			border: 1rpx solid #FFE4D6;
-			border-radius: 16rpx;
-			padding: 20rpx 0;
-			margin-bottom: 20rpx;
-
-			.data-left,
-			.data-right {
-				flex: 1;
+			.rr-right {
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				gap: 6rpx;
+				align-items: flex-end;
+				gap: 4rpx;
+				flex-shrink: 0;
 
-				.data-label {
-					font-size: 22rpx;
-					color: #9CA3AF;
-				}
-
-				.data-num {
-					font-size: 40rpx;
-					font-weight: 800;
-					letter-spacing: -1rpx;
-				}
-
-				.cost-num { color: #EF4444; }
-				.token-num { color: #F59E0B; }
-			}
-
-			.data-divider {
-				width: 1rpx;
-				height: 64rpx;
-				background: #FFD6C8;
+				.rr-cost { font-size: 28rpx; font-weight: 800; color: #EF4444; }
+				.rr-mood { font-size: 24rpx; }
 			}
 		}
+	}
 
-		/* 用途描述 */
-		.burn-content {
-			font-size: 28rpx;
-			color: #374151;
-			line-height: 1.7;
-			margin-bottom: 18rpx;
-		}
+	/* 分割线 */
+	.list-divider {
+		padding: 16rpx 0;
+		display: flex;
+		justify-content: center;
 
-		/* 心情标签 */
-		.mood-row {
+		.divider-text { font-size: 22rpx; color: #C4C9D4; }
+	}
+
+	/* 全部记录 */
+	.section-label {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8rpx 24rpx 12rpx;
+
+		.sl-text { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
+
+		.sl-sort {
 			display: flex;
-			flex-wrap: wrap;
-			gap: 10rpx;
-			margin-bottom: 18rpx;
+			gap: 4rpx;
 
-			.mood-tag {
-				display: inline-flex;
-				align-items: center;
-				padding: 8rpx 20rpx;
-				border-radius: 30rpx;
-				border: 1rpx solid #E5E7EB;
-				background: #F9FAFB;
+			.sl-sort-item {
+				font-size: 22rpx;
+				color: #9CA3AF;
+				padding: 6rpx 12rpx;
+				border-radius: 10rpx;
 
-				.mood-text {
-					font-size: 22rpx;
-					color: #9CA3AF;
-					white-space: nowrap;
-				}
-
-				&.mood-active .mood-text {
+				&.active {
+					background: rgba(91,91,214,0.08);
+					color: #5B5BD6;
 					font-weight: 600;
 				}
 			}
 		}
+	}
 
-		/* 底部互动栏 */
-		.card-foot {
+	.full-feed {
+		padding: 0 20rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 12rpx;
+	}
+
+	/* Burn 卡片 */
+	.burn-card {
+		background: #fff;
+		border-radius: 20rpx;
+		padding: 20rpx;
+		box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+
+		.bc-head {
 			display: flex;
 			align-items: center;
+			gap: 12rpx;
+			margin-bottom: 16rpx;
+
+			.bc-av {
+				width: 64rpx;
+				height: 64rpx;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+
+				.bc-av-t { font-size: 24rpx; color: #fff; font-weight: 700; }
+			}
+
+			.bc-meta {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				gap: 5rpx;
+
+				.bc-top {
+					display: flex;
+					align-items: center;
+					gap: 10rpx;
+
+					.bc-author { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
+
+					.bc-model-badge {
+						display: flex;
+						align-items: center;
+						gap: 5rpx;
+						padding: 3rpx 10rpx;
+						border-radius: 10rpx;
+
+						.bc-dot { width: 10rpx; height: 10rpx; border-radius: 50%; flex-shrink: 0; }
+						.bc-model { font-size: 19rpx; color: #6B7280; }
+					}
+				}
+
+				.bc-time { font-size: 21rpx; color: #9CA3AF; }
+			}
+
+			.bc-more { font-size: 32rpx; color: #C4C9D4; letter-spacing: 2rpx; }
+		}
+
+		.bc-data {
+			display: flex;
+			align-items: center;
+			background: linear-gradient(135deg, #FFF7F0, #FFF1F0);
+			border: 1rpx solid #FFE4D6;
+			border-radius: 14rpx;
+			padding: 16rpx 0;
+			margin-bottom: 16rpx;
+
+			.bc-data-left, .bc-data-right {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 4rpx;
+
+				.bc-data-label { font-size: 21rpx; color: #9CA3AF; }
+			}
+
+			.bc-cost { font-size: 38rpx; font-weight: 800; color: #EF4444; letter-spacing: -1rpx; }
+			.bc-tokens { font-size: 26rpx; font-weight: 700; color: #F59E0B; }
+
+			.bc-data-div { width: 1rpx; height: 56rpx; background: #FFD6C8; }
+		}
+
+		.bc-content {
+			font-size: 26rpx;
+			color: #374151;
+			line-height: 1.65;
+			margin-bottom: 14rpx;
+			display: block;
+		}
+
+		.bc-mood-row {
+			display: flex;
+			flex-wrap: wrap;
 			gap: 8rpx;
-			padding-top: 16rpx;
+			margin-bottom: 14rpx;
+
+			.bc-mood-tag {
+				padding: 7rpx 18rpx;
+				border-radius: 24rpx;
+				border: 1rpx solid #E5E7EB;
+				background: #F9FAFB;
+
+				.bc-mood-text { font-size: 21rpx; color: #9CA3AF; white-space: nowrap; }
+
+				&.active .bc-mood-text { font-weight: 600; }
+			}
+		}
+
+		.bc-foot {
+			display: flex;
+			align-items: center;
+			gap: 6rpx;
+			padding-top: 14rpx;
 			border-top: 1rpx solid #F3F4F6;
 
-			.act {
+			.bc-act {
 				display: flex;
 				align-items: center;
 				gap: 6rpx;
 				padding: 6rpx 10rpx;
 
-				.act-ico {
-					font-size: 28rpx;
-					color: #C4C9D4;
-
-					&.liked { color: #EF4444; }
-				}
-
-				.act-n { font-size: 22rpx; color: #9CA3AF; }
+				.bc-act-ico { font-size: 26rpx; color: #C4C9D4; &.liked { color: #EF4444; } }
+				.bc-act-n { font-size: 21rpx; color: #9CA3AF; }
 			}
 
-			.resonate-act {
+			.bc-resonate {
+				display: flex;
+				align-items: center;
+				gap: 6rpx;
 				background: #F9FAFB;
-				border-radius: 20rpx;
-				padding: 8rpx 16rpx;
 				border: 1rpx solid #E5E7EB;
+				border-radius: 20rpx;
+				padding: 7rpx 14rpx;
 
-				.resonate-ico { font-size: 24rpx; }
-
-				.act-resonate-text {
-					font-size: 22rpx;
-					color: #6B7280;
-					margin: 0 4rpx;
-				}
+				.bc-resonate-ico { font-size: 22rpx; }
+				.bc-resonate-text { font-size: 21rpx; color: #6B7280; }
+				.bc-act-n { font-size: 21rpx; color: #9CA3AF; }
 
 				&.resonated {
-					background: rgba(239, 68, 68, 0.06);
-					border-color: rgba(239, 68, 68, 0.3);
-
-					.act-resonate-text { color: #EF4444; }
-					.act-n { color: #EF4444; }
+					background: rgba(239,68,68,0.06);
+					border-color: rgba(239,68,68,0.25);
+					.bc-resonate-text, .bc-act-n { color: #EF4444; }
 				}
 			}
 
-			.share-act {
-				margin-left: auto;
-				.act-ico { font-size: 28rpx; color: #C4C9D4; }
-			}
+			.bc-share { margin-left: auto; padding: 6rpx 10rpx; .bc-act-ico { font-size: 26rpx; color: #C4C9D4; } }
 		}
+	}
+
+	.list-bottom { height: 160rpx; }
+
+	.line-1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+	.line-3 {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
 	}
 </style>

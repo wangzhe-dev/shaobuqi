@@ -73,7 +73,8 @@
 	],
 	"easycom": {
 		"custom": {
-			"^sar-(.*)": "sard-uniapp/components/$1/$1.vue"
+			"^sar-(.*)": "sard-uniapp/components/$1/$1.vue",
+			"^tab-bar$": "@/components/tab-bar/index.vue"
 		}
 	},
 	"globalStyle": {
@@ -88,6 +89,7 @@
 		}
 	},
 	"tabBar": {
+		"custom": true,
 		"color": "#9CA3AF",
 		"selectedColor": "#5B5BD6",
 		"borderStyle": "white",

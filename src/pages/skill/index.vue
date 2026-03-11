@@ -108,6 +108,7 @@
 			<view class="list-bottom" />
 		</scroll-view>
 
+		<tab-bar current="/pages/skill/index" />
 	</view>
 </template>
 

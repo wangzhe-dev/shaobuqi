@@ -109,6 +109,7 @@
 			<text class="notice-item">· 禁止发布违法、广告、引流等内容</text>
 		</view>
 
+		<tab-bar current="/pages/publish/index" />
 	</view>
 </template>
 
@@ -140,7 +141,7 @@
 
 <style lang="scss" scoped>
 	.page {
-		padding: 20rpx 24rpx;
+		padding: 20rpx 24rpx 180rpx;
 		background: #F7F8FA;
 		min-height: 100vh;
 	}
