@@ -783,7 +783,7 @@
 		}
 	}
 
-	.list-bottom { height: 160rpx; }
+	.list-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
 
 	.line-1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 	.line-3 {

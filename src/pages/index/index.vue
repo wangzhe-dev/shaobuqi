@@ -623,7 +623,7 @@
 		}
 	}
 
-	.feed-bottom { height: 160rpx; }
+	.feed-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
 
 	.line-2 {
 		display: -webkit-box;

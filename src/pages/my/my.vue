@@ -566,7 +566,7 @@
 		flex: 1;
 		overflow: hidden;
 
-		.content-bottom { height: 160rpx; }
+		.content-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
 	}
 
 	/* 烧榜记录列表 */

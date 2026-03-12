@@ -223,6 +223,10 @@
 			</view>
 		</view>
 
+		<!-- #ifdef H5 -->
+		<view class="tab-bar-placeholder" />
+		<!-- #endif -->
+
 		<tab-bar current="/pages/publish/index" />
 	</view>
 </template>

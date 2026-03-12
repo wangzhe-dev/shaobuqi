@@ -392,7 +392,7 @@
 		}
 
 		.list-bottom {
-			height: 40rpx;
+			height: calc(160rpx + env(safe-area-inset-bottom));
 		}
 	}
 

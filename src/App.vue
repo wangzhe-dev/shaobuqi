@@ -1,5 +1,15 @@
+<!-- #ifdef H5 -->
+<template>
+	<pwa-prompt />
+</template>
+<!-- #endif -->
+
 <script>
 	import { useSysInfoStore } from '@/stores'
+
+	// #ifdef H5
+	import PwaPrompt from '@/components/PwaPrompt.vue'
+	// #endif
 
 	// #ifdef MP-WEIXIN
 	import { checkUpdate } from '@/utils/weixin'
@@ -11,6 +21,10 @@
 	// #endif
 
 	export default {
+		// #ifdef H5
+		components: { PwaPrompt },
+		// #endif
+
 		onLaunch() {
 			useSysInfoStore().setSystemInfo()
 

@@ -1,8 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<meta charset="UTF-8" />
-		<title></title>
+		<title>少不起</title>
+
+		<!-- PWA Meta Tags -->
+		<meta name="application-name" content="少不起" />
+		<meta name="theme-color" content="#5B5BD6" />
+		<meta name="description" content="工具 · 社区 · Skill 技能展示平台" />
+
+		<!-- iOS PWA 支持 -->
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="少不起" />
+		<link rel="apple-touch-icon" href="static/icons/apple-touch-icon.png" />
+
+		<!-- 标准图标 -->
+		<link rel="icon" type="image/png" sizes="96x96" href="static/icons/icon-96x96.png" />
+
+		<!-- PWA: 尽早捕获 beforeinstallprompt，防止 Vue 挂载前事件已触发被错过 -->
+		<script>
+			window.__pwa_deferred_prompt = null
+			window.addEventListener('beforeinstallprompt', function(e) {
+				e.preventDefault()
+				window.__pwa_deferred_prompt = e
+			})
+		</script>
 
 		<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
 		<script>
