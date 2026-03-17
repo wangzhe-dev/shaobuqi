@@ -1,8 +1,8 @@
-<!-- #ifdef H5 -->
 <template>
+	<!-- #ifdef H5 -->
 	<pwa-prompt />
+	<!-- #endif -->
 </template>
-<!-- #endif -->
 
 <script>
 	import { useSysInfoStore } from '@/stores'
