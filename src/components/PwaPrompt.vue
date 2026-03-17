@@ -44,7 +44,21 @@
 			</view>
 		</view>
 
-		<!-- ③ SW 更新提示 -->
+		<!-- ③ 桌面 Chromium 安装引导（浏览器未主动弹提示时兜底显示） -->
+		<view v-else-if="showDesktopHint" class="pwa-prompt pwa-prompt--install" @tap.stop>
+			<view class="pwa-prompt__content pwa-prompt__content--row">
+				<text class="pwa-prompt__icon">💻</text>
+				<view class="pwa-prompt__text">
+					<text class="pwa-prompt__title">可安装到桌面</text>
+					<text class="pwa-prompt__desc">Chrome 桌面版通常不会自动弹窗，请点击地址栏右侧的安装图标</text>
+				</view>
+				<view class="pwa-prompt__actions pwa-prompt__actions--row">
+					<text class="pwa-prompt__btn pwa-prompt__btn--dismiss" @tap="dismissInstall">知道了</text>
+				</view>
+			</view>
+		</view>
+
+		<!-- ④ SW 更新提示 -->
 		<view v-else-if="needRefresh" class="pwa-prompt pwa-prompt--update" @tap.stop>
 			<view class="pwa-prompt__content pwa-prompt__content--row">
 				<text class="pwa-prompt__icon">🚀</text>
@@ -65,13 +79,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+interface BeforeInstallPromptEvent extends Event {
+	prompt: () => Promise<void>
+	userChoice: Promise<{ outcome: 'accepted' | 'dismissed', platform: string }>
+}
+
 // ── 状态 ──────────────────────────────────────────────────────
 const showIOSHint = ref(false)
 const showInstallBtn = ref(false)
+const showDesktopHint = ref(false)
 const needRefresh = ref(false)
 
 // Chrome beforeinstallprompt 事件暂存
-let deferredPrompt: any = null
+let deferredPrompt: BeforeInstallPromptEvent | null = null
 let swRegistration: ServiceWorkerRegistration | null = null
 
 // ── 平台检测 ───────────────────────────────────────────────────
@@ -86,9 +106,40 @@ const isInStandaloneMode = (): boolean => {
 /** iOS 设备（iPhone / iPad） */
 const isIOS = (): boolean => /iphone|ipad|ipod/i.test(navigator.userAgent)
 
+/** Android 设备 */
+const isAndroid = (): boolean => /android/i.test(navigator.userAgent)
+
+/** 桌面版 Chromium（Chrome / Edge） */
+const isDesktopChromium = (): boolean => {
+	const ua = navigator.userAgent.toLowerCase()
+	const isChromium = /chrome|chromium|edg\//i.test(ua) && !/opr\//i.test(ua)
+	return isChromium && !isIOS() && !isAndroid()
+}
+
 /** 是否已关闭过安装提示 */
 const wasDismissed = (): boolean => {
 	try { return !!localStorage.getItem('pwa-install-dismissed') } catch { return false }
+}
+
+function revealInstallPrompt() {
+	showDesktopHint.value = false
+	setTimeout(() => { showInstallBtn.value = true }, 1500)
+}
+
+function scheduleDesktopInstallHint() {
+	if (!isDesktopChromium()) return
+
+	window.setTimeout(() => {
+		if (!deferredPrompt && !showInstallBtn.value && !isInStandaloneMode() && !wasDismissed()) {
+			showDesktopHint.value = true
+		}
+	}, 3200)
+}
+
+function handleBeforeInstallPrompt(event: Event) {
+	event.preventDefault()
+	deferredPrompt = event as BeforeInstallPromptEvent
+	revealInstallPrompt()
 }
 
 // ── 生命周期 ──────────────────────────────────────────────────
@@ -112,23 +163,21 @@ function setupInstallPrompt() {
 
 	// Chrome / Edge / Android：
 	// beforeinstallprompt 可能在 Vue 挂载前已触发（由 index.html 提前捕获）
-	const preCapture = (window as any).__pwa_deferred_prompt
+	const preCapture = (window as any).__pwa_deferred_prompt as BeforeInstallPromptEvent | null
 	if (preCapture) {
 		deferredPrompt = preCapture
 		;(window as any).__pwa_deferred_prompt = null
-		setTimeout(() => { showInstallBtn.value = true }, 1500)
+		revealInstallPrompt()
 	} else {
 		// 尚未触发，继续监听
-		window.addEventListener('beforeinstallprompt', (e: Event) => {
-			e.preventDefault()
-			deferredPrompt = e
-			setTimeout(() => { showInstallBtn.value = true }, 1500)
-		})
+		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+		scheduleDesktopInstallHint()
 	}
 
 	// 用户完成安装后自动隐藏
 	window.addEventListener('appinstalled', () => {
 		showInstallBtn.value = false
+		showDesktopHint.value = false
 		deferredPrompt = null
 		try { localStorage.setItem('pwa-install-dismissed', '1') } catch { /* noop */ }
 	})
@@ -146,6 +195,7 @@ function installApp() {
 function dismissInstall() {
 	showIOSHint.value = false
 	showInstallBtn.value = false
+	showDesktopHint.value = false
 	try { localStorage.setItem('pwa-install-dismissed', '1') } catch { /* noop */ }
 }
 

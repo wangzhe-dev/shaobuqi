@@ -4,6 +4,19 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { requestUrl, apiPrefix } from './src/config'
 
+const pwaAssetVersion = Date.now().toString()
+
+const withPwaAssetVersion = (path: string) => `${path}?v=${pwaAssetVersion}`
+
+const injectVersionedPwaIcons = () => ({
+	name: 'inject-versioned-pwa-icons',
+	transformIndexHtml(html: string) {
+		return html
+			.replace('static/icons/apple-touch-icon.png', withPwaAssetVersion('static/icons/apple-touch-icon.png'))
+			.replace('static/icons/icon-96x96.png', withPwaAssetVersion('static/icons/icon-96x96.png'))
+	}
+})
+
 export default defineConfig({
 	plugins: [
 		uni(),
@@ -16,50 +29,54 @@ export default defineConfig({
 			eslintrc: {
 				// 1、改为true 用于生成eslint配置。2、生成后改回false，避免重复生成消耗
 				enabled: true
-			}
-		}),
-		// PWA 支持（仅 H5 构建生效）
-		// 图标使用 src/static/icons/ —— UniApp H5 会将其复制到 dist 的 static/icons/
-		VitePWA({
-			registerType: 'prompt', // 有新版本时提示用户，而非静默更新
-			injectRegister: 'auto',
-			manifest: {
-				name: '少不起',
-				short_name: '少不起',
-				description: '工具 · 社区 · Skill 技能展示平台',
-				theme_color: '#5B5BD6',
-				background_color: '#F7F8FA',
-				display: 'standalone',
-				orientation: 'portrait',
-				// 相对路径（相对于 manifest.webmanifest 所在目录）
-				// UniApp H5 base 是 /h5/，manifest 位于 /h5/manifest.webmanifest
-				// 相对路径 "./" 解析为 /h5/ 而非 /，适配任何 base 部署
-				start_url: './',
+				}
+			}),
+			injectVersionedPwaIcons(),
+			// PWA 支持（仅 H5 构建生效）
+			// 图标使用 src/static/icons/ —— UniApp H5 会将其复制到 dist 的 static/icons/
+			VitePWA({
+				registerType: 'prompt', // 有新版本时提示用户，而非静默更新
+				injectRegister: 'auto',
+				manifestFilename: `manifest-${pwaAssetVersion}.webmanifest`,
+				manifest: {
+					name: '少不起',
+					short_name: '少不起',
+					description: '工具 · 社区 · Skill 技能展示平台',
+					theme_color: '#5B5BD6',
+					background_color: '#F7F8FA',
+					display: 'standalone',
+					orientation: 'portrait',
+					// 固定应用标识，避免 manifest 文件名变化时被识别成另一份应用
+					id: './',
+					// 相对路径（相对于 manifest.webmanifest 所在目录）
+					// UniApp H5 base 是 /h5/，manifest 位于 /h5/manifest.webmanifest
+					// 相对路径 "./" 解析为 /h5/ 而非 /，适配任何 base 部署
+					start_url: './',
 				scope: './',
 				lang: 'zh-CN',
-				icons: [
-					{
-						// 相对路径：manifest 在 /h5/，图标在 /h5/static/icons/
-						src: 'static/icons/icon-96x96.png',
-						sizes: '96x96',
-						type: 'image/png'
-					},
-					{
-						src: 'static/icons/icon-192x192.png',
-						sizes: '192x192',
-						type: 'image/png'
-					},
-					{
-						src: 'static/icons/icon-512x512.png',
-						sizes: '512x512',
-						type: 'image/png'
-					},
-					{
-						src: 'static/icons/icon-512x512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'maskable'
-					}
+					icons: [
+						{
+							// 相对路径：manifest 在 /h5/，图标在 /h5/static/icons/
+							src: withPwaAssetVersion('static/icons/icon-96x96.png'),
+							sizes: '96x96',
+							type: 'image/png'
+						},
+						{
+							src: withPwaAssetVersion('static/icons/icon-192x192.png'),
+							sizes: '192x192',
+							type: 'image/png'
+						},
+						{
+							src: withPwaAssetVersion('static/icons/icon-512x512.png'),
+							sizes: '512x512',
+							type: 'image/png'
+						},
+						{
+							src: withPwaAssetVersion('static/icons/icon-512x512.png'),
+							sizes: '512x512',
+							type: 'image/png',
+							purpose: 'maskable'
+						}
 				]
 			},
 			workbox: {
