@@ -10,6 +10,18 @@ import 'sard-uniapp/global.d.ts'
 import mpShareMixin from './mixin/mp-share-mixin'
 // #endif
 
+// #ifdef H5
+if (import.meta.env.DEV && typeof document !== 'undefined') {
+	const script = document.createElement('script')
+	script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js'
+	script.onload = () => {
+		const VConsole = (window as Window & { VConsole?: new () => unknown }).VConsole
+		if (VConsole) new VConsole()
+	}
+	document.head.appendChild(script)
+}
+// #endif
+
 export const createApp = () => {
 	const app = createSSRApp(App)
 
