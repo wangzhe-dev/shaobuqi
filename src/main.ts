@@ -11,7 +11,7 @@ import mpShareMixin from './mixin/mp-share-mixin'
 // #endif
 
 // #ifdef H5
-if (import.meta.env.DEV && typeof document !== 'undefined') {
+if (import.meta.env.DEV && import.meta.env.MODE !== 'production' && typeof document !== 'undefined') {
 	const script = document.createElement('script')
 	script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js'
 	script.onload = () => {
