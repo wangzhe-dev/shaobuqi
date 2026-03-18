@@ -1,5 +1,5 @@
 {
-	"name": "uniapp-vue3-ts-vite-pinia-eslint模板",
+	"name": "烧不起APP",
 	"version": "0.0.4",
 	"scripts": {
 		"dev:custom": "uni -p",
