@@ -2,92 +2,118 @@
 	<!-- 仅在 H5 平台渲染 -->
 	<!-- #ifdef H5 -->
 	<view>
+
+		<!-- ── 版本更新 Banner（顶部滑入）── -->
+		<view v-if="needRefresh" class="update-bar">
+			<view class="ub-inner">
+				<view class="ub-pulse" />
+				<view class="ub-text">
+					<text class="ub-title">发现新版本</text>
+					<text class="ub-desc">更新后体验更流畅</text>
+				</view>
+				<view class="ub-btn" @tap="updateSW">
+					<text class="ub-btn-t">立即更新</text>
+				</view>
+				<view class="ub-close" @tap="dismissUpdate">
+					<text class="ub-close-t">×</text>
+				</view>
+			</view>
+		</view>
+
+		<!-- ── 悬浮安装入口（左下角，不与 FAB 冲突）── -->
+		<view v-if="showInstallEntry" class="entry-pill" @tap="openInstallEntry">
+			<text class="ep-icon">{{ installEntryIcon }}</text>
+			<text class="ep-text">{{ installEntryText }}</text>
+		</view>
+
+		<!-- ── 弹框遮罩 ── -->
 		<view
-			v-if="showInstallEntry"
-			class="pwa-entry"
-			@tap="openInstallEntry"
-		>
-			<text class="pwa-entry__icon">{{ installEntryIcon }}</text>
-			<text class="pwa-entry__text">{{ installEntryText }}</text>
-		</view>
+			v-if="showIOSHint || showInstallBtn || showManualHint"
+			class="modal-backdrop"
+			@tap="dismissInstall"
+		/>
 
-		<!-- iOS Safari 原生安装引导 -->
-		<view v-if="showIOSHint" class="pwa-prompt pwa-prompt--install" @tap.stop>
-			<view class="pwa-prompt__content">
-				<view class="pwa-prompt__close" @tap="dismissInstall">✕</view>
-				<view class="pwa-prompt__icon-wrap">
-					<text class="pwa-prompt__app-icon">烧不起</text>
+		<!-- ── iOS Safari 安装引导 Modal ── -->
+		<view v-if="showIOSHint" class="modal-wrap" @tap.stop>
+			<view class="modal">
+				<view class="modal-close" @tap="dismissInstall"><text class="modal-close-t">×</text></view>
+				<view class="modal-app-icon"><text class="mai-t">烧不起</text></view>
+				<text class="modal-title">添加到主屏幕</text>
+				<text class="modal-desc">3 步完成安装，像 App 一样直接打开</text>
+				<view class="modal-steps">
+					<view class="ms-item">
+						<view class="ms-num"><text class="ms-n">1</text></view>
+						<text class="ms-t">点击底部工具栏的 <text class="ms-em">□↑ 分享</text> 按钮</text>
+					</view>
+					<view class="ms-item">
+						<view class="ms-num"><text class="ms-n">2</text></view>
+						<text class="ms-t">向下滑动，选择 <text class="ms-em">「添加到主屏幕」</text></text>
+					</view>
+					<view class="ms-item">
+						<view class="ms-num"><text class="ms-n">3</text></view>
+						<text class="ms-t">点击右上角 <text class="ms-em">「添加」</text> 确认即可</text>
+					</view>
 				</view>
-				<text class="pwa-prompt__title">添加到主屏幕</text>
-				<text class="pwa-prompt__desc">安装后可离线使用，体验更流畅</text>
-				<view class="pwa-prompt__steps">
-					<view class="pwa-prompt__step">
-						<text class="pwa-prompt__step-num">1</text>
-						<text class="pwa-prompt__step-text">点击底部或顶部的分享按钮</text>
-					</view>
-					<view class="pwa-prompt__step">
-						<text class="pwa-prompt__step-num">2</text>
-						<text class="pwa-prompt__step-text">选择“添加到主屏幕”</text>
-					</view>
-					<view class="pwa-prompt__step">
-						<text class="pwa-prompt__step-num">3</text>
-						<text class="pwa-prompt__step-text">确认后即可从桌面直接打开</text>
-					</view>
+				<view class="modal-actions">
+					<view class="btn-dismiss" @tap="dismissInstall"><text class="btn-dismiss-t">知道了</text></view>
 				</view>
 			</view>
 		</view>
 
-		<!-- 支持原生 beforeinstallprompt 的浏览器 -->
-		<view v-else-if="showInstallBtn" class="pwa-prompt pwa-prompt--install" @tap.stop>
-			<view class="pwa-prompt__content pwa-prompt__content--row">
-				<text class="pwa-prompt__icon">安装</text>
-				<view class="pwa-prompt__text">
-					<text class="pwa-prompt__title">安装烧不起</text>
-					<text class="pwa-prompt__desc">添加到主屏幕，后续可像 App 一样直接打开</text>
-				</view>
-				<view class="pwa-prompt__actions pwa-prompt__actions--row">
-					<text class="pwa-prompt__btn pwa-prompt__btn--update" @tap="installApp">安装</text>
-					<text class="pwa-prompt__btn pwa-prompt__btn--dismiss" @tap="dismissInstall">稍后</text>
-				</view>
-			</view>
-		</view>
-
-		<!-- 手动安装引导 -->
-		<view v-else-if="showManualHint" class="pwa-prompt pwa-prompt--install" @tap.stop>
-			<view class="pwa-prompt__content">
-				<view class="pwa-prompt__close" @tap="dismissInstall">✕</view>
-				<view class="pwa-prompt__icon-wrap pwa-prompt__icon-wrap--small">
-					<text class="pwa-prompt__app-icon">{{ manualGuide.icon }}</text>
-				</view>
-				<text class="pwa-prompt__title">{{ manualGuide.title }}</text>
-				<text class="pwa-prompt__desc">{{ manualGuide.desc }}</text>
-				<view class="pwa-prompt__steps">
-					<view v-for="(step, index) in manualGuide.steps" :key="`${manualGuide.title}-${index}`" class="pwa-prompt__step">
-						<text class="pwa-prompt__step-num">{{ index + 1 }}</text>
-						<text class="pwa-prompt__step-text">{{ step }}</text>
+		<!-- ── 原生 beforeinstallprompt 安装 Modal ── -->
+		<view v-else-if="showInstallBtn" class="modal-wrap" @tap.stop>
+			<view class="modal">
+				<view class="modal-close" @tap="dismissInstall"><text class="modal-close-t">×</text></view>
+				<view class="modal-app-icon"><text class="mai-t">烧不起</text></view>
+				<text class="modal-title">安装烧不起</text>
+				<text class="modal-desc">添加到桌面，随时打开，告别浏览器栏</text>
+				<view class="modal-benefits">
+					<view class="mb-item">
+						<text class="mb-icon">✦</text>
+						<text class="mb-text">桌面图标，一秒直达</text>
+					</view>
+					<view class="mb-item">
+						<text class="mb-icon">⚡</text>
+						<text class="mb-text">离线缓存，加载更快</text>
+					</view>
+					<view class="mb-item">
+						<text class="mb-icon">🎯</text>
+						<text class="mb-text">沉浸体验，无浏览器栏</text>
 					</view>
 				</view>
-				<view class="pwa-prompt__actions pwa-prompt__actions--manual">
-					<text v-if="hasNativeInstallPrompt" class="pwa-prompt__btn pwa-prompt__btn--update" @tap="installApp">立即安装</text>
-					<text class="pwa-prompt__btn pwa-prompt__btn--dismiss" @tap="dismissInstall">知道了</text>
+				<view class="modal-actions">
+					<view class="btn-primary" @tap="installApp"><text class="btn-primary-t">添加到桌面</text></view>
+					<view class="btn-dismiss" @tap="dismissInstall"><text class="btn-dismiss-t">稍后再说</text></view>
 				</view>
 			</view>
 		</view>
 
-		<!-- SW 更新提示 -->
-		<view v-else-if="needRefresh" class="pwa-prompt pwa-prompt--update" @tap.stop>
-			<view class="pwa-prompt__content pwa-prompt__content--row">
-				<text class="pwa-prompt__icon">更新</text>
-				<view class="pwa-prompt__text">
-					<text class="pwa-prompt__title">发现新版本</text>
-					<text class="pwa-prompt__desc">点击更新以获取最新内容</text>
+		<!-- ── 手动安装引导 Modal ── -->
+		<view v-else-if="showManualHint" class="modal-wrap" @tap.stop>
+			<view class="modal">
+				<view class="modal-close" @tap="dismissInstall"><text class="modal-close-t">×</text></view>
+				<view class="modal-app-icon"><text class="mai-t">烧不起</text></view>
+				<text class="modal-title">{{ manualGuide.title }}</text>
+				<text class="modal-desc">{{ manualGuide.desc }}</text>
+				<view class="modal-steps">
+					<view
+						v-for="(step, index) in manualGuide.steps"
+						:key="`${manualGuide.title}-${index}`"
+						class="ms-item"
+					>
+						<view class="ms-num"><text class="ms-n">{{ index + 1 }}</text></view>
+						<text class="ms-t">{{ step }}</text>
+					</view>
 				</view>
-				<view class="pwa-prompt__actions pwa-prompt__actions--row">
-					<text class="pwa-prompt__btn pwa-prompt__btn--update" @tap="updateSW">立即更新</text>
-					<text class="pwa-prompt__btn pwa-prompt__btn--dismiss" @tap="dismissUpdate">稍后</text>
+				<view class="modal-actions">
+					<view v-if="hasNativeInstallPrompt" class="btn-primary" @tap="installApp">
+						<text class="btn-primary-t">立即安装</text>
+					</view>
+					<view class="btn-dismiss" @tap="dismissInstall"><text class="btn-dismiss-t">知道了</text></view>
 				</view>
 			</view>
 		</view>
+
 	</view>
 	<!-- #endif -->
 </template>
@@ -209,7 +235,7 @@ function createAndroidGuide(browserName: string, entryLabel: string): InstallGui
 		title: `在${browserName}添加到桌面`,
 		desc: `${browserName} 对安装入口的命名不完全一样，请在浏览器菜单里查找相近选项。`,
 		steps: [
-			'点击浏览器右上角、底部栏或“更多/菜单”入口',
+			'点击浏览器右上角、底部栏或"更多/菜单"入口',
 			`查找 ${entryLabel}`,
 			'确认添加后，即可从手机桌面直接打开'
 		]
@@ -224,8 +250,8 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: '微信内置浏览器通常不支持直接安装到桌面，需要先跳到系统浏览器。',
 			steps: [
 				'点击右上角菜单',
-				'选择“在浏览器打开”或先复制链接到系统浏览器',
-				'回到页面后点击“安装应用”或“添加到桌面”'
+				'选择"在浏览器打开"或先复制链接到系统浏览器',
+				'回到页面后点击"安装应用"或"添加到桌面"'
 			]
 		}
 	}
@@ -237,7 +263,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: 'QQ 内打开时通常不能直接安装，请切到系统浏览器继续。',
 			steps: [
 				'点击右上角菜单',
-				'选择“在浏览器打开”',
+				'选择"在浏览器打开"',
 				'在系统浏览器里再次点击安装入口'
 			]
 		}
@@ -250,7 +276,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: '微博内置浏览器会限制安装能力，建议切到系统浏览器。',
 			steps: [
 				'点击右上角菜单',
-				'选择“浏览器打开”或复制链接',
+				'选择"浏览器打开"或复制链接',
 				'在外部浏览器中添加到桌面'
 			]
 		}
@@ -263,8 +289,8 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: '支付宝内置浏览器不稳定，建议改用系统浏览器完成安装。',
 			steps: [
 				'点击右上角菜单',
-				'选择“在浏览器打开”',
-				'在系统浏览器里选择“安装应用”或“添加到桌面”'
+				'选择"在浏览器打开"',
+				'在系统浏览器里选择"安装应用"或"添加到桌面"'
 			]
 		}
 	}
@@ -276,7 +302,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: '钉钉内打开时不一定支持桌面安装，请改用系统浏览器。',
 			steps: [
 				'点击右上角菜单',
-				'选择“在浏览器打开”',
+				'选择"在浏览器打开"',
 				'回到站点后添加到桌面'
 			]
 		}
@@ -289,7 +315,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: 'iPhone 和 iPad 需要通过 Safari 手动添加到主屏幕。',
 			steps: [
 				'点击底部或顶部的分享按钮',
-				'选择“添加到主屏幕”',
+				'选择"添加到主屏幕"',
 				'确认后即可从桌面直接打开'
 			]
 		}
@@ -299,11 +325,11 @@ const manualGuide = computed<InstallGuide>(() => {
 		return {
 			icon: 'Saf',
 			title: '请在 Safari 中打开',
-			desc: 'iPhone 上只有 Safari 的“添加到主屏幕”体验最完整，其他浏览器通常需要先跳到 Safari。',
+			desc: 'iPhone 上只有 Safari 的"添加到主屏幕"体验最完整，其他浏览器通常需要先跳到 Safari。',
 			steps: [
-				'打开当前浏览器菜单并选择“在 Safari 中打开”',
+				'打开当前浏览器菜单并选择"在 Safari 中打开"',
 				'在 Safari 中点击分享按钮',
-				'选择“添加到主屏幕”并确认'
+				'选择"添加到主屏幕"并确认'
 			]
 		}
 	}
@@ -315,7 +341,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			desc: 'Safari 桌面版不会直接弹出安装框，需要手动添加到程序坞。',
 			steps: [
 				'打开 Safari 顶部菜单栏',
-				'选择“文件 -> 添加到程序坞”',
+				'选择"文件 -> 添加到程序坞"',
 				'确认后即可像应用一样打开'
 			]
 		}
@@ -329,26 +355,26 @@ const manualGuide = computed<InstallGuide>(() => {
 			steps: [
 				'点击地址栏右侧的安装图标',
 				'如果没有图标，打开浏览器菜单',
-				'选择“安装烧不起”或“Install app”'
+				'选择"安装烧不起"或"Install app"'
 			]
 		}
 	}
 
-	if (isSamsungBrowser()) return createAndroidGuide('三星浏览器', '“添加页面到”或“添加到主屏幕”')
-	if (isHuaweiBrowser()) return createAndroidGuide('华为浏览器', '“添加到桌面”或“添加快捷方式”')
-	if (isHonorBrowser()) return createAndroidGuide('荣耀浏览器', '“添加到桌面”或“添加快捷方式”')
-	if (isMiBrowser()) return createAndroidGuide('小米浏览器', '“添加到桌面”或“发送到桌面”')
-	if (isVivoBrowser()) return createAndroidGuide('vivo 浏览器', '“添加到桌面”或“添加到主屏幕”')
-	if (isOppoBrowser()) return createAndroidGuide('OPPO 浏览器', '“添加到桌面”或“创建快捷方式”')
-	if (isQuarkBrowser()) return createAndroidGuide('夸克浏览器', '“添加到桌面”或“安装应用”')
-	if (isUCBrowser()) return createAndroidGuide('UC 浏览器', '“添加到桌面”或“发送到桌面”')
-	if (isQQBrowser()) return createAndroidGuide('QQ 浏览器', '“添加到桌面”或“添加到主屏幕”')
-	if (isBaiduBrowser()) return createAndroidGuide('百度浏览器', '“添加到桌面”或“创建快捷方式”')
-	if (isFirefoxMobile()) return createAndroidGuide('Firefox', '“安装”或“添加到主屏幕”')
-	if (isEdgeMobile()) return createAndroidGuide('Edge', '“安装此站点为应用”或“添加到手机”')
-	if (isChromeMobile()) return createAndroidGuide('Chrome', '“安装应用”或“添加到主屏幕”')
+	if (isSamsungBrowser()) return createAndroidGuide('三星浏览器', '"添加页面到"或"添加到主屏幕"')
+	if (isHuaweiBrowser()) return createAndroidGuide('华为浏览器', '"添加到桌面"或"添加快捷方式"')
+	if (isHonorBrowser()) return createAndroidGuide('荣耀浏览器', '"添加到桌面"或"添加快捷方式"')
+	if (isMiBrowser()) return createAndroidGuide('小米浏览器', '"添加到桌面"或"发送到桌面"')
+	if (isVivoBrowser()) return createAndroidGuide('vivo 浏览器', '"添加到桌面"或"添加到主屏幕"')
+	if (isOppoBrowser()) return createAndroidGuide('OPPO 浏览器', '"添加到桌面"或"创建快捷方式"')
+	if (isQuarkBrowser()) return createAndroidGuide('夸克浏览器', '"添加到桌面"或"安装应用"')
+	if (isUCBrowser()) return createAndroidGuide('UC 浏览器', '"添加到桌面"或"发送到桌面"')
+	if (isQQBrowser()) return createAndroidGuide('QQ 浏览器', '"添加到桌面"或"添加到主屏幕"')
+	if (isBaiduBrowser()) return createAndroidGuide('百度浏览器', '"添加到桌面"或"创建快捷方式"')
+	if (isFirefoxMobile()) return createAndroidGuide('Firefox', '"安装"或"添加到主屏幕"')
+	if (isEdgeMobile()) return createAndroidGuide('Edge', '"安装此站点为应用"或"添加到手机"')
+	if (isChromeMobile()) return createAndroidGuide('Chrome', '"安装应用"或"添加到主屏幕"')
 
-	return createAndroidGuide('当前浏览器', '“安装应用”“添加到主屏幕”“添加到桌面”或“创建快捷方式”')
+	return createAndroidGuide('当前浏览器', '"安装应用""添加到主屏幕""添加到桌面"或"创建快捷方式"')
 })
 
 const wasDismissed = (): boolean => {
@@ -522,265 +548,241 @@ function dismissUpdate() {
 </script>
 
 <style lang="scss" scoped>
-.pwa-entry {
+
+/* ── 版本更新 Banner（顶部）── */
+.update-bar {
 	position: fixed;
-	right: 24rpx;
+	top: 0; left: 0; right: 0;
+	z-index: 9999;
+	background: linear-gradient(135deg, #5B5BD6 0%, #7C7CE8 100%);
+	padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+	animation: slideDown 0.36s cubic-bezier(0.34, 1.2, 0.64, 1);
+	box-shadow: 0 4px 20px rgba(91, 91, 214, 0.30);
+}
+
+.ub-inner {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ub-pulse {
+	width: 10px; height: 10px;
+	border-radius: 50%;
+	background: #fff;
+	opacity: 0.9;
+	flex-shrink: 0;
+	animation: pulse 1.6s ease-in-out infinite;
+}
+
+.ub-text { flex: 1; }
+.ub-title { display: block; font-size: 14px; font-weight: 700; color: #fff; line-height: 1.3; }
+.ub-desc  { display: block; font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+.ub-btn {
+	background: rgba(255,255,255,0.20);
+	border: 1px solid rgba(255,255,255,0.35);
+	border-radius: 100px;
+	padding: 7px 16px;
+	flex-shrink: 0;
+	.ub-btn-t { font-size: 13px; font-weight: 700; color: #fff; }
+}
+
+.ub-close {
+	width: 30px; height: 30px;
+	display: flex; align-items: center; justify-content: center;
+	flex-shrink: 0;
+	.ub-close-t { font-size: 18px; color: rgba(255,255,255,0.65); line-height: 1; }
+}
+
+/* ── 悬浮安装入口（左下角）── */
+.entry-pill {
+	position: fixed;
+	left: 24rpx;
 	bottom: calc(env(safe-area-inset-bottom) + 160rpx);
 	z-index: 9998;
 	display: flex;
 	align-items: center;
 	gap: 10rpx;
-	padding: 18rpx 24rpx;
+	padding: 18rpx 28rpx 18rpx 22rpx;
 	border-radius: 999rpx;
-	background: #E45C1A;
-	box-shadow:
-		0 16rpx 36rpx rgba(173, 79, 20, 0.24),
-		0 4rpx 10rpx rgba(0, 0, 0, 0.12);
-	color: #FFFFFF;
+	background: #5B5BD6;
+	box-shadow: 0 8rpx 28rpx rgba(91, 91, 214, 0.35);
+
+	.ep-icon { font-size: 26rpx; line-height: 1; }
+	.ep-text { font-size: 24rpx; font-weight: 700; color: #fff; }
 }
 
-.pwa-entry__icon {
-	width: 34rpx;
-	height: 34rpx;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.22);
+/* ── 弹框遮罩 ── */
+.modal-backdrop {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0, 0, 0, 0.50);
+	z-index: 9998;
+	animation: fadeIn 0.22s ease;
+}
+
+/* ── Modal 容器 ── */
+.modal-wrap {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 26rpx;
-	line-height: 34rpx;
-	text-align: center;
-}
-
-.pwa-entry__text {
-	font-size: 24rpx;
-	font-weight: 700;
-	line-height: 1;
-}
-
-.pwa-prompt {
-	position: fixed;
-	left: 24rpx;
-	right: 24rpx;
 	z-index: 9999;
-	animation: slideUp 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+	padding: 40rpx;
+}
 
-	&--install {
-		bottom: calc(env(safe-area-inset-bottom) + 20rpx);
-	}
+/* ── Modal 卡片 ── */
+.modal {
+	width: 100%;
+	max-width: 680rpx;
+	background: #FFFFFF;
+	border-radius: 36rpx;
+	padding: 48rpx 40rpx 40rpx;
+	position: relative;
+	box-shadow:
+		0 32rpx 80rpx rgba(0, 0, 0, 0.18),
+		0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+	animation: modalIn 0.30s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
 
-	&--update {
-		bottom: calc(env(safe-area-inset-bottom) + 120rpx);
-	}
+.modal-close {
+	position: absolute;
+	top: 24rpx; right: 28rpx;
+	width: 52rpx; height: 52rpx;
+	border-radius: 50%;
+	background: rgba(0,0,0,0.06);
+	display: flex; align-items: center; justify-content: center;
+	.modal-close-t { font-size: 30rpx; color: #9CA3AF; line-height: 1; }
+}
 
-	&__content {
-		background: #FFFFFF;
-		border-radius: 28rpx;
-		padding: 40rpx 36rpx 32rpx;
-		box-shadow:
-			0 8rpx 40rpx rgba(228, 92, 26, 0.16),
-			0 2rpx 8rpx rgba(0, 0, 0, 0.06);
-		border: 1rpx solid rgba(228, 92, 26, 0.1);
-		position: relative;
+/* App 图标 */
+.modal-app-icon {
+	width: 112rpx; height: 112rpx;
+	border-radius: 28rpx;
+	background: linear-gradient(145deg, #5B5BD6 0%, #7C7CE8 100%);
+	display: flex; align-items: center; justify-content: center;
+	margin: 0 auto 28rpx;
+	box-shadow: 0 12rpx 32rpx rgba(91, 91, 214, 0.35);
 
-		&--row {
-			display: flex;
-			align-items: center;
-			gap: 20rpx;
-			padding: 28rpx 32rpx;
-		}
-	}
-
-	&__close {
-		position: absolute;
-		top: 24rpx;
-		right: 28rpx;
-		font-size: 28rpx;
-		color: #999999;
-		line-height: 1;
-		padding: 8rpx;
-	}
-
-	&__icon-wrap {
-		width: 100rpx;
-		height: 100rpx;
-		background: #E45C1A;
-		border-radius: 24rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: 0 auto 24rpx;
-		box-shadow: 0 8rpx 20rpx rgba(228, 92, 26, 0.18);
-	}
-
-	&__icon-wrap--small {
-		width: 84rpx;
-		height: 84rpx;
-		margin-bottom: 20rpx;
-	}
-
-	&__app-icon {
-		font-size: 22rpx;
-		color: #fff;
-		font-weight: 700;
-		letter-spacing: -1rpx;
-	}
-
-	&__icon {
-		font-size: 30rpx;
-		min-width: 72rpx;
-		height: 72rpx;
-		border-radius: 20rpx;
-		background: #F6F8FA;
-		color: #E06420;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	&__text {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 6rpx;
-	}
-
-	&__title {
-		font-size: 30rpx;
-		font-weight: 700;
-		color: #1E2228;
-		line-height: 1.3;
-		display: block;
-		text-align: center;
-	}
-
-	&__content--row &__title {
-		text-align: left;
-		font-size: 28rpx;
-	}
-
-	&__desc {
-		font-size: 24rpx;
-		color: #666666;
-		line-height: 1.5;
-		display: block;
-		text-align: center;
-		margin-top: 8rpx;
-	}
-
-	&__content--row &__desc {
-		text-align: left;
-		margin-top: 4rpx;
-	}
-
-	&__steps {
-		margin-top: 32rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 20rpx;
-	}
-
-	&__step {
-		display: flex;
-		align-items: center;
-		gap: 12rpx;
-		background: #FAFBFC;
-		border-radius: 16rpx;
-		padding: 18rpx 20rpx;
-	}
-
-	&__step-num {
-		width: 36rpx;
-		height: 36rpx;
-		background: #E45C1A;
-		color: #fff;
-		border-radius: 50%;
-		font-size: 22rpx;
-		font-weight: 700;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-		line-height: 36rpx;
-		text-align: center;
-	}
-
-	&__step-text {
-		font-size: 26rpx;
-		color: #4A5563;
-		line-height: 1.4;
-	}
-
-	&__actions {
-		&--row {
-			display: flex;
-			flex-direction: column;
-			gap: 10rpx;
-			flex-shrink: 0;
-		}
-
-		&--manual {
-			display: flex;
-			flex-direction: column;
-			gap: 12rpx;
-			margin-top: 28rpx;
-		}
-	}
-
-	&__btn {
-		font-size: 24rpx;
-		font-weight: 600;
-		padding: 12rpx 24rpx;
-		border-radius: 100rpx;
-		text-align: center;
-		white-space: nowrap;
-
-		&--update {
-			background: #E45C1A;
-			color: #FFFFFF;
-		}
-
-		&--dismiss {
-			background: #F6F8FA;
-			color: #666666;
-		}
+	.mai-t {
+		font-size: 20rpx; font-weight: 800;
+		color: #fff; letter-spacing: 0;
+		line-height: 1.3; text-align: center;
 	}
 }
 
-@media screen and (min-width: 768px) {
-	.pwa-entry {
-		right: 24px;
-		bottom: 32px;
-		padding: 12px 16px;
-		gap: 8px;
-	}
-
-	.pwa-entry__icon {
-		width: 22px;
-		height: 22px;
-		font-size: 18px;
-		line-height: 22px;
-	}
-
-	.pwa-entry__text {
-		font-size: 14px;
-	}
-
-	.pwa-prompt {
-		left: auto;
-		right: 24px;
-		width: 380px;
-
-		&--install,
-		&--update {
-			bottom: 92px;
-		}
-	}
+.modal-title {
+	display: block;
+	font-size: 36rpx; font-weight: 800;
+	color: #1A1A2E;
+	text-align: center;
+	margin-bottom: 12rpx;
 }
 
-@keyframes slideUp {
-	from { opacity: 0; transform: translateY(24rpx); }
+.modal-desc {
+	display: block;
+	font-size: 25rpx; color: #6B7280;
+	text-align: center; line-height: 1.55;
+	margin-bottom: 32rpx;
+}
+
+/* 步骤（iOS / 手动引导）*/
+.modal-steps {
+	display: flex; flex-direction: column; gap: 16rpx;
+	margin-bottom: 36rpx;
+}
+
+.ms-item {
+	display: flex; align-items: flex-start; gap: 16rpx;
+	background: #F7F8FA;
+	border-radius: 18rpx;
+	padding: 20rpx 22rpx;
+
+	.ms-num {
+		width: 40rpx; height: 40rpx; border-radius: 50%;
+		background: #5B5BD6;
+		display: flex; align-items: center; justify-content: center;
+		flex-shrink: 0;
+		.ms-n { font-size: 20rpx; font-weight: 800; color: #fff; line-height: 1; }
+	}
+
+	.ms-t { font-size: 26rpx; color: #374151; line-height: 1.55; flex: 1; }
+	.ms-em { color: #5B5BD6; font-weight: 700; }
+}
+
+/* 优势列表（Chrome 安装）*/
+.modal-benefits {
+	display: flex; flex-direction: column; gap: 16rpx;
+	margin-bottom: 36rpx;
+}
+
+.mb-item {
+	display: flex; align-items: center; gap: 16rpx;
+	padding: 16rpx 20rpx;
+	background: #F7F8FA;
+	border-radius: 16rpx;
+
+	.mb-icon { font-size: 30rpx; flex-shrink: 0; }
+	.mb-text { font-size: 26rpx; color: #374151; font-weight: 500; }
+}
+
+/* 按钮 */
+.modal-actions { display: flex; flex-direction: column; gap: 14rpx; }
+
+.btn-primary {
+	height: 88rpx;
+	border-radius: 22rpx;
+	background: #5B5BD6;
+	display: flex; align-items: center; justify-content: center;
+	box-shadow: 0 8rpx 24rpx rgba(91, 91, 214, 0.30);
+	.btn-primary-t { font-size: 30rpx; font-weight: 800; color: #fff; }
+}
+
+.btn-dismiss {
+	height: 80rpx;
+	border-radius: 22rpx;
+	background: rgba(0,0,0,0.05);
+	display: flex; align-items: center; justify-content: center;
+	.btn-dismiss-t { font-size: 27rpx; font-weight: 600; color: #9CA3AF; }
+}
+
+/* ── 动画 ── */
+@keyframes slideDown {
+	from { opacity: 0; transform: translateY(-100%); }
 	to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@keyframes modalIn {
+	from { opacity: 0; transform: scale(0.88) translateY(20rpx); }
+	to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 0.9; transform: scale(1); }
+	50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+/* ── 桌面端适配 ── */
+@media screen and (min-width: 768px) {
+	.entry-pill {
+		left: 24px;
+		bottom: 32px;
+		padding: 10px 18px 10px 14px;
+		gap: 8px;
+		.ep-icon { font-size: 16px; }
+		.ep-text { font-size: 13px; }
+	}
+
+	.update-bar { padding: 12px 24px; }
+
+	.modal-wrap { padding: 24px; }
+	.modal { max-width: 420px; padding: 36px 32px 32px; }
 }
 </style>
