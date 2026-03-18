@@ -236,6 +236,94 @@
 				</view>
 			</view>
 
+			<!-- 模块6：最新消耗动态 -->
+			<view class="feed-section-label">
+				<text class="fsl-title">最新动态</text>
+				<text class="fsl-sub">社区实时消耗记录</text>
+			</view>
+			<view class="community-feed">
+				<view
+					v-for="post in communityPosts"
+					:key="post.id"
+					class="post-card"
+					@tap="toPost(post.id)"
+				>
+					<!-- 头部 -->
+					<view class="pc-header">
+						<view class="pc-av" :style="{ background: post.authorColor }">
+							<text class="pc-av-t">{{ post.author[0] }}</text>
+						</view>
+						<view class="pc-info">
+							<text class="pc-name">{{ post.author }}</text>
+							<view class="pc-meta-row">
+								<view class="pc-model-tag">
+									<view class="pc-model-dot" />
+									<text class="pc-model-text">{{ post.model }}</text>
+								</view>
+								<text class="pc-time">{{ post.time }}</text>
+							</view>
+						</view>
+						<view class="pc-more">
+							<text class="pc-more-dot">·</text>
+							<text class="pc-more-dot">·</text>
+							<text class="pc-more-dot">·</text>
+						</view>
+					</view>
+
+					<!-- 花费 + Token 数据块 -->
+					<view class="pc-cost-block">
+						<view class="pcb-left">
+							<uni-icons type="wallet-filled" size="18" color="#E45C1A" />
+							<text class="pcb-label">花费</text>
+							<text class="pcb-cost-val">¥{{ post.cost }}</text>
+						</view>
+						<view class="pcb-divider" />
+						<view class="pcb-right">
+							<uni-icons type="bars" size="18" color="#FF7A45" />
+							<text class="pcb-label">Token</text>
+							<text class="pcb-token-val">{{ post.tokens }}</text>
+						</view>
+					</view>
+
+					<!-- 正文 -->
+					<text class="pc-content">{{ post.content }}</text>
+
+					<!-- 情绪反应 -->
+					<view class="pc-reactions">
+						<view
+							class="pc-reaction"
+							:class="{ selected: post.myReaction === r.key }"
+							v-for="r in reactions"
+							:key="r.key"
+							@tap.stop="post.myReaction = r.key"
+						>
+							<uni-icons :type="r.icon" :size="16" :color="post.myReaction === r.key ? r.activeColor : '#9CA3AF'" />
+							<text class="pr-text">{{ r.text }}</text>
+						</view>
+					</view>
+
+					<!-- 底部操作 -->
+					<view class="pc-actions">
+						<view class="pc-action" @tap.stop>
+							<uni-icons type="heart-filled" size="16" color="#9CA3AF" />
+							<text class="pa-val">{{ post.likes }}</text>
+						</view>
+						<view class="pc-action" @tap.stop>
+							<uni-icons type="chat" size="16" color="#9CA3AF" />
+							<text class="pa-val">{{ post.comments }}</text>
+						</view>
+						<view class="pc-action meoo" @tap.stop>
+							<uni-icons type="hand-up" size="16" color="#6B7280" />
+							<text class="pa-meoo-text">我也是</text>
+							<text class="pa-val">{{ post.meoo }}</text>
+						</view>
+						<view class="pc-action" @tap.stop>
+							<uni-icons type="redo" size="16" color="#9CA3AF" />
+						</view>
+					</view>
+				</view>
+			</view>
+
 			<view class="trend-bottom" />
 		</scroll-view>
 
@@ -247,9 +335,61 @@
 
 	const instance = getCurrentInstance()
 	onShow(() => {
-		uni.getTabBar(instance?.proxy)?.setData({ selected: 1 })
+		;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 1 })
 	})
 	const activeBurnTab = ref('Skill')
+
+	const reactions = [
+		{ key: 'worth', icon: 'checkmarkempty', activeColor: '#2F8A57', text: '值了' },
+		{ key: 'ok', icon: 'info', activeColor: '#5B5BD6', text: '还行' },
+		{ key: 'regret', icon: 'closeempty', activeColor: '#9CA3AF', text: '后悔了' },
+		{ key: 'addicted', icon: 'fire-filled', activeColor: '#FF7A45', text: '上瘾了' },
+	]
+
+	const communityPosts = ref([
+		{
+			id: 'cp1',
+			author: '王建明',
+			authorColor: '#5B5BD6',
+			model: 'GPT-4o',
+			time: '今天 11:08',
+			cost: '56.20',
+			tokens: '890,000',
+			content: '写了一篇技术文档，反复让它改格式改措辞，改了12轮。最后发现直接把要求写清楚第一轮就出来了。这课交得值。',
+			likes: '156',
+			comments: '23',
+			meoo: '89',
+			myReaction: '',
+		},
+		{
+			id: 'cp2',
+			author: '李设计',
+			authorColor: '#D6943A',
+			model: 'Claude Sonnet',
+			time: '今天 09:45',
+			cost: '12.80',
+			tokens: '198,000',
+			content: '用 AI 生成了 20 套 UI 配色方案，筛出 3 套给客户选。以前这活得半天，现在 30 分钟搞定。但 token 消耗也是真不少……',
+			likes: '98',
+			comments: '15',
+			meoo: '44',
+			myReaction: '',
+		},
+		{
+			id: 'cp3',
+			author: '陈省钱',
+			authorColor: '#2F8A57',
+			model: 'Claude Haiku',
+			time: '昨天 22:30',
+			cost: '1.20',
+			tokens: '24,000',
+			content: '把日常总结任务从 Sonnet 换到 Haiku，用了两周，质量没啥差别，费用降了 80%。Haiku 真的被低估了，适合结构化、格式化任务。',
+			likes: '342',
+			comments: '67',
+			meoo: '178',
+			myReaction: '',
+		},
+	])
 	const burnTabs = ['Skill', '场景', '模型']
 
 	const topBurnSkills = ref([
@@ -328,6 +468,10 @@
 
 	const toSkill = (id: string) => {
 		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+	}
+
+	const toPost = (id: string) => {
+		uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
 	}
 
 	const copySkill = (_skill: any) => {
@@ -751,4 +895,204 @@
 	}
 
 	.trend-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
+
+	/* 最新动态 section label */
+	.feed-section-label {
+		display: flex;
+		align-items: baseline;
+		gap: 12rpx;
+		padding: 8rpx 24rpx 16rpx;
+
+		.fsl-title { font-size: 30rpx; font-weight: 800; color: #1A1A2E; }
+		.fsl-sub { font-size: 22rpx; color: #9CA3AF; }
+	}
+
+	/* 社区动态 feed */
+	.community-feed {
+		padding: 0 24rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 20rpx;
+		margin-bottom: 8rpx;
+	}
+
+	/* 消耗记录 card */
+	.post-card {
+		background: #fff;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(0,0,0,0.06);
+		padding: 28rpx;
+		box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+
+		.pc-header {
+			display: flex;
+			align-items: center;
+			gap: 16rpx;
+			margin-bottom: 24rpx;
+
+			.pc-av {
+				width: 72rpx;
+				height: 72rpx;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+
+				.pc-av-t { font-size: 26rpx; color: #fff; font-weight: 800; }
+			}
+
+			.pc-info {
+				flex: 1;
+
+				.pc-name { display: block; font-size: 30rpx; font-weight: 700; color: #1A1A2E; margin-bottom: 8rpx; }
+
+				.pc-meta-row {
+					display: flex;
+					align-items: center;
+					gap: 14rpx;
+
+					.pc-model-tag {
+						display: flex;
+						align-items: center;
+						gap: 8rpx;
+						background: rgba(47,138,87,0.08);
+						border: 1rpx solid rgba(47,138,87,0.15);
+						border-radius: 100rpx;
+						padding: 5rpx 14rpx;
+
+						.pc-model-dot {
+							width: 12rpx;
+							height: 12rpx;
+							border-radius: 50%;
+							background: #2F8A57;
+							flex-shrink: 0;
+						}
+
+						.pc-model-text { font-size: 20rpx; color: #2F8A57; font-weight: 500; }
+					}
+
+					.pc-time { font-size: 20rpx; color: #9CA3AF; }
+				}
+			}
+
+			.pc-more {
+				display: flex;
+				gap: 5rpx;
+				padding: 8rpx;
+
+				.pc-more-dot { font-size: 20rpx; color: #9CA3AF; line-height: 1; }
+			}
+		}
+
+		.pc-cost-block {
+			display: flex;
+			align-items: center;
+			background: rgba(255, 122, 69, 0.07);
+			border-radius: 20rpx;
+			margin-bottom: 24rpx;
+			overflow: hidden;
+
+			.pcb-left, .pcb-right {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 20rpx 16rpx;
+				gap: 6rpx;
+
+				.pcb-label { font-size: 20rpx; color: #9CA3AF; }
+			}
+
+			.pcb-left .pcb-cost-val {
+				font-size: 40rpx;
+				font-weight: 900;
+				color: #E45C1A;
+				letter-spacing: -1rpx;
+				font-variant-numeric: tabular-nums;
+			}
+
+			.pcb-right .pcb-token-val {
+				font-size: 36rpx;
+				font-weight: 900;
+				color: #FF7A45;
+				letter-spacing: -1rpx;
+				font-variant-numeric: tabular-nums;
+			}
+
+			.pcb-divider {
+				width: 1rpx;
+				height: 80rpx;
+				background: rgba(255,122,69,0.2);
+				flex-shrink: 0;
+			}
+		}
+
+		.pc-content {
+			display: block;
+			font-size: 30rpx;
+			color: #374151;
+			line-height: 1.75;
+			margin-bottom: 24rpx;
+		}
+
+		.pc-reactions {
+			display: flex;
+			gap: 12rpx;
+			margin-bottom: 24rpx;
+
+			.pc-reaction {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6rpx;
+				background: rgba(0,0,0,0.04);
+				border: 1rpx solid rgba(0,0,0,0.06);
+				border-radius: 100rpx;
+				padding: 12rpx 0;
+
+				.pr-emoji { font-size: 24rpx; }
+				.pr-text { font-size: 20rpx; color: #6B7280; font-weight: 500; }
+
+				&.selected {
+					background: rgba(255,122,69,0.12);
+					border-color: rgba(255,122,69,0.25);
+
+					.pr-text { color: #FF7A45; }
+				}
+			}
+		}
+
+		.pc-actions {
+			display: flex;
+			align-items: center;
+			padding-top: 18rpx;
+			border-top: 1rpx solid rgba(0,0,0,0.05);
+
+			.pc-action {
+				display: flex;
+				align-items: center;
+				gap: 8rpx;
+				padding-right: 20rpx;
+
+				.pa-heart { font-size: 28rpx; }
+				.pa-val { font-size: 24rpx; color: #9CA3AF; }
+
+				&.meoo {
+					flex: 1;
+					background: rgba(0,0,0,0.04);
+					border-radius: 100rpx;
+					padding: 10rpx 20rpx;
+					margin-left: auto;
+					justify-content: center;
+					gap: 6rpx;
+
+					.pa-meoo-emoji { font-size: 24rpx; }
+					.pa-meoo-text { font-size: 22rpx; color: #6B7280; font-weight: 500; }
+					.pa-val { font-size: 22rpx; }
+				}
+			}
+		}
+	}
 </style>
