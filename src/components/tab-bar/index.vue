@@ -11,7 +11,7 @@
 			>
 				<uni-icons
 					:type="isActive(item.path) ? item.activeIcon : item.icon"
-					:color="isActive(item.path) ? '#FF7A1A' : 'rgba(255,255,255,0.35)'"
+					:color="isActive(item.path) ? '#E45C1A' : 'rgba(26, 26, 26,0.35)'"
 					size="24"
 				/>
 				<text class="tab-label">{{ item.label }}</text>
@@ -33,7 +33,7 @@
 			>
 				<uni-icons
 					:type="isActive(item.path) ? item.activeIcon : item.icon"
-					:color="isActive(item.path) ? '#FF7A1A' : 'rgba(255,255,255,0.35)'"
+					:color="isActive(item.path) ? '#E45C1A' : 'rgba(26, 26, 26,0.35)'"
 					size="24"
 				/>
 				<text class="tab-label">{{ item.label }}</text>
@@ -75,7 +75,7 @@
 		left: 0;
 		right: 0;
 		background: #FFFFFF;
-		border-top: 1rpx solid rgba(0,0,0,0.06);
+		border-top: 1rpx solid rgba(26, 26, 26,0.08);
 		z-index: 999;
 	}
 
@@ -106,15 +106,15 @@
 			width: 80rpx;
 			height: 80rpx;
 			border-radius: 50%;
-			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+			background: #E45C1A;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			box-shadow: 0 4rpx 20rpx rgba(255, 122, 26, 0.45);
+			box-shadow: 0 4rpx 20rpx rgba(228, 92, 26, 0.24);
 			margin-top: -30rpx;
 
 			&.active {
-				box-shadow: 0 2rpx 10rpx rgba(255, 122, 26, 0.3);
+				box-shadow: 0 2rpx 10rpx rgba(228, 92, 26, 0.18);
 				opacity: 0.9;
 			}
 
@@ -124,17 +124,17 @@
 
 	.tab-label {
 		font-size: 18rpx;
-		color: rgba(255, 255, 255, 0.35);
+		color: rgba(26, 26, 26, 0.45);
 		font-weight: 400;
 		line-height: 1;
 
 		&.center {
-			color: rgba(255, 255, 255, 0.5);
+			color: rgba(26, 26, 26, 0.45);
 		}
 	}
 
 	.tab-item.active .tab-label {
-		color: #FF7A1A;
+		color: #E45C1A;
 		font-weight: 600;
 	}
 

@@ -19,7 +19,7 @@
 					</view>
 				</view>
 				<view class="ph-edit-btn" @tap="editProfile">
-					<text class="ph-edit-icon">✏️</text>
+					<uni-icons class="ph-edit-icon" type="compose" size="18" color="rgba(255,255,255,0.88)" />
 				</view>
 			</view>
 
@@ -56,7 +56,7 @@
 					class="func-item"
 					@tap="item.action"
 				>
-					<text class="func-icon">{{ item.icon }}</text>
+					<uni-icons class="func-icon" :type="item.icon" :color="item.color" size="22" />
 					<text class="func-label">{{ item.label }}</text>
 					<view v-if="item.count" class="func-count">
 						<text class="func-count-text">{{ item.count }}</text>
@@ -124,27 +124,27 @@
 
 	const funcItems = [
 		{
-			icon: '📋', label: '我的发布', count: '23',
+			icon: 'list', color: '#5E738A', label: '我的发布', count: '23',
 			action: () => toMyPublish()
 		},
 		{
-			icon: '⭐', label: '我的收藏', count: '47',
+			icon: 'star-filled', color: '#D6943A', label: '我的收藏', count: '47',
 			action: () => toMyFavorites()
 		},
 		{
-			icon: '⚡', label: '我的复制', count: '128',
+			icon: 'fire-filled', color: '#E45C1A', label: '我的复制', count: '128',
 			action: () => toMyCopies()
 		},
 		{
-			icon: '💬', label: '我的反馈', count: '15',
+			icon: 'chatbubble-filled', color: '#2F8A57', label: '我的反馈', count: '15',
 			action: () => toMyFeedbacks()
 		},
 		{
-			icon: '📂', label: '草稿箱', count: '2',
+			icon: 'folder-add-filled', color: '#7B5B3C', label: '草稿箱', count: '2',
 			action: () => toDrafts()
 		},
 		{
-			icon: '⚙️', label: '设置', count: null,
+			icon: 'settings-filled', color: 'rgba(0,0,0,0.55)', label: '设置', count: null,
 			action: () => toSettings()
 		}
 	]
@@ -182,12 +182,12 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	/* Profile 头 */
 	.profile-header {
-		background: linear-gradient(160deg, #141922 0%, #1A1025 60%, #141922 100%);
+		background: linear-gradient(160deg, #191D23 0%, #1E2228 60%, #191D23 100%);
 		border-bottom: 1rpx solid rgba(0,0,0,0.07);
 		padding-bottom: 0;
 		flex-shrink: 0;
@@ -207,12 +207,12 @@
 				width: 120rpx;
 				height: 120rpx;
 				border-radius: 50%;
-				background: linear-gradient(135deg, #7C3AED, #4C1D95);
+				background: #D6943A;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				box-shadow: 0 8rpx 24rpx rgba(124,58,237,0.4);
-				border: 3rpx solid rgba(255,122,26,0.3);
+				box-shadow: 0 8rpx 24rpx rgba(214, 148, 58,0.4);
+				border: 3rpx solid rgba(228, 92, 26, 0.18);
 
 				.ph-avatar-t { font-size: 48rpx; color: #fff; font-weight: 800; }
 			}
@@ -223,9 +223,9 @@
 				right: -4rpx;
 				font-size: 18rpx;
 				font-weight: 700;
-				color: #FF7A1A;
-				background: #F5F3EF;
-				border: 2rpx solid rgba(255,122,26,0.4);
+				color: #E45C1A;
+				background: #FFFFFF;
+				border: 2rpx solid rgba(228, 92, 26, 0.24);
 				padding: 3rpx 10rpx;
 				border-radius: 100rpx;
 			}
@@ -261,7 +261,13 @@
 			align-items: center;
 			justify-content: center;
 
-			.ph-edit-icon { font-size: 28rpx; }
+			.ph-edit-icon {
+				width: 30rpx;
+				height: 30rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 		}
 
 		.ph-stats {
@@ -279,8 +285,8 @@
 				gap: 6rpx;
 
 				.ph-stat-val { font-size: 34rpx; font-weight: 900; color: #1A1A1A; }
-				.ph-stat-val.orange { color: #FF7A1A; }
-				.ph-stat-val.green { color: #4CD964; }
+				.ph-stat-val.orange { color: #E45C1A; }
+				.ph-stat-val.green { color: #2F8A57; }
 				.ph-stat-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
@@ -313,20 +319,27 @@
 				gap: 10rpx;
 				position: relative;
 
-				&:active { background: #F0EDE8; }
+				&:active { background: #F5F7FA; }
 
-				.func-icon { font-size: 40rpx; }
+				.func-icon {
+					width: 44rpx;
+					height: 44rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
 				.func-label { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500; }
 
 				.func-count {
 					position: absolute;
 					top: 12rpx;
 					right: 14rpx;
-					background: rgba(255,122,26,0.2);
+					background: rgba(228, 92, 26,0.2);
 					border-radius: 100rpx;
 					padding: 2rpx 10rpx;
 
-					.func-count-text { font-size: 18rpx; color: #FF7A1A; font-weight: 600; }
+					.func-count-text { font-size: 18rpx; color: #E45C1A; font-weight: 600; }
 				}
 			}
 		}
@@ -358,7 +371,7 @@
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx 28rpx;
 
-			&:active { background: #F0EDE8; }
+			&:active { background: #F5F7FA; }
 
 			.msc-head {
 				display: flex;
@@ -404,9 +417,9 @@
 					& + .msc-stat { margin-left: 10rpx; }
 
 					.msc-stat-val { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
-					.msc-stat-val.orange { color: #FF7A1A; }
-					.msc-stat-val.green { color: #4CD964; }
-					.msc-stat-val.blue { color: #5DA9FF; }
+					.msc-stat-val.orange { color: #E45C1A; }
+					.msc-stat-val.green { color: #2F8A57; }
+					.msc-stat-val.blue { color: #5E738A; }
 					.msc-stat-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 				}
 			}

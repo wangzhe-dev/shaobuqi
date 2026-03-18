@@ -26,7 +26,10 @@
 			<!-- 核心数据大卡 -->
 			<view class="burn-hero">
 				<view class="burn-label-row">
-					<text class="burn-label">🔥 这次燃烧</text>
+					<view class="burn-label">
+						<uni-icons type="fire-filled" size="15" color="#E45C1A" />
+						<text class="burn-label-text">这次燃烧</text>
+					</view>
 					<text class="burn-date">{{ post.time }}</text>
 				</view>
 				<view class="burn-numbers">
@@ -42,15 +45,15 @@
 				</view>
 				<view class="burn-meta-row">
 					<view class="burn-meta-item">
-						<text class="meta-icon">🤖</text>
+						<uni-icons class="meta-icon" type="staff-filled" size="14" color="rgba(0,0,0,0.70)" />
 						<text class="meta-text">{{ post.model }}</text>
 					</view>
 					<view class="burn-meta-item">
-						<text class="meta-icon">⏱</text>
+						<uni-icons class="meta-icon" type="reload" size="14" color="rgba(0,0,0,0.70)" />
 						<text class="meta-text">{{ post.duration }}</text>
 					</view>
 					<view class="burn-meta-item">
-						<text class="meta-icon">🔁</text>
+						<uni-icons class="meta-icon" type="loop" size="14" color="rgba(0,0,0,0.70)" />
 						<text class="meta-text">{{ post.rounds }} 轮对话</text>
 					</view>
 				</view>
@@ -121,7 +124,12 @@
 						<text class="cmt-text">{{ comment.content }}</text>
 						<view class="cmt-actions">
 							<view class="cmt-like" @tap="likeComment(comment)">
-								<text :class="['cmt-like-ico', { liked: comment.liked }]">♥</text>
+								<uni-icons
+									class="cmt-like-ico"
+									:type="comment.liked ? 'heart-filled' : 'heart'"
+									size="14"
+									:color="comment.liked ? '#C84634' : 'rgba(0,0,0,0.25)'"
+								/>
 								<text class="cmt-like-n">{{ comment.likes }}</text>
 							</view>
 							<text class="cmt-reply-btn" @tap="replyComment(comment)">回复</text>
@@ -144,15 +152,20 @@
 			</view>
 			<view class="bottom-acts">
 				<view class="bact" @tap="toggleLike">
-					<text :class="['bact-ico', { liked: isLiked }]">♥</text>
+					<uni-icons
+						class="bact-ico"
+						:type="isLiked ? 'heart-filled' : 'heart'"
+						size="18"
+						:color="isLiked ? '#C84634' : 'rgba(0,0,0,0.40)'"
+					/>
 					<text class="bact-n">{{ post.likes }}</text>
 				</view>
 				<view class="bact resonate-bact" :class="{ resonated: isResonated }" @tap="toggleResonate">
-					<text class="bact-ico">😭</text>
+					<uni-icons class="bact-ico" type="chatbubble-filled" size="18" :color="isResonated ? '#C84634' : 'rgba(0,0,0,0.40)'" />
 					<text class="bact-resonate-text">我也是</text>
 				</view>
 				<view class="bact" @tap="share">
-					<text class="bact-ico">↗</text>
+					<uni-icons class="bact-ico" type="paperplane" size="18" color="rgba(0,0,0,0.40)" />
 				</view>
 			</view>
 		</view>
@@ -166,19 +179,19 @@
 	const isFollowing = ref(false)
 
 	const MOODS = [
-		{ key: 'worth', label: '值了 ✓', color: '#10B981' },
-		{ key: 'ok', label: '还行 😐', color: '#6B7280' },
-		{ key: 'regret', label: '后悔了 😭', color: '#EF4444' },
-		{ key: 'hooked', label: '上瘾了 🔥', color: '#F59E0B' }
+		{ key: 'worth', label: '值了 ✓', color: '#2F8A57' },
+		{ key: 'ok', label: '还行', color: '#666666' },
+		{ key: 'regret', label: '后悔了', color: '#B53A2E' },
+		{ key: 'hooked', label: '上瘾了', color: '#8C6741' }
 	]
 
 	const post = reactive({
 		id: 'p1',
 		author: '林晓珊',
-		color: '#7C3AED',
+		color: '#D6943A',
 		time: '今天 14:32',
 		model: 'Claude Opus',
-		modelColor: '#7C3AED',
+		modelColor: '#D6943A',
 		cost: '¥128.50',
 		tokens: '2,340,000',
 		duration: '约 3 小时',
@@ -198,27 +211,27 @@
 
 	const comments = ref([
 		{
-			id: 'c1', user: '王建明', color: '#0891B2', time: '1小时前',
+			id: 'c1', user: '王建明', color: '#9A6530', time: '1小时前',
 			model: 'GPT-4o',
 			cost: '¥89.20', tokens: '1,560,000',
 			content: '我也是！帮客户改方案，来回改了9版，最后客户说"就用第一版吧"。我直接关电脑了。',
 			likes: 67, liked: false
 		},
 		{
-			id: 'c2', user: '张晴', color: '#D97706', time: '2小时前',
+			id: 'c2', user: '张晴', color: '#7B5B3C', time: '2小时前',
 			model: null, cost: null, tokens: null,
 			content: '所以现在我的策略是第一版故意做差，让甲方改，然后第三版放出精品。成功率提升了80%。',
 			likes: 124, liked: true
 		},
 		{
-			id: 'c3', user: '陈佳慧', color: '#059669', time: '3小时前',
+			id: 'c3', user: '陈佳慧', color: '#2F8A57', time: '3小时前',
 			model: 'Claude Sonnet',
 			cost: '¥34.80', tokens: '640,000',
 			content: '¥128 的课程费，比很多付费课便宜，而且是实战学的。算值了。',
 			likes: 89, liked: false
 		},
 		{
-			id: 'c4', user: '刘明远', color: '#DC2626', time: '昨天',
+			id: 'c4', user: '刘明远', color: '#9A2F28', time: '昨天',
 			model: null, cost: null, tokens: null,
 			content: '甲方确实只有甲方自己知道自己想要什么，而且他们自己也不知道。AI 来了也没用。',
 			likes: 201, liked: false
@@ -270,7 +283,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	.main-scroll {
@@ -334,12 +347,12 @@
 		}
 
 		.follow-btn {
-			border: 2rpx solid rgba(255,122,26,0.5);
+			border: 2rpx solid rgba(228, 92, 26,0.5);
 			border-radius: 40rpx;
 			padding: 12rpx 28rpx;
 			flex-shrink: 0;
 
-			.follow-text { font-size: 24rpx; color: #FF7A1A; font-weight: 600; }
+			.follow-text { font-size: 24rpx; color: #E45C1A; font-weight: 600; }
 
 			&.following {
 				border-color: rgba(0,0,0,0.09);
@@ -376,7 +389,17 @@
 			justify-content: space-between;
 			margin-bottom: 24rpx;
 
-			.burn-label { font-size: 26rpx; font-weight: 700; color: rgba(255,255,255,0.9); }
+			.burn-label {
+				display: flex;
+				align-items: center;
+				gap: 6rpx;
+
+				.burn-label-text {
+					font-size: 26rpx;
+					font-weight: 700;
+					color: rgba(255,255,255,0.9);
+				}
+			}
 			.burn-date { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 		}
 
@@ -397,8 +420,8 @@
 					font-weight: 800;
 					letter-spacing: -2rpx;
 
-					&.cost { color: #FCA5A5; }
-					&.token { color: #FCD34D; }
+					&.cost { color: #D1A89A; }
+					&.token { color: #C7A06A; }
 				}
 
 				.burn-num-desc { font-size: 22rpx; color: rgba(0,0,0,0.50); }
@@ -426,7 +449,14 @@
 				padding: 10rpx 0;
 				margin: 0 4rpx;
 
-				.meta-icon { font-size: 22rpx; }
+				.meta-icon {
+					width: 20rpx;
+					height: 20rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
 				.meta-text { font-size: 20rpx; color: rgba(0,0,0,0.70); white-space: nowrap; }
 			}
 		}
@@ -550,11 +580,11 @@
 					.cmt-user { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 
 					.cmt-model-badge {
-						background: rgba(93,169,255,0.1);
+						background: rgba(94, 115, 138,0.1);
 						padding: 3rpx 12rpx;
 						border-radius: 12rpx;
 
-						.cmt-model-text { font-size: 20rpx; color: #5DA9FF; }
+						.cmt-model-text { font-size: 20rpx; color: #5E738A; }
 					}
 
 					.cmt-time { font-size: 22rpx; color: rgba(0,0,0,0.40); margin-left: auto; }
@@ -565,14 +595,14 @@
 					display: flex;
 					align-items: center;
 					gap: 8rpx;
-					background: rgba(255,122,26,0.08);
+					background: rgba(228, 92, 26,0.08);
 					border-radius: 10rpx;
 					padding: 8rpx 14rpx;
 					margin-bottom: 10rpx;
 
-					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #FF5D5D; }
+					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #C84634; }
 					.cmt-burn-sep { font-size: 20rpx; color: rgba(0,0,0,0.20); }
-					.cmt-burn-tokens { font-size: 22rpx; color: #FF7A1A; }
+					.cmt-burn-tokens { font-size: 22rpx; color: #E45C1A; }
 				}
 
 				.cmt-text { font-size: 26rpx; color: rgba(0,0,0,0.60); line-height: 1.65; margin-bottom: 12rpx; }
@@ -587,7 +617,14 @@
 						align-items: center;
 						gap: 6rpx;
 
-						.cmt-like-ico { font-size: 24rpx; color: rgba(0,0,0,0.25); &.liked { color: #FF5D5D; } }
+						.cmt-like-ico {
+							width: 24rpx;
+							height: 24rpx;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							flex-shrink: 0;
+						}
 						.cmt-like-n { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 					}
 
@@ -600,7 +637,7 @@
 			text-align: center;
 			padding: 16rpx 0 8rpx;
 
-			.load-more-text { font-size: 24rpx; color: #FF7A1A; }
+			.load-more-text { font-size: 24rpx; color: #E45C1A; }
 		}
 	}
 
@@ -638,7 +675,14 @@
 				gap: 6rpx;
 				padding: 10rpx 12rpx;
 
-				.bact-ico { font-size: 32rpx; color: rgba(0,0,0,0.40); &.liked { color: #FF5D5D; } }
+				.bact-ico {
+					width: 32rpx;
+					height: 32rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
 				.bact-n { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
@@ -651,10 +695,10 @@
 				.bact-resonate-text { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 
 				&.resonated {
-					background: rgba(239, 68, 68, 0.06);
-					border-color: rgba(239, 68, 68, 0.3);
+					background: rgba(200, 70, 52, 0.06);
+					border-color: rgba(200, 70, 52, 0.3);
 
-					.bact-ico, .bact-resonate-text { color: #FF5D5D; }
+					.bact-resonate-text { color: #C84634; }
 				}
 			}
 		}

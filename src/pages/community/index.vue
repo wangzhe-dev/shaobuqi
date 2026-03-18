@@ -12,7 +12,9 @@
 			<!-- 模块1：今日最烧榜 -->
 			<view class="trend-module">
 				<view class="module-header">
-					<text class="module-badge">🔥</text>
+					<view class="module-badge">
+						<uni-icons type="fire-filled" size="20" color="#C84634" />
+					</view>
 					<text class="module-title">今日最烧榜</text>
 				</view>
 
@@ -51,7 +53,7 @@
 						<view class="bri-rank" :class="'rank-' + (idx + 1)">
 							<text class="bri-rank-text">{{ idx + 1 }}</text>
 						</view>
-						<text class="bri-scene-icon">{{ item.icon }}</text>
+						<uni-icons class="bri-scene-icon" :type="item.icon" :color="item.color" size="22" />
 						<view class="bri-info">
 							<text class="bri-title">{{ item.name }}</text>
 							<text class="bri-scene">今日 {{ item.count }} 次使用</text>
@@ -78,7 +80,9 @@
 			<!-- 模块2：低成本高收益榜 -->
 			<view class="trend-module">
 				<view class="module-header">
-					<text class="module-badge">💡</text>
+					<view class="module-badge">
+						<uni-icons type="wallet-filled" size="20" color="#2F8A57" />
+					</view>
 					<text class="module-title">低成本高收益</text>
 					<text class="module-subtitle">token 低 · 复现率高</text>
 				</view>
@@ -100,7 +104,10 @@
 						<text class="vi-title">{{ skill.title }}</text>
 						<view class="vi-metrics">
 							<view class="vim-item">
-								<text class="vim-val orange">⚡ {{ skill.avgToken }}</text>
+								<view class="vim-token">
+									<uni-icons type="fire-filled" size="14" color="#E45C1A" />
+									<text class="vim-val orange">{{ skill.avgToken }}</text>
+								</view>
 								<text class="vim-label">平均token</text>
 							</view>
 							<view class="vim-item">
@@ -122,7 +129,9 @@
 			<!-- 模块3：模型消耗对比 -->
 			<view class="trend-module">
 				<view class="module-header">
-					<text class="module-badge">📊</text>
+					<view class="module-badge">
+						<uni-icons type="bars" size="20" color="#5E738A" />
+					</view>
 					<text class="module-title">模型消耗对比</text>
 					<text class="module-subtitle">社区平均 / 本周</text>
 				</view>
@@ -161,7 +170,9 @@
 			<!-- 模块4：场景趋势 -->
 			<view class="trend-module">
 				<view class="module-header">
-					<text class="module-badge">📈</text>
+					<view class="module-badge">
+						<uni-icons type="arrow-up" size="20" color="#E45C1A" />
+					</view>
 					<text class="module-title">场景趋势</text>
 					<text class="module-subtitle">本周增长最快</text>
 				</view>
@@ -169,7 +180,7 @@
 				<view class="scene-trend-list">
 					<view v-for="(scene, idx) in sceneTrends" :key="scene.name" class="st-item">
 						<view class="st-rank">{{ idx + 1 }}</view>
-						<text class="st-icon">{{ scene.icon }}</text>
+						<uni-icons class="st-icon" :type="scene.icon" :color="scene.color" size="22" />
 						<view class="st-info">
 							<text class="st-name">{{ scene.name }}</text>
 							<view class="st-bar-wrap">
@@ -187,7 +198,9 @@
 			<!-- 模块5：我的消耗洞察 -->
 			<view class="trend-module">
 				<view class="module-header">
-					<text class="module-badge">👤</text>
+					<view class="module-badge">
+						<uni-icons type="person-filled" size="20" color="#7B5B3C" />
+					</view>
 					<text class="module-title">我的消耗洞察</text>
 				</view>
 
@@ -248,10 +261,10 @@
 	])
 
 	const topBurnScenes = ref([
-		{ name: '编程', icon: '💻', count: '12.4k', avgToken: '4.2k' },
-		{ name: '写作', icon: '✍️', count: '10.1k', avgToken: '3.8k' },
-		{ name: '办公', icon: '💼', count: '8.7k', avgToken: '3.1k' },
-		{ name: '自媒体', icon: '📱', count: '6.3k', avgToken: '2.4k' }
+		{ name: '编程', icon: 'gear-filled', color: '#5E738A', count: '12.4k', avgToken: '4.2k' },
+		{ name: '写作', icon: 'compose', color: '#C84634', count: '10.1k', avgToken: '3.8k' },
+		{ name: '办公', icon: 'calendar-filled', color: '#4F6C82', count: '8.7k', avgToken: '3.1k' },
+		{ name: '自媒体', icon: 'videocam-filled', color: '#7B5B3C', count: '6.3k', avgToken: '2.4k' }
 	])
 
 	const topBurnModels = ref([
@@ -278,33 +291,33 @@
 
 	const modelCompare = ref([
 		{
-			name: 'Claude Sonnet', family: 'Claude 系', color: '#A78BFA',
+			name: 'Claude Sonnet', family: 'Claude 系', color: '#C7A06A',
 			avgInput: '1.1k', avgOutput: '2.0k', avgTotal: '3.1k',
 			inputPct: 55, outputPct: 75
 		},
 		{
-			name: 'GPT-4o', family: 'GPT 系', color: '#10B981',
+			name: 'GPT-4o', family: 'GPT 系', color: '#2F8A57',
 			avgInput: '1.4k', avgOutput: '1.6k', avgTotal: '3.0k',
 			inputPct: 70, outputPct: 60
 		},
 		{
-			name: 'DeepSeek', family: 'DeepSeek 系', color: '#5DA9FF',
+			name: 'DeepSeek', family: 'DeepSeek 系', color: '#5E738A',
 			avgInput: '1.8k', avgOutput: '1.2k', avgTotal: '3.0k',
 			inputPct: 90, outputPct: 45
 		},
 		{
-			name: 'Gemini Pro', family: 'Gemini 系', color: '#FFC24A',
+			name: 'Gemini Pro', family: 'Gemini 系', color: '#D6943A',
 			avgInput: '1.0k', avgOutput: '1.8k', avgTotal: '2.8k',
 			inputPct: 50, outputPct: 68
 		}
 	])
 
 	const sceneTrends = ref([
-		{ name: '编程辅助', icon: '💻', pct: 95, growth: 34 },
-		{ name: '自媒体运营', icon: '📱', pct: 82, growth: 28 },
-		{ name: '电商文案', icon: '🛍️', pct: 71, growth: 22 },
-		{ name: '办公效率', icon: '💼', pct: 63, growth: 18 },
-		{ name: '学习辅助', icon: '📚', pct: 54, growth: 14 }
+		{ name: '编程辅助', icon: 'gear-filled', color: '#5E738A', pct: 95, growth: 34 },
+		{ name: '自媒体运营', icon: 'videocam-filled', color: '#7B5B3C', pct: 82, growth: 28 },
+		{ name: '电商文案', icon: 'shop-filled', color: '#9A6530', pct: 71, growth: 22 },
+		{ name: '办公效率', icon: 'calendar-filled', color: '#4F6C82', pct: 63, growth: 18 },
+		{ name: '学习辅助', icon: 'staff-filled', color: '#2F8A57', pct: 54, growth: 14 }
 	])
 
 	const myRecentSkills = ref([
@@ -327,7 +340,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	.main-scroll { flex: 1; overflow: hidden; }
@@ -355,7 +368,14 @@
 		gap: 10rpx;
 		margin-bottom: 24rpx;
 
-		.module-badge { font-size: 28rpx; }
+		.module-badge {
+			width: 36rpx;
+			height: 36rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
 		.module-title { font-size: 28rpx; font-weight: 700; color: #1A1A1A; flex: 1; }
 		.module-subtitle { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 	}
@@ -377,10 +397,10 @@
 			.burn-tab-text { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 
 			&.active {
-				background: rgba(255,122,26,0.15);
-				border: 1rpx solid rgba(255,122,26,0.3);
+				background: rgba(228, 92, 26,0.15);
+				border: 1rpx solid rgba(228, 92, 26, 0.18);
 
-				.burn-tab-text { color: #FF7A1A; font-weight: 600; }
+				.burn-tab-text { color: #E45C1A; font-weight: 600; }
 			}
 		}
 	}
@@ -412,12 +432,19 @@
 
 				.bri-rank-text { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.50); }
 
-				&.rank-1 { background: linear-gradient(135deg, #FFC24A, #E08A00); .bri-rank-text { color: #fff; } }
+				&.rank-1 { background: #D6943A; .bri-rank-text { color: #fff; } }
 				&.rank-2 { background: rgba(0,0,0,0.10); .bri-rank-text { color: rgba(255,255,255,0.8); } }
-				&.rank-3 { background: linear-gradient(135deg, #FF7A1A, #C45200); .bri-rank-text { color: #fff; } }
+				&.rank-3 { background: #E45C1A; .bri-rank-text { color: #fff; } }
 			}
 
-			.bri-scene-icon { font-size: 32rpx; flex-shrink: 0; }
+			.bri-scene-icon {
+				width: 36rpx;
+				height: 36rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
 
 			.bri-info {
 				flex: 1;
@@ -432,11 +459,11 @@
 				align-items: flex-end;
 				gap: 2rpx;
 
-				.bri-token-val { font-size: 24rpx; font-weight: 700; color: #FF7A1A; }
+				.bri-token-val { font-size: 24rpx; font-weight: 700; color: #E45C1A; }
 				.bri-token-unit { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 			}
 
-			.bri-token-val.orange { font-size: 24rpx; font-weight: 700; color: #FF7A1A; }
+			.bri-token-val.orange { font-size: 24rpx; font-weight: 700; color: #E45C1A; }
 		}
 	}
 
@@ -477,8 +504,8 @@
 						padding: 3rpx 12rpx;
 						border-radius: 6rpx;
 
-						&.badge-green { color: #4CD964; background: rgba(76,217,100,0.12); }
-						&.badge-blue { color: #5DA9FF; background: rgba(93,169,255,0.12); }
+						&.badge-green { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+						&.badge-blue { color: #5E738A; background: rgba(94, 115, 138,0.12); }
 					}
 				}
 			}
@@ -504,9 +531,15 @@
 					align-items: center;
 					gap: 4rpx;
 
+					.vim-token {
+						display: flex;
+						align-items: center;
+						gap: 4rpx;
+					}
+
 					.vim-val { font-size: 24rpx; font-weight: 700; color: #1A1A1A; }
-					.vim-val.orange { color: #FF7A1A; }
-					.vim-val.green { color: #4CD964; }
+					.vim-val.orange { color: #E45C1A; }
+					.vim-val.green { color: #2F8A57; }
 					.vim-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 				}
 			}
@@ -514,12 +547,12 @@
 			.vi-copy-btn {
 				width: 100%;
 				height: 72rpx;
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				border-radius: 16rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.3);
+				box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.18);
 
 				.vi-copy-text { font-size: 26rpx; font-weight: 700; color: #fff; }
 			}
@@ -588,7 +621,7 @@
 						}
 					}
 
-					.mc-bar-val { font-size: 20rpx; color: rgba(255,255,255,0.55); width: 60rpx; text-align: right; flex-shrink: 0; }
+					.mc-bar-val { font-size: 20rpx; color: rgba(0,0,0,0.55); width: 60rpx; text-align: right; flex-shrink: 0; }
 				}
 			}
 
@@ -601,7 +634,7 @@
 
 				.mc-total-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.mc-total-val { font-size: 26rpx; font-weight: 700; }
-				.orange { color: #FF7A1A; }
+				.orange { color: #E45C1A; }
 			}
 		}
 	}
@@ -626,7 +659,14 @@
 				flex-shrink: 0;
 			}
 
-			.st-icon { font-size: 32rpx; flex-shrink: 0; }
+			.st-icon {
+				width: 36rpx;
+				height: 36rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
 
 			.st-info {
 				flex: 1;
@@ -641,7 +681,7 @@
 
 					.st-bar {
 						height: 100%;
-						background: linear-gradient(90deg, #FF7A1A, #FFC24A);
+						background: #E45C1A;
 						border-radius: 4rpx;
 					}
 				}
@@ -654,7 +694,7 @@
 				gap: 2rpx;
 				flex-shrink: 0;
 
-				.st-growth-val { font-size: 24rpx; font-weight: 700; color: #4CD964; }
+				.st-growth-val { font-size: 24rpx; font-weight: 700; color: #2F8A57; }
 				.st-growth-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 			}
 		}
@@ -677,7 +717,7 @@
 
 			.mi-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			.mi-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
-			.mi-val.orange { color: #FF7A1A; }
+			.mi-val.orange { color: #E45C1A; }
 			.mi-sub { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 		}
 	}

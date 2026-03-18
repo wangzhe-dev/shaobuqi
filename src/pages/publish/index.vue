@@ -1,934 +1,1209 @@
 <template>
 	<view class="page">
-
-		<!-- 入口选择（默认视图） -->
-		<view v-if="!activeMode" class="entry-view">
-			<view class="entry-header">
-				<text class="entry-title">发布</text>
-				<text class="entry-subtitle">选择你想发布的内容类型</text>
+		<view class="top-bar">
+			<view class="top-main">
+				<text class="top-title">发布 Skill</text>
+				<text class="top-subtitle">把你的提示词整理成可复制模板，60 秒可发布</text>
 			</view>
-
-			<view class="entry-cards">
-				<!-- 入口A：发布 Skill -->
-				<view class="entry-card entry-card-skill" @tap="startPublishSkill">
-					<view class="ec-icon-wrap">
-						<text class="ec-icon">⚡</text>
-					</view>
-					<view class="ec-body">
-						<text class="ec-title">发布 Skill</text>
-						<text class="ec-desc">分享可复制、可复用的 AI 话术模板。让更多人复制你验证过的 Skill。</text>
-						<view class="ec-tags">
-							<text class="ec-tag">可复制模板</text>
-							<text class="ec-tag">变量参数化</text>
-							<text class="ec-tag">token透明</text>
-						</view>
-					</view>
-					<text class="ec-arrow">→</text>
-				</view>
-
-				<!-- 入口B：记录一次使用 -->
-				<view class="entry-card entry-card-record" @tap="startRecord">
-					<view class="ec-icon-wrap ec-icon-wrap-blue">
-						<text class="ec-icon">📝</text>
-					</view>
-					<view class="ec-body">
-						<text class="ec-title">记录一次使用</text>
-						<text class="ec-desc">记录你的一次 AI 使用经历，包括模型、消耗和效果，沉淀为社区数据。</text>
-						<view class="ec-tags">
-							<text class="ec-tag">模型+token</text>
-							<text class="ec-tag">效果评价</text>
-							<text class="ec-tag">关联Skill</text>
-						</view>
-					</view>
-					<text class="ec-arrow">→</text>
-				</view>
-			</view>
-
-			<!-- 草稿箱 -->
-			<view class="draft-row" @tap="toDraftBox">
-				<text class="draft-icon">📂</text>
-				<text class="draft-text">草稿箱 (2)</text>
-				<text class="draft-arrow">›</text>
+			<view class="top-clear" @tap="resetFormWithConfirm">
+				<text class="top-clear-text">清空</text>
 			</view>
 		</view>
 
-		<!-- 发布 Skill —— 4步分步表单 -->
-		<view v-if="activeMode === 'skill'" class="form-view">
-			<!-- 步骤进度条 -->
-			<view class="step-progress">
-				<view class="sp-header">
-					<view class="sp-back" @tap="backToEntry">
-						<text class="sp-back-icon">←</text>
+		<view v-if="restoredDraftAt" class="draft-tip">
+			<text class="draft-tip-text">已恢复草稿 · {{ restoredDraftAt }}</text>
+			<view class="draft-tip-btn" @tap="clearDraft">
+				<text class="draft-tip-btn-text">删除草稿</text>
+			</view>
+		</view>
+
+		<scroll-view class="content" scroll-y :show-scrollbar="false">
+			<view class="card guide-card">
+				<text class="guide-title">发布节奏</text>
+				<view class="guide-list">
+					<text class="guide-item">1. 写标题，选场景</text>
+					<text class="guide-item">2. 粘贴完整 Prompt</text>
+					<text class="guide-item">3. 点发布，自动跳转详情预览</text>
+				</view>
+				<view class="guide-actions">
+					<view class="guide-btn" @tap="fillPromptTemplate">
+						<text class="guide-btn-text">一键模板</text>
 					</view>
-					<text class="sp-title">发布 Skill</text>
-					<view class="sp-draft-btn" @tap="saveDraft">
-						<text class="sp-draft-text">存草稿</text>
+					<view class="guide-btn" @tap="smartExtract">
+						<text class="guide-btn-text">智能整理</text>
 					</view>
 				</view>
-				<view class="sp-bar">
-					<view
-						v-for="i in 4" :key="i"
-						class="sp-segment"
-						:class="{ active: skillStep >= i, done: skillStep > i }"
+			</view>
+
+			<view class="card">
+				<view class="card-head">
+					<text class="card-title">基础信息</text>
+					<text class="card-flag">必填</text>
+				</view>
+
+				<view class="field">
+					<view class="field-label-row">
+						<text class="field-label">标题</text>
+						<text class="field-count">{{ form.title.length }}/24</text>
+					</view>
+					<input
+						class="field-input"
+						v-model="form.title"
+						placeholder="例如：朋友圈成交文案生成器"
+						maxlength="24"
 					/>
 				</view>
-				<text class="sp-hint">步骤 {{ skillStep }} / 4 · {{ stepHints[skillStep - 1] }}</text>
+
+				<view class="field">
+					<text class="field-label">场景分类</text>
+					<view class="chip-group">
+						<view
+							v-for="scene in sceneOptions"
+							:key="scene"
+							class="chip"
+							:class="{ active: form.scene === scene }"
+							@tap="form.scene = scene"
+						>
+							<text class="chip-text">{{ scene }}</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="field">
+					<view class="field-label-row">
+						<text class="field-label">简介</text>
+						<text class="field-count">{{ form.brief.length }}/90</text>
+					</view>
+					<textarea
+						class="field-textarea compact"
+						v-model="form.brief"
+						placeholder="可选，不填会自动生成一句简介"
+						:maxlength="90"
+						:auto-height="true"
+					/>
+				</view>
 			</view>
 
-			<scroll-view class="form-scroll" scroll-y :show-scrollbar="false">
+			<view class="card">
+				<view class="card-head">
+					<text class="card-title">Skill 内容</text>
+					<text class="card-flag">必填</text>
+				</view>
 
-				<!-- Step 1: 基本信息 -->
-				<view v-if="skillStep === 1" class="form-step">
-					<text class="form-section-title">基本信息</text>
-
-					<view class="form-field">
-						<text class="field-label">Skill 标题 *</text>
-						<input class="field-input" v-model="form.title" placeholder="简洁有力的标题，20字以内" maxlength="20" />
+				<view class="field">
+					<view class="field-label-row">
+						<text class="field-label">完整 Prompt</text>
+						<text class="field-count">{{ form.fullPrompt.length }}/4000</text>
 					</view>
+					<textarea
+						class="field-textarea code"
+						v-model="form.fullPrompt"
+						placeholder="贴入可直接复制使用的完整 Prompt"
+						:maxlength="4000"
+						:auto-height="true"
+					/>
+				</view>
 
-					<view class="form-field">
-						<text class="field-label">一句话简介 *</text>
-						<input class="field-input" v-model="form.summary" placeholder="描述这个Skill能做什么，40字以内" maxlength="40" />
+				<view class="prompt-actions">
+					<view class="ghost-btn" @tap="fillPromptTemplate">
+						<text class="ghost-btn-text">填入模板</text>
 					</view>
+					<view class="ghost-btn" @tap="smartExtract">
+						<text class="ghost-btn-text">智能提取</text>
+					</view>
+				</view>
+			</view>
 
-					<view class="form-field">
-						<text class="field-label">场景分类 *</text>
-						<view class="field-chips">
-							<view
-								v-for="s in scenes"
-								:key="s"
-								class="field-chip"
-								:class="{ active: form.scene === s }"
-								@tap="form.scene = s"
-							>
-								<text class="field-chip-text">{{ s }}</text>
+			<view class="card">
+				<view class="card-head">
+					<text class="card-title">展示补充</text>
+					<text class="card-flag soft">可选</text>
+				</view>
+
+				<view class="field">
+					<text class="field-label">使用场景</text>
+					<view class="chip-group">
+						<view
+							v-for="scene in useSceneOptions"
+							:key="scene"
+							class="chip"
+							:class="{ active: form.useScenes.includes(scene) }"
+							@tap="toggleUseScene(scene)"
+						>
+							<text class="chip-text">{{ scene }}</text>
+						</view>
+					</view>
+					<input
+						class="field-input custom-scene"
+						v-model="customUseSceneInput"
+						placeholder="补充一个自定义场景，回车添加"
+						@confirm="addCustomUseScene"
+					/>
+					<view class="tag-list" v-if="form.useScenes.length">
+						<view v-for="(scene, idx) in form.useScenes" :key="scene + idx" class="tag-item">
+							<text class="tag-item-text">{{ scene }}</text>
+							<text class="tag-item-del" @tap="removeUseScene(idx)">×</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="field">
+					<view class="field-label-row">
+						<text class="field-label">使用步骤</text>
+						<text class="field-count">{{ previewSteps.length }} 步</text>
+					</view>
+					<textarea
+						class="field-textarea compact"
+						v-model="form.stepsText"
+						placeholder="可选，每行一步；不填会自动生成 3~4 步"
+						:maxlength="500"
+						:auto-height="true"
+					/>
+				</view>
+
+				<view class="field">
+					<view class="field-label-row">
+						<text class="field-label">变量说明</text>
+						<text class="field-count">{{ placeholderVars.length }} 个变量</text>
+					</view>
+					<textarea
+						class="field-textarea compact"
+						v-model="form.variableNotes"
+						placeholder="可选，不填会根据 {变量} 自动生成"
+						:maxlength="500"
+						:auto-height="true"
+					/>
+				</view>
+			</view>
+
+			<view class="card preview-card">
+				<view class="card-head">
+					<text class="card-title">发布预览</text>
+					<text class="preview-score">{{ qualityScore }} 分</text>
+				</view>
+
+				<view class="preview-head">
+					<text class="preview-scene">{{ form.scene || '未分类' }}</text>
+				</view>
+				<text class="preview-title">{{ form.title || '（请填写标题）' }}</text>
+				<text class="preview-brief">{{ previewBrief || '（请填写 Prompt 后自动生成简介）' }}</text>
+
+				<view class="preview-block">
+					<text class="preview-block-title">使用场景</text>
+					<view class="preview-scene-list">
+						<view v-for="scene in previewUseScenes" :key="scene" class="preview-scene-chip">
+							<text class="preview-scene-chip-text">{{ scene }}</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="preview-block">
+					<text class="preview-block-title">Skill 内容</text>
+					<view class="preview-prompt-panel">
+						<text class="preview-prompt-text">{{ promptPreview }}</text>
+					</view>
+				</view>
+
+				<view class="preview-block">
+					<text class="preview-block-title">使用步骤</text>
+					<view class="preview-steps">
+						<view v-for="(step, idx) in previewSteps" :key="step + idx" class="preview-step-item">
+							<view class="preview-step-num">
+								<text class="preview-step-num-text">{{ idx + 1 }}</text>
 							</view>
-						</view>
-					</view>
-
-					<view class="form-field">
-						<text class="field-label">标签（最多3个）</text>
-						<input class="field-input" v-model="tagInput" placeholder="输入后按空格添加" @confirm="addTag" />
-						<view class="tag-list">
-							<view v-for="(tag, idx) in form.tags" :key="idx" class="added-tag">
-								<text class="added-tag-text">{{ tag }}</text>
-								<text class="added-tag-del" @tap="removeTag(idx)">×</text>
-							</view>
+							<text class="preview-step-text">{{ step }}</text>
 						</view>
 					</view>
 				</view>
+			</view>
 
-				<!-- Step 2: Skill 内容 -->
-				<view v-if="skillStep === 2" class="form-step">
-					<text class="form-section-title">Skill 内容</text>
+			<view class="content-bottom" />
+		</scroll-view>
 
-					<view class="form-field">
-						<view class="field-label-row">
-							<text class="field-label">System Prompt *</text>
-							<text class="field-count">{{ form.systemPrompt.length }}/500</text>
-						</view>
-						<textarea
-							class="field-textarea"
-							v-model="form.systemPrompt"
-							placeholder="你的 System Prompt，告诉模型它是什么角色"
-							:maxlength="500"
-							:auto-height="true"
-						/>
-					</view>
-
-					<view class="form-field">
-						<view class="field-label-row">
-							<text class="field-label">用户输入模板 *</text>
-							<text class="field-count">{{ form.userTemplate.length }}/300</text>
-						</view>
-						<textarea
-							class="field-textarea"
-							v-model="form.userTemplate"
-							placeholder="用{变量名}标记可替换的部分，如{topic}、{audience}"
-							:maxlength="300"
-							:auto-height="true"
-						/>
-						<text class="field-tip">使用 {变量名} 格式标记可替换内容</text>
-					</view>
-
-					<view class="form-field">
-						<view class="field-label-row">
-							<text class="field-label">使用说明</text>
-						</view>
-						<textarea
-							class="field-textarea"
-							v-model="form.usage"
-							placeholder="可选：说明如何使用这个Skill，注意事项等"
-							:maxlength="200"
-							:auto-height="true"
-						/>
-					</view>
-				</view>
-
-				<!-- Step 3: 消耗信息 -->
-				<view v-if="skillStep === 3" class="form-step">
-					<text class="form-section-title">消耗信息</text>
-					<text class="step-desc">这是烧不起的核心特色，帮助用户判断值不值得使用</text>
-
-					<view class="form-field">
-						<text class="field-label">推荐模型 *</text>
-						<view class="field-chips">
-							<view
-								v-for="m in models"
-								:key="m"
-								class="field-chip"
-								:class="{ active: form.recommendedModel === m }"
-								@tap="form.recommendedModel = m"
-							>
-								<text class="field-chip-text">{{ m }}</text>
-							</view>
-						</view>
-					</view>
-
-					<view class="token-inputs">
-						<view class="form-field ti-field">
-							<text class="field-label">预计输入 token</text>
-							<input class="field-input" v-model="form.avgInputToken" placeholder="如：1200" type="number" />
-						</view>
-						<view class="form-field ti-field">
-							<text class="field-label">预计输出 token</text>
-							<input class="field-input" v-model="form.avgOutputToken" placeholder="如：2000" type="number" />
-						</view>
-					</view>
-
-					<view class="token-preview" v-if="totalToken">
-						<text class="tp-label">预计总 token</text>
-						<text class="tp-val">{{ totalToken }}</text>
-					</view>
-
-					<view class="form-field">
-						<view class="field-label-row">
-							<text class="field-label">示例输出（可选）</text>
-						</view>
-						<textarea
-							class="field-textarea"
-							v-model="form.sampleOutput"
-							placeholder="粘贴一段实际输出，帮助用户判断质量"
-							:maxlength="400"
-							:auto-height="true"
-						/>
-					</view>
-				</view>
-
-				<!-- Step 4: 预览与发布 -->
-				<view v-if="skillStep === 4" class="form-step">
-					<text class="form-section-title">预览与发布</text>
-
-					<!-- 预览卡 -->
-					<view class="preview-card">
-						<view class="prev-head">
-							<view class="prev-scene-tag">{{ form.scene || '未分类' }}</view>
-						</view>
-						<text class="prev-title">{{ form.title || '(未填写标题)' }}</text>
-						<text class="prev-summary">{{ form.summary || '(未填写简介)' }}</text>
-						<view class="prev-meta">
-							<view class="pm-item">
-								<text class="pm-icon">⚡</text>
-								<text class="pm-val orange">{{ totalToken || '--' }} tokens</text>
-							</view>
-							<view class="pm-item">
-								<text class="pm-label">推荐模型</text>
-								<text class="pm-val">{{ form.recommendedModel || '--' }}</text>
-							</view>
-						</view>
-					</view>
-
-					<!-- 发布校验 -->
-					<view class="publish-checklist">
-						<text class="pcl-title">发布前检查</text>
-						<view v-for="check in publishChecks" :key="check.label" class="pcl-item">
-							<text class="pcl-icon" :class="check.pass ? 'pass' : 'fail'">
-								{{ check.pass ? '✓' : '✗' }}
-							</text>
-							<text class="pcl-label" :class="{ 'pcl-fail': !check.pass }">{{ check.label }}</text>
-						</view>
-					</view>
-				</view>
-
-				<view class="form-bottom" />
-			</scroll-view>
-
-			<!-- 步骤按钮 -->
-			<view class="step-actions">
-				<view v-if="skillStep > 1" class="step-prev-btn" @tap="prevStep">
-					<text class="step-prev-text">上一步</text>
-				</view>
-				<view
-					v-if="skillStep < 4"
-					class="step-next-btn"
-					:class="{ disabled: !canNext }"
-					@tap="nextStep"
-				>
-					<text class="step-next-text">下一步</text>
-				</view>
-				<view v-if="skillStep === 4" class="step-publish-btn" :class="{ disabled: !canPublish }" @tap="publishSkill">
-					<text class="step-publish-text">发布 Skill</text>
-				</view>
+		<view class="bottom-bar">
+			<view class="draft-btn" @tap="saveDraft(true)">
+				<text class="draft-btn-text">存草稿</text>
+			</view>
+			<view class="publish-btn" :class="{ disabled: !canPublish }" @tap="publishSkill">
+				<text class="publish-btn-text">发布并预览</text>
 			</view>
 		</view>
-
-		<!-- 记录一次使用 -->
-		<view v-if="activeMode === 'record'" class="form-view">
-			<view class="step-progress">
-				<view class="sp-header">
-					<view class="sp-back" @tap="backToEntry">
-						<text class="sp-back-icon">←</text>
-					</view>
-					<text class="sp-title">记录一次使用</text>
-					<view class="sp-draft-btn" @tap="saveDraft">
-						<text class="sp-draft-text">存草稿</text>
-					</view>
-				</view>
-			</view>
-
-			<scroll-view class="form-scroll" scroll-y :show-scrollbar="false">
-				<view class="form-step">
-					<text class="form-section-title">使用记录</text>
-
-					<view class="form-field">
-						<text class="field-label">我做了什么任务 *</text>
-						<textarea
-							class="field-textarea"
-							v-model="record.task"
-							placeholder="简单描述这次AI使用的任务"
-							:maxlength="100"
-							:auto-height="true"
-						/>
-					</view>
-
-					<view class="form-field">
-						<text class="field-label">用了什么模型 *</text>
-						<view class="field-chips">
-							<view
-								v-for="m in models"
-								:key="m"
-								class="field-chip"
-								:class="{ active: record.model === m }"
-								@tap="record.model = m"
-							>
-								<text class="field-chip-text">{{ m }}</text>
-							</view>
-						</view>
-					</view>
-
-					<view class="token-inputs">
-						<view class="form-field ti-field">
-							<text class="field-label">输入 token</text>
-							<input class="field-input" v-model="record.inputToken" placeholder="如：1200" type="number" />
-						</view>
-						<view class="form-field ti-field">
-							<text class="field-label">输出 token</text>
-							<input class="field-input" v-model="record.outputToken" placeholder="如：2000" type="number" />
-						</view>
-					</view>
-
-					<view class="form-field">
-						<text class="field-label">最终效果 *</text>
-						<view class="field-chips">
-							<view
-								v-for="e in ['成功 ✅', '一般 🆗', '翻车 ❌']"
-								:key="e"
-								class="field-chip"
-								:class="{ active: record.result === e }"
-								@tap="record.result = e"
-							>
-								<text class="field-chip-text">{{ e }}</text>
-							</view>
-						</view>
-					</view>
-
-					<view class="form-field">
-						<text class="field-label">简短感受（可选）</text>
-						<textarea
-							class="field-textarea"
-							v-model="record.comment"
-							placeholder="用几句话描述你的体验"
-							:maxlength="150"
-							:auto-height="true"
-						/>
-					</view>
-				</view>
-
-				<view class="form-bottom" />
-			</scroll-view>
-
-			<view class="step-actions">
-				<view class="step-publish-btn" @tap="publishRecord">
-					<text class="step-publish-text">发布记录</text>
-				</view>
-			</view>
-		</view>
-
 	</view>
 </template>
 
 <script setup lang="ts">
-	import { getCurrentInstance } from 'vue'
+	import { computed, getCurrentInstance, onUnmounted, reactive, ref, watch } from 'vue'
+
+	type SkillForm = {
+		title: string
+		scene: string
+		brief: string
+		fullPrompt: string
+		useScenes: string[]
+		stepsText: string
+		variableNotes: string
+	}
+
+	const SKILL_DRAFT_KEY = 'publish_skill_draft_v5'
+	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
+
+	const sceneOptions = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+	const useSceneOptions = ['朋友圈', '小红书', '公众号', '知乎', '视频口播', '私域转化', '直播间', '客服回复']
 
 	const instance = getCurrentInstance()
-	onShow(() => {
-		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
-	})
-	const activeMode = ref<'skill' | 'record' | null>(null)
-	const skillStep = ref(1)
-	const tagInput = ref('')
+	const customUseSceneInput = ref('')
+	const restoredDraftAt = ref('')
 
-	const form = reactive({
+	const form = reactive<SkillForm>({
 		title: '',
-		summary: '',
 		scene: '',
-		tags: [] as string[],
-		systemPrompt: '',
-		userTemplate: '',
-		usage: '',
-		recommendedModel: '',
-		avgInputToken: '',
-		avgOutputToken: '',
-		sampleOutput: ''
+		brief: '',
+		fullPrompt: '',
+		useScenes: [],
+		stepsText: '',
+		variableNotes: ''
 	})
 
-	const record = reactive({
-		task: '',
-		model: '',
-		inputToken: '',
-		outputToken: '',
-		result: '',
-		comment: ''
-	})
+	const normalizeLineList = (text: string) => {
+		return text
+			.split('\n')
+			.map(line => line.trim())
+			.filter(Boolean)
+	}
 
-	const scenes = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
-	const models = ['Claude Sonnet', 'Claude Opus', 'GPT-4o', 'GPT-4o-mini', 'DeepSeek', 'Gemini Pro']
+	const extractSection = (text: string, label: string) => {
+		const reg = new RegExp(`【${label}】([\\s\\S]*?)(?=\\n\\s*【[^\\n]+】|$)`)
+		const match = text.match(reg)
+		return match ? match[1].trim() : ''
+	}
 
-	const stepHints = ['填写基本信息', '填写Skill内容', '填写消耗信息', '预览并发布']
-
-	const totalToken = computed(() => {
-		const i = parseInt(form.avgInputToken) || 0
-		const o = parseInt(form.avgOutputToken) || 0
-		if (!i && !o) return ''
-		return ((i + o) / 1000).toFixed(1) + 'k'
-	})
-
-	const canNext = computed(() => {
-		if (skillStep.value === 1) return form.title && form.summary && form.scene
-		if (skillStep.value === 2) return form.systemPrompt && form.userTemplate
-		if (skillStep.value === 3) return form.recommendedModel
-		return true
-	})
-
-	const publishChecks = computed(() => [
-		{ label: '已填写标题', pass: !!form.title },
-		{ label: '已填写简介', pass: !!form.summary },
-		{ label: '已选择场景', pass: !!form.scene },
-		{ label: '已填写 System Prompt', pass: !!form.systemPrompt },
-		{ label: '已填写用户输入模板', pass: !!form.userTemplate },
-		{ label: '已选择推荐模型', pass: !!form.recommendedModel }
-	])
-
-	const canPublish = computed(() => publishChecks.value.every(c => c.pass))
-
-	const addTag = () => {
-		const t = tagInput.value.trim()
-		if (t && form.tags.length < 3 && !form.tags.includes(t)) {
-			form.tags.push(t)
+	const detectSceneFromPrompt = (text: string) => {
+		for (const scene of sceneOptions) {
+			if (text.includes(scene)) return scene
 		}
-		tagInput.value = ''
+		return ''
 	}
 
-	const removeTag = (idx: number) => {
-		form.tags.splice(idx, 1)
+	const extractUseScenesFromPrompt = (text: string) => {
+		const found: string[] = []
+		const inline = text.match(/使用场景[：:]\s*([^\n]+)/)
+		if (inline?.[1]) {
+			inline[1]
+				.split(/[、，,\/\s]+/)
+				.map(item => item.trim())
+				.filter(Boolean)
+				.forEach(item => found.push(item))
+		}
+		for (const scene of useSceneOptions) {
+			if (text.includes(scene)) found.push(scene)
+		}
+		return Array.from(new Set(found)).slice(0, 8)
 	}
 
-	const startPublishSkill = () => {
-		activeMode.value = 'skill'
-		skillStep.value = 1
+	const extractStepsFromPrompt = (text: string) => {
+		const direct = Array.from(text.matchAll(/^\s*(?:\d+[\.、]|[-•])\s*(.+)$/gm))
+			.map(item => item[1].trim())
+			.filter(Boolean)
+		if (direct.length >= 2) return Array.from(new Set(direct)).slice(0, 8)
+
+		const outputSection = extractSection(text, '输出要求')
+		const outputSteps = Array.from(outputSection.matchAll(/^\s*(?:\d+[\.、]|[-•])\s*(.+)$/gm))
+			.map(item => item[1].trim())
+			.filter(Boolean)
+		if (outputSteps.length >= 2) return Array.from(new Set(outputSteps)).slice(0, 8)
+
+		return []
 	}
 
-	const startRecord = () => {
-		activeMode.value = 'record'
+	const buildTitleFromPrompt = (text: string, scene: string) => {
+		const lines = normalizeLineList(text)
+		const candidate = lines.find(line => !/^【.+】$/.test(line) && line.length <= 24)
+		if (candidate && !/[：:]/.test(candidate)) return candidate.slice(0, 24)
+
+		const sceneMap: Record<string, string> = {
+			写作: '高转化文案生成器',
+			编程: '问题排查助手',
+			自媒体: '爆款内容生成器',
+			办公: '高效办公助手',
+			运营: '增长运营策略助手',
+			学习: '结构化学习教练',
+			设计: '创意设计助手',
+			电商: '电商转化文案助手'
+		}
+		return sceneMap[scene] || '结构化提示词助手'
 	}
 
-	const backToEntry = () => {
-		activeMode.value = null
+	const buildBriefFromPrompt = (text: string, scene: string) => {
+		const role = extractSection(text, '角色设定').replace(/\s+/g, ' ')
+		const output = extractSection(text, '输出要求').replace(/\s+/g, ' ')
+		const raw = (output || role || text).replace(/\s+/g, ' ').slice(0, 40)
+		const brief = `面向${scene || '通用'}场景的结构化 Prompt，${raw}${raw.length >= 40 ? '...' : ''}`
+		return brief.slice(0, 90)
 	}
 
-	const nextStep = () => {
-		if (canNext.value && skillStep.value < 4) skillStep.value++
+	const mergeUseScenes = (items: string[]) => {
+		const merged = new Set(form.useScenes)
+		for (const item of items) {
+			if (!item || merged.size >= 8) break
+			merged.add(item)
+		}
+		form.useScenes = Array.from(merged).slice(0, 8)
 	}
 
-	const prevStep = () => {
-		if (skillStep.value > 1) skillStep.value--
+	const placeholderVars = computed(() => {
+		const vars = new Set<string>()
+		const matches = form.fullPrompt.matchAll(/\{([^{}\n]{1,30})\}/g)
+		for (const match of matches) {
+			vars.add(match[1].trim())
+		}
+		return Array.from(vars)
+	})
+
+	const previewUseScenes = computed(() => {
+		if (form.useScenes.length) return form.useScenes
+		if (form.scene) return [form.scene]
+		return ['待补充']
+	})
+
+	const manualSteps = computed(() => normalizeLineList(form.stepsText).slice(0, 8))
+	const autoSteps = computed(() => extractStepsFromPrompt(form.fullPrompt.trim()))
+
+	const previewSteps = computed(() => {
+		if (manualSteps.value.length >= 2) return manualSteps.value
+		if (autoSteps.value.length >= 2) return autoSteps.value
+		return ['复制 Skill 内容', '粘贴到 ChatGPT 或 Claude', '替换大括号变量为真实信息', '发送并按结果微调']
+	})
+
+	const autoBrief = computed(() => {
+		const text = form.fullPrompt.trim()
+		if (!text) return ''
+		return buildBriefFromPrompt(text, form.scene)
+	})
+
+	const previewBrief = computed(() => {
+		if (form.brief.trim()) return form.brief.trim()
+		return autoBrief.value
+	})
+
+	const promptPreview = computed(() => {
+		const text = form.fullPrompt.trim()
+		if (!text) return '（请先填写 Prompt）'
+		if (text.length <= 380) return text
+		return `${text.slice(0, 380)}...`
+	})
+
+	const resolvedVariableNotes = computed(() => {
+		if (form.variableNotes.trim()) return form.variableNotes.trim()
+		if (!placeholderVars.value.length) return ''
+		return placeholderVars.value.map(item => `{${item}}：替换为你的实际信息`).join('\n')
+	})
+
+	const qualityScore = computed(() => {
+		let score = 0
+		if (form.title.trim()) score += 30
+		if (form.scene) score += 20
+		if (form.fullPrompt.trim()) score += 30
+		if (previewSteps.value.length >= 2) score += 10
+		if (previewBrief.value) score += 10
+		return Math.min(score, 100)
+	})
+
+	const hasFormContent = computed(() => {
+		return [
+			form.title,
+			form.scene,
+			form.brief,
+			form.fullPrompt,
+			form.stepsText,
+			form.variableNotes,
+			...form.useScenes
+		]
+			.some(item => `${item || ''}`.trim().length > 0)
+	})
+
+	const canPublish = computed(() => {
+		return !!form.title.trim() && !!form.scene && !!form.fullPrompt.trim()
+	})
+
+	const toggleUseScene = (scene: string) => {
+		if (form.useScenes.includes(scene)) {
+			form.useScenes = form.useScenes.filter(item => item !== scene)
+			return
+		}
+		if (form.useScenes.length < 8) form.useScenes.push(scene)
 	}
 
-	const saveDraft = () => {
-		uni.showToast({ title: '已存入草稿箱', icon: 'success' })
+	const addCustomUseScene = () => {
+		const value = customUseSceneInput.value.trim()
+		if (!value) return
+		if (!form.useScenes.includes(value) && form.useScenes.length < 8) {
+			form.useScenes.push(value)
+		}
+		customUseSceneInput.value = ''
+	}
+
+	const removeUseScene = (idx: number) => {
+		form.useScenes.splice(idx, 1)
+	}
+
+	const fillPromptTemplate = () => {
+		const template = `【你是谁】
+你是一位很会写营销文案的老师，能把复杂卖点写成普通人看得懂、愿意下单的文案。
+
+【你要做什么】
+1. 先看懂：这是谁的产品、卖给谁、在哪个场景用。
+2. 输出 3 个版本：
+- 痛点版（先说问题，再给解决方案）
+- 场景版（让人有代入感）
+- 数据版（用数字或结果增强说服力）
+3. 每个版本都要有：核心好处 + 一句行动引导（比如“现在就试试”）。
+4. 信息不完整时，不要反问，直接按默认参数生成可用结果。
+
+【固定参数（默认执行）】
+- 每版 120~150 字
+- 语气：真实、自然、口语化
+- 输出数量：3版
+- 如缺“目标用户”：默认“25~35岁上班族”
+- 如缺“使用场景”：默认“日常通勤+碎片时间”
+- 如缺“核心卖点”：默认提炼为“省时、省钱、好上手”
+- 禁止先提问，直接输出结果
+
+【输出格式】
+请按下面格式输出：
+
+版本1（痛点版）：
+...
+
+版本2（场景版）：
+...
+
+版本3（数据版）：
+...
+
+最后自检：
+- 有没有讲清楚用户能得到什么：是/否
+- 有没有行动引导：是/否
+- 有没有空话套话：是/否
+
+【我会提供这些信息】
+产品名称：{产品名称}
+核心卖点：{核心卖点}
+目标用户：{目标用户}
+使用场景：{使用场景}
+语气风格：{语气风格}
+禁用词：{禁用词，可留空}`
+
+		if (!form.fullPrompt.trim()) {
+			form.fullPrompt = template
+			return
+		}
+
+		uni.showModal({
+			title: '替换当前 Prompt？',
+			content: '模板会覆盖你已经填写的 Prompt 内容。',
+			success: (res) => {
+				if (res.confirm) form.fullPrompt = template
+			}
+		})
+	}
+
+	const smartExtract = () => {
+		const text = form.fullPrompt.trim()
+		if (!text) {
+			uni.showToast({ title: '请先粘贴 Prompt', icon: 'none' })
+			return
+		}
+
+		const detectedScene = detectSceneFromPrompt(text)
+		if (!form.scene && detectedScene) form.scene = detectedScene
+
+		if (!form.title.trim()) form.title = buildTitleFromPrompt(text, form.scene)
+		if (!form.brief.trim()) form.brief = buildBriefFromPrompt(text, form.scene)
+
+		const extractedUseScenes = extractUseScenesFromPrompt(text)
+		if (extractedUseScenes.length) mergeUseScenes(extractedUseScenes)
+
+		if (!form.stepsText.trim()) {
+			const extractedSteps = extractStepsFromPrompt(text)
+			if (extractedSteps.length) form.stepsText = extractedSteps.join('\n')
+		}
+
+		if (!form.variableNotes.trim() && placeholderVars.value.length) {
+			form.variableNotes = placeholderVars.value.map(item => `{${item}}：替换为你的实际信息`).join('\n')
+		}
+
+		uni.showToast({
+			title: `已整理 ${placeholderVars.value.length} 变量 / ${previewSteps.value.length} 步骤`,
+			icon: 'none'
+		})
+	}
+
+	const resetForm = () => {
+		form.title = ''
+		form.scene = ''
+		form.brief = ''
+		form.fullPrompt = ''
+		form.useScenes = []
+		form.stepsText = ''
+		form.variableNotes = ''
+		customUseSceneInput.value = ''
+	}
+
+	const resetFormWithConfirm = () => {
+		if (!hasFormContent.value) {
+			resetForm()
+			return
+		}
+		uni.showModal({
+			title: '确认清空？',
+			content: '将清空当前填写内容，草稿不会被删除。',
+			success: (res) => {
+				if (!res.confirm) return
+				resetForm()
+				uni.showToast({ title: '已清空', icon: 'none' })
+			}
+		})
+	}
+
+	const formatDateTime = (timestamp: number) => {
+		const date = new Date(timestamp)
+		const month = `${date.getMonth() + 1}`.padStart(2, '0')
+		const day = `${date.getDate()}`.padStart(2, '0')
+		const hour = `${date.getHours()}`.padStart(2, '0')
+		const minute = `${date.getMinutes()}`.padStart(2, '0')
+		return `${month}-${day} ${hour}:${minute}`
+	}
+
+	const formatPublishDate = () => {
+		const now = new Date()
+		const y = now.getFullYear()
+		const m = `${now.getMonth() + 1}`.padStart(2, '0')
+		const d = `${now.getDate()}`.padStart(2, '0')
+		return `${y}-${m}-${d}`
+	}
+
+	const saveDraft = (showToast = false) => {
+		if (!hasFormContent.value) return
+		const payload = {
+			form: {
+				title: form.title,
+				scene: form.scene,
+				brief: form.brief,
+				fullPrompt: form.fullPrompt,
+				useScenes: [...form.useScenes],
+				stepsText: form.stepsText,
+				variableNotes: form.variableNotes
+			},
+			updatedAt: Date.now()
+		}
+		uni.setStorageSync(SKILL_DRAFT_KEY, payload)
+		restoredDraftAt.value = formatDateTime(payload.updatedAt)
+		if (showToast) uni.showToast({ title: '草稿已保存', icon: 'success' })
+	}
+
+	const loadDraft = () => {
+		const raw = uni.getStorageSync(SKILL_DRAFT_KEY)
+		if (!raw || !raw.form) return false
+		const data = raw.form
+
+		form.title = data.title || ''
+		form.scene = data.scene || ''
+		form.brief = data.brief || ''
+		form.fullPrompt = data.fullPrompt || ''
+		form.useScenes = Array.isArray(data.useScenes) ? data.useScenes.slice(0, 8) : []
+		form.stepsText = data.stepsText || ''
+		form.variableNotes = data.variableNotes || ''
+		customUseSceneInput.value = ''
+		restoredDraftAt.value = raw.updatedAt ? formatDateTime(raw.updatedAt) : ''
+		return true
+	}
+
+	const clearDraft = () => {
+		uni.removeStorageSync(SKILL_DRAFT_KEY)
+		restoredDraftAt.value = ''
+		uni.showToast({ title: '草稿已删除', icon: 'none' })
+	}
+
+	const buildPublishedSkillPayload = () => {
+		return {
+			id: `p-${Date.now()}`,
+			title: form.title.trim() || '新发布 Skill',
+			scene: form.scene || '未分类',
+			author: '我',
+			authorColor: '#D6943A',
+			publishTime: formatPublishDate(),
+			copyCount: '0',
+			favoriteCount: '0',
+			successRate: '--',
+			feedbackCount: '0',
+			brief: previewBrief.value,
+			useScenes: previewUseScenes.value,
+			fullPrompt: form.fullPrompt.trim(),
+			steps: previewSteps.value,
+			variableNotes: resolvedVariableNotes.value,
+			showConsume: false,
+			avgInputToken: '',
+			avgOutputToken: '',
+			avgTotalToken: '',
+			estimatedCost: '',
+			recommendedModel: '--',
+			commonModel: '--',
+			totalUses: '0',
+			weekUses: '0',
+			feedbacks: [],
+			similarSkills: []
+		}
 	}
 
 	const publishSkill = () => {
-		if (!canPublish.value) return
-		uni.showToast({ title: 'Skill 发布成功！', icon: 'success' })
+		if (!canPublish.value) {
+			uni.showToast({ title: '请补全标题、场景和 Prompt', icon: 'none' })
+			return
+		}
+
+		uni.setStorageSync(PUBLISHED_SKILL_PREVIEW_KEY, buildPublishedSkillPayload())
+		uni.removeStorageSync(SKILL_DRAFT_KEY)
+		restoredDraftAt.value = ''
+		uni.showToast({ title: '发布成功', icon: 'success' })
+
 		setTimeout(() => {
-			activeMode.value = null
-			skillStep.value = 1
-		}, 1500)
+			resetForm()
+			uni.navigateTo({ url: '/pages/detail/skill?fromPublish=1' })
+		}, 600)
 	}
 
-	const publishRecord = () => {
-		uni.showToast({ title: '使用记录发布成功！', icon: 'success' })
-		setTimeout(() => {
-			activeMode.value = null
-		}, 1500)
+	let draftTimer: ReturnType<typeof setTimeout> | null = null
+	const scheduleDraftSave = () => {
+		if (draftTimer) clearTimeout(draftTimer)
+		draftTimer = setTimeout(() => saveDraft(false), 600)
 	}
 
-	const toDraftBox = () => {
-		uni.showToast({ title: '草稿箱功能开发中', icon: 'none' })
-	}
+	watch(form, scheduleDraftSave, { deep: true })
+
+	onShow(() => {
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
+		if (!hasFormContent.value) loadDraft()
+	})
+
+	onUnmounted(() => {
+		if (draftTimer) clearTimeout(draftTimer)
+	})
 </script>
 
 <style lang="scss" scoped>
 	.page {
+		--accent: #e45c1a;
+		--accent-soft: rgba(228, 92, 26, 0.1);
+		--ink: #18181a;
+		--ink-soft: rgba(24, 24, 26, 0.58);
+		--line: rgba(24, 24, 26, 0.1);
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #ffffff;
+		font-family: 'DIN Alternate', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 	}
 
-	/* 入口视图 */
-	.entry-view {
-		flex: 1;
-		padding: 0 24rpx;
-		overflow-y: auto;
-
-		.entry-header {
-			padding: 48rpx 0 32rpx;
-
-			.entry-title { display: block; font-size: 44rpx; font-weight: 900; color: #1A1A1A; margin-bottom: 10rpx; }
-			.entry-subtitle { display: block; font-size: 26rpx; color: rgba(0,0,0,0.40); }
-		}
-
-		.entry-cards {
-			display: flex;
-			flex-direction: column;
-			gap: 20rpx;
-			margin-bottom: 28rpx;
-		}
-	}
-
-	.entry-card {
-		background: #FFFFFF;
-		border-radius: 28rpx;
-		border: 1rpx solid rgba(0,0,0,0.07);
-		padding: 28rpx;
+	.top-bar {
 		display: flex;
 		align-items: flex-start;
-		gap: 20rpx;
+		gap: 18rpx;
+		padding: 28rpx 24rpx 20rpx;
+		background: #ffffff;
+		border-bottom: 1rpx solid var(--line);
 
-		&:active { background: #F0EDE8; }
+		.top-main {
+			flex: 1;
+		}
 
-		&.entry-card-skill { border-color: rgba(255,122,26,0.2); }
-		&.entry-card-record { border-color: rgba(93,169,255,0.2); }
+		.top-title {
+			display: block;
+			font-size: 42rpx;
+			font-weight: 900;
+			color: var(--ink);
+			line-height: 1.2;
+		}
 
-		.ec-icon-wrap {
-			width: 88rpx;
-			height: 88rpx;
-			border-radius: 24rpx;
-			background: rgba(255,122,26,0.15);
-			border: 1rpx solid rgba(255,122,26,0.25);
+		.top-subtitle {
+			display: block;
+			margin-top: 8rpx;
+			font-size: 24rpx;
+			line-height: 1.5;
+			color: var(--ink-soft);
+		}
+
+		.top-clear {
+			height: 56rpx;
+			padding: 0 20rpx;
+			border-radius: 999rpx;
+			background: rgba(0, 0, 0, 0.05);
+			border: 1rpx solid rgba(0, 0, 0, 0.08);
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			flex-shrink: 0;
 
-			.ec-icon { font-size: 40rpx; }
-
-			&.ec-icon-wrap-blue {
-				background: rgba(93,169,255,0.15);
-				border-color: rgba(93,169,255,0.25);
+			.top-clear-text {
+				font-size: 22rpx;
+				color: rgba(0, 0, 0, 0.55);
+				font-weight: 600;
 			}
 		}
-
-		.ec-body {
-			flex: 1;
-
-			.ec-title { display: block; font-size: 30rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 10rpx; }
-			.ec-desc { display: block; font-size: 24rpx; color: rgba(0,0,0,0.50); line-height: 1.6; margin-bottom: 16rpx; }
-
-			.ec-tags {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 10rpx;
-
-				.ec-tag {
-					font-size: 18rpx;
-					color: rgba(0,0,0,0.40);
-					background: rgba(0,0,0,0.05);
-					padding: 4rpx 14rpx;
-					border-radius: 8rpx;
-				}
-			}
-		}
-
-		.ec-arrow { font-size: 32rpx; color: rgba(0,0,0,0.30); flex-shrink: 0; margin-top: 24rpx; }
 	}
 
-	.draft-row {
+	.draft-tip {
+		margin: 16rpx 24rpx 0;
+		padding: 16rpx 18rpx;
+		border-radius: 16rpx;
+		background: #fff7f2;
+		border: 1rpx solid rgba(228, 92, 26, 0.2);
 		display: flex;
 		align-items: center;
-		gap: 14rpx;
-		background: rgba(0,0,0,0.04);
-		border-radius: 20rpx;
-		padding: 24rpx 28rpx;
-		margin-bottom: calc(160rpx + env(safe-area-inset-bottom));
+		gap: 12rpx;
 
-		.draft-icon { font-size: 32rpx; }
-		.draft-text { flex: 1; font-size: 26rpx; color: rgba(255,255,255,0.6); font-weight: 500; }
-		.draft-arrow { font-size: 28rpx; color: rgba(0,0,0,0.30); }
+		.draft-tip-text {
+			flex: 1;
+			font-size: 22rpx;
+			color: rgba(0, 0, 0, 0.55);
+		}
+
+		.draft-tip-btn {
+			height: 46rpx;
+			padding: 0 16rpx;
+			border-radius: 999rpx;
+			background: rgba(228, 92, 26, 0.12);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.draft-tip-btn-text {
+			font-size: 20rpx;
+			color: var(--accent);
+			font-weight: 700;
+		}
 	}
 
-	/* 表单视图 */
-	.form-view {
+	.content {
 		flex: 1;
-		display: flex;
-		flex-direction: column;
 		overflow: hidden;
 	}
 
-	/* 步骤进度条 */
-	.step-progress {
-		padding: 20rpx 24rpx 16rpx;
-		background: #F5F3EF;
-		border-bottom: 1rpx solid rgba(0,0,0,0.05);
-		flex-shrink: 0;
+	.card {
+		margin: 20rpx 24rpx 0;
+		background: #ffffff;
+		border-radius: 24rpx;
+		border: 1rpx solid var(--line);
+		padding: 24rpx;
+	}
 
-		.sp-header {
-			display: flex;
-			align-items: center;
-			gap: 16rpx;
-			margin-bottom: 20rpx;
+	.guide-card {
+		background: linear-gradient(135deg, #fff6ef 0%, #fff 100%);
+		border-color: rgba(228, 92, 26, 0.2);
 
-			.sp-back {
-				width: 60rpx;
-				height: 60rpx;
-				background: rgba(0,0,0,0.06);
-				border-radius: 18rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-
-				.sp-back-icon { font-size: 28rpx; color: #1A1A1A; }
-			}
-
-			.sp-title { flex: 1; font-size: 30rpx; font-weight: 700; color: #1A1A1A; }
-
-			.sp-draft-btn {
-				background: rgba(0,0,0,0.06);
-				border-radius: 100rpx;
-				padding: 10rpx 22rpx;
-
-				.sp-draft-text { font-size: 22rpx; color: rgba(255,255,255,0.55); }
-			}
+		.guide-title {
+			display: block;
+			font-size: 26rpx;
+			font-weight: 800;
+			color: #b94b14;
+			margin-bottom: 14rpx;
 		}
 
-		.sp-bar {
+		.guide-list {
 			display: flex;
+			flex-direction: column;
 			gap: 8rpx;
-			margin-bottom: 12rpx;
-
-			.sp-segment {
-				flex: 1;
-				height: 6rpx;
-				background: rgba(0,0,0,0.09);
-				border-radius: 3rpx;
-				transition: background 0.3s;
-
-				&.active { background: #FF7A1A; }
-				&.done { background: rgba(255,122,26,0.4); }
-			}
 		}
 
-		.sp-hint { font-size: 22rpx; color: rgba(0,0,0,0.40); }
-	}
-
-	.form-scroll { flex: 1; overflow: hidden; }
-
-	.form-step {
-		padding: 28rpx 24rpx 0;
-
-		.form-section-title {
+		.guide-item {
 			display: block;
-			font-size: 30rpx;
-			font-weight: 700;
-			color: #1A1A1A;
-			margin-bottom: 8rpx;
+			font-size: 23rpx;
+			color: rgba(0, 0, 0, 0.68);
+			line-height: 1.55;
 		}
 
-		.step-desc {
-			display: block;
-			font-size: 24rpx;
-			color: rgba(0,0,0,0.40);
-			line-height: 1.5;
-			margin-bottom: 28rpx;
-		}
-	}
-
-	.form-field {
-		margin-top: 28rpx;
-
-		.field-label {
-			display: block;
-			font-size: 24rpx;
-			font-weight: 600;
-			color: rgba(0,0,0,0.60);
-			margin-bottom: 14rpx;
+		.guide-actions {
+			display: flex;
+			gap: 12rpx;
+			margin-top: 16rpx;
 		}
 
-		.field-label-row {
+		.guide-btn {
+			height: 56rpx;
+			padding: 0 18rpx;
+			background: rgba(228, 92, 26, 0.1);
+			border: 1rpx solid rgba(228, 92, 26, 0.18);
+			border-radius: 14rpx;
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
-			margin-bottom: 14rpx;
-
-			.field-label { margin-bottom: 0; }
-			.field-count { font-size: 20rpx; color: rgba(0,0,0,0.35); }
+			justify-content: center;
 		}
 
-		.field-input {
-			width: 100%;
-			height: 80rpx;
-			background: #FFFFFF;
-			border-radius: 16rpx;
-			border: 1rpx solid rgba(0,0,0,0.08);
-			padding: 0 20rpx;
-			font-size: 26rpx;
-			color: #1A1A1A;
-
-			&:focus { border-color: rgba(255,122,26,0.4); }
-		}
-
-		.field-textarea {
-			width: 100%;
-			min-height: 160rpx;
-			background: #FFFFFF;
-			border-radius: 16rpx;
-			border: 1rpx solid rgba(0,0,0,0.08);
-			padding: 20rpx;
-			font-size: 26rpx;
-			color: #1A1A1A;
-			line-height: 1.65;
-		}
-
-		.field-tip {
-			display: block;
-			font-size: 20rpx;
-			color: rgba(255,122,26,0.6);
-			margin-top: 8rpx;
-		}
-
-		.field-chips {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 12rpx;
-
-			.field-chip {
-				height: 64rpx;
-				padding: 0 24rpx;
-				background: rgba(0,0,0,0.06);
-				border-radius: 16rpx;
-				border: 1rpx solid rgba(0,0,0,0.08);
-				display: flex;
-				align-items: center;
-				transition: all 0.2s;
-
-				.field-chip-text { font-size: 24rpx; color: rgba(255,255,255,0.6); }
-
-				&.active {
-					background: rgba(255,122,26,0.15);
-					border-color: rgba(255,122,26,0.4);
-
-					.field-chip-text { color: #FF7A1A; font-weight: 600; }
-				}
-			}
-		}
-
-		.tag-list {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 10rpx;
-			margin-top: 12rpx;
-
-			.added-tag {
-				display: flex;
-				align-items: center;
-				gap: 8rpx;
-				background: rgba(93,169,255,0.12);
-				border: 1rpx solid rgba(93,169,255,0.25);
-				padding: 6rpx 16rpx;
-				border-radius: 100rpx;
-
-				.added-tag-text { font-size: 22rpx; color: #5DA9FF; }
-				.added-tag-del { font-size: 24rpx; color: rgba(93,169,255,0.6); }
-			}
+		.guide-btn-text {
+			font-size: 22rpx;
+			font-weight: 700;
+			color: var(--accent);
 		}
 	}
 
-	.token-inputs {
+	.card-head {
 		display: flex;
-		gap: 16rpx;
-
-		.ti-field { flex: 1; }
+		align-items: center;
+		gap: 12rpx;
+		margin-bottom: 10rpx;
 	}
 
-	.token-preview {
-		margin-top: 16rpx;
-		background: rgba(255,122,26,0.08);
-		border-radius: 16rpx;
-		border: 1rpx solid rgba(255,122,26,0.2);
-		padding: 16rpx 24rpx;
+	.card-title {
+		flex: 1;
+		font-size: 28rpx;
+		font-weight: 800;
+		color: var(--ink);
+	}
+
+	.card-flag {
+		height: 40rpx;
+		padding: 0 14rpx;
+		border-radius: 999rpx;
+		background: rgba(228, 92, 26, 0.14);
+		color: var(--accent);
+		font-size: 20rpx;
+		font-weight: 700;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		&.soft {
+			background: rgba(0, 0, 0, 0.06);
+			color: rgba(0, 0, 0, 0.45);
+		}
+	}
+
+	.field {
+		margin-top: 18rpx;
+	}
+
+	.field-label-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-
-		.tp-label { font-size: 22rpx; color: rgba(0,0,0,0.50); }
-		.tp-val { font-size: 30rpx; font-weight: 800; color: #FF7A1A; }
+		margin-bottom: 10rpx;
 	}
 
-	/* 预览卡 */
-	.preview-card {
-		background: rgba(0,0,0,0.03);
-		border-radius: 20rpx;
-		border: 1rpx solid rgba(0,0,0,0.07);
-		padding: 24rpx;
-		margin-bottom: 28rpx;
-
-		.prev-head { margin-bottom: 14rpx; }
-
-		.prev-scene-tag {
-			display: inline-flex;
-			font-size: 20rpx;
-			color: rgba(0,0,0,0.50);
-			background: rgba(0,0,0,0.07);
-			padding: 5rpx 16rpx;
-			border-radius: 8rpx;
-		}
-
-		.prev-title {
-			display: block;
-			font-size: 30rpx;
-			font-weight: 800;
-			color: #1A1A1A;
-			margin-bottom: 10rpx;
-		}
-
-		.prev-summary {
-			display: block;
-			font-size: 24rpx;
-			color: rgba(0,0,0,0.50);
-			line-height: 1.6;
-			margin-bottom: 18rpx;
-		}
-
-		.prev-meta {
-			display: flex;
-			gap: 24rpx;
-
-			.pm-item {
-				display: flex;
-				align-items: center;
-				gap: 8rpx;
-
-				.pm-icon { font-size: 22rpx; }
-				.pm-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
-				.pm-val { font-size: 24rpx; font-weight: 600; color: rgba(0,0,0,0.70); }
-				.pm-val.orange { color: #FF7A1A; }
-			}
-		}
+	.field-label {
+		display: block;
+		font-size: 24rpx;
+		font-weight: 700;
+		color: rgba(0, 0, 0, 0.62);
+		margin-bottom: 10rpx;
 	}
 
-	/* 发布校验清单 */
-	.publish-checklist {
-		background: rgba(0,0,0,0.03);
-		border-radius: 20rpx;
-		padding: 24rpx;
-
-		.pcl-title {
-			display: block;
-			font-size: 24rpx;
-			font-weight: 600;
-			color: rgba(255,255,255,0.55);
-			margin-bottom: 18rpx;
-		}
-
-		.pcl-item {
-			display: flex;
-			align-items: center;
-			gap: 14rpx;
-			padding: 12rpx 0;
-			border-bottom: 1rpx solid rgba(0,0,0,0.04);
-
-			&:last-child { border-bottom: none; }
-
-			.pcl-icon {
-				font-size: 26rpx;
-				font-weight: 700;
-				width: 40rpx;
-				text-align: center;
-
-				&.pass { color: #4CD964; }
-				&.fail { color: rgba(0,0,0,0.20); }
-			}
-
-			.pcl-label { font-size: 24rpx; color: rgba(0,0,0,0.70); }
-			.pcl-fail { color: rgba(0,0,0,0.35); }
-		}
+	.field-count {
+		font-size: 20rpx;
+		color: rgba(0, 0, 0, 0.36);
 	}
 
-	.form-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
+	.field-input,
+	.field-textarea {
+		width: 100%;
+		background: #ffffff;
+		border-radius: 16rpx;
+		border: 1rpx solid var(--line);
+		padding: 0 18rpx;
+		font-size: 26rpx;
+		color: #1a1a1a;
+	}
 
-	/* 步骤操作按钮 */
-	.step-actions {
+	.field-input {
+		height: 84rpx;
+	}
+
+	.field-textarea {
+		min-height: 220rpx;
+		padding: 18rpx;
+		line-height: 1.65;
+	}
+
+	.field-textarea.compact {
+		min-height: 140rpx;
+	}
+
+	.field-textarea.code {
+		background: #fff9f4;
+		border-color: rgba(228, 92, 26, 0.22);
+		font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
+		font-size: 24rpx;
+	}
+
+	.custom-scene {
+		margin-top: 12rpx;
+	}
+
+	.chip-group {
 		display: flex;
-		gap: 16rpx;
-		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
-		background: rgba(11,13,18,0.95);
-		backdrop-filter: blur(20px);
-		border-top: 1rpx solid rgba(0,0,0,0.05);
-		flex-shrink: 0;
+		flex-wrap: wrap;
+		gap: 12rpx;
+	}
 
-		.step-prev-btn {
-			flex: 1;
-			height: 88rpx;
-			background: rgba(0,0,0,0.06);
-			border-radius: 24rpx;
-			border: 1rpx solid rgba(0,0,0,0.09);
-			display: flex;
-			align-items: center;
-			justify-content: center;
+	.chip {
+		height: 62rpx;
+		padding: 0 22rpx;
+		border-radius: 15rpx;
+		border: 1rpx solid rgba(0, 0, 0, 0.1);
+		background: rgba(0, 0, 0, 0.04);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.18s ease;
 
-			.step-prev-text { font-size: 28rpx; color: rgba(255,255,255,0.6); font-weight: 600; }
+		.chip-text {
+			font-size: 23rpx;
+			font-weight: 600;
+			color: rgba(0, 0, 0, 0.58);
 		}
 
-		.step-next-btn, .step-publish-btn {
-			flex: 2;
-			height: 88rpx;
-			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
-			border-radius: 24rpx;
-			box-shadow: 0 8rpx 24rpx rgba(255,122,26,0.35);
-			display: flex;
-			align-items: center;
-			justify-content: center;
+		&.active {
+			background: rgba(228, 92, 26, 0.12);
+			border-color: rgba(228, 92, 26, 0.35);
+			box-shadow: 0 6rpx 14rpx rgba(228, 92, 26, 0.12);
 
-			.step-next-text, .step-publish-text { font-size: 28rpx; color: #fff; font-weight: 700; }
-
-			&.disabled {
-				background: rgba(0,0,0,0.08);
-				box-shadow: none;
-
-				.step-next-text, .step-publish-text { color: rgba(0,0,0,0.35); }
+			.chip-text {
+				color: var(--accent);
 			}
 		}
+	}
+
+	.tag-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10rpx;
+		margin-top: 12rpx;
+	}
+
+	.tag-item {
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+		height: 48rpx;
+		padding: 0 14rpx;
+		border-radius: 999rpx;
+		background: rgba(0, 0, 0, 0.05);
+
+		.tag-item-text {
+			font-size: 21rpx;
+			color: rgba(0, 0, 0, 0.62);
+		}
+
+		.tag-item-del {
+			font-size: 22rpx;
+			color: rgba(0, 0, 0, 0.4);
+		}
+	}
+
+	.prompt-actions {
+		display: flex;
+		gap: 12rpx;
+		margin-top: 16rpx;
+	}
+
+	.ghost-btn {
+		height: 58rpx;
+		padding: 0 18rpx;
+		background: #ffffff;
+		border: 1rpx solid rgba(228, 92, 26, 0.22);
+		border-radius: 14rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		.ghost-btn-text {
+			font-size: 22rpx;
+			font-weight: 700;
+			color: var(--accent);
+		}
+	}
+
+	.preview-card {
+		background: #fafafa;
+		border-color: rgba(0, 0, 0, 0.08);
+		margin-bottom: 8rpx;
+	}
+
+	.preview-score {
+		font-size: 24rpx;
+		font-weight: 800;
+		color: #2f8a57;
+	}
+
+	.preview-head {
+		margin-bottom: 10rpx;
+	}
+
+	.preview-scene {
+		display: inline-flex;
+		height: 42rpx;
+		padding: 0 14rpx;
+		border-radius: 999rpx;
+		background: rgba(0, 0, 0, 0.06);
+		font-size: 20rpx;
+		color: rgba(0, 0, 0, 0.5);
+		align-items: center;
+	}
+
+	.preview-title {
+		display: block;
+		font-size: 30rpx;
+		font-weight: 900;
+		color: #1a1a1a;
+		line-height: 1.3;
+		margin-bottom: 10rpx;
+	}
+
+	.preview-brief {
+		display: block;
+		font-size: 24rpx;
+		color: rgba(0, 0, 0, 0.54);
+		line-height: 1.6;
+	}
+
+	.preview-block {
+		margin-top: 16rpx;
+	}
+
+	.preview-block-title {
+		display: block;
+		font-size: 22rpx;
+		font-weight: 700;
+		color: rgba(0, 0, 0, 0.68);
+		margin-bottom: 10rpx;
+	}
+
+	.preview-scene-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10rpx;
+	}
+
+	.preview-scene-chip {
+		height: 44rpx;
+		padding: 0 14rpx;
+		border-radius: 999rpx;
+		background: rgba(228, 92, 26, 0.12);
+		border: 1rpx solid rgba(228, 92, 26, 0.2);
+		display: flex;
+		align-items: center;
+	}
+
+	.preview-scene-chip-text {
+		font-size: 20rpx;
+		font-weight: 600;
+		color: #be4d15;
+	}
+
+	.preview-prompt-panel {
+		background: #191a31;
+		border-radius: 18rpx;
+		padding: 20rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+	}
+
+	.preview-prompt-text {
+		display: block;
+		font-size: 22rpx;
+		line-height: 1.7;
+		color: #b9c2ff;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.preview-steps {
+		display: flex;
+		flex-direction: column;
+		gap: 12rpx;
+	}
+
+	.preview-step-item {
+		display: flex;
+		align-items: flex-start;
+		gap: 12rpx;
+	}
+
+	.preview-step-num {
+		width: 38rpx;
+		height: 38rpx;
+		border-radius: 50%;
+		background: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		margin-top: 2rpx;
+	}
+
+	.preview-step-num-text {
+		font-size: 18rpx;
+		font-weight: 800;
+		color: #fff;
+	}
+
+	.preview-step-text {
+		flex: 1;
+		font-size: 22rpx;
+		line-height: 1.55;
+		color: rgba(0, 0, 0, 0.72);
+	}
+
+	.content-bottom {
+		height: calc(180rpx + env(safe-area-inset-bottom));
+	}
+
+	.bottom-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		gap: 14rpx;
+		padding: 14rpx 24rpx calc(14rpx + env(safe-area-inset-bottom));
+		background: rgba(255, 255, 255, 0.98);
+		border-top: 1rpx solid var(--line);
+		backdrop-filter: blur(10px);
+	}
+
+	.draft-btn {
+		width: 188rpx;
+		height: 88rpx;
+		border-radius: 22rpx;
+		background: rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.1);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.draft-btn-text {
+		font-size: 26rpx;
+		font-weight: 700;
+		color: rgba(0, 0, 0, 0.58);
+	}
+
+	.publish-btn {
+		flex: 1;
+		height: 88rpx;
+		border-radius: 22rpx;
+		background: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 10rpx 24rpx rgba(228, 92, 26, 0.24);
+
+		&.disabled {
+			background: rgba(0, 0, 0, 0.1);
+			box-shadow: none;
+		}
+	}
+
+	.publish-btn-text {
+		font-size: 30rpx;
+		font-weight: 800;
+		color: #fff;
 	}
 </style>

@@ -19,15 +19,15 @@
 					</view>
 					<view class="hero-tags">
 						<view class="hero-tag">
-							<text class="hero-tag-dot">✓</text>
+							<uni-icons class="hero-tag-dot" type="checkmarkempty" size="14" color="#2F8A57" />
 							<text class="hero-tag-text">可直接复制</text>
 						</view>
 						<view class="hero-tag">
-							<text class="hero-tag-dot">✓</text>
+							<uni-icons class="hero-tag-dot" type="checkmarkempty" size="14" color="#2F8A57" />
 							<text class="hero-tag-text">透明展示 token</text>
 						</view>
 						<view class="hero-tag">
-							<text class="hero-tag-dot">✓</text>
+							<uni-icons class="hero-tag-dot" type="checkmarkempty" size="14" color="#2F8A57" />
 							<text class="hero-tag-text">社区复现反馈</text>
 						</view>
 					</view>
@@ -37,7 +37,9 @@
 			<!-- ② 本周最值得复制 -->
 			<view class="section-head">
 				<view class="sh-left">
-					<text class="sh-badge">🏆</text>
+					<view class="sh-badge">
+						<uni-icons type="medal-filled" size="20" color="#D6943A" />
+					</view>
 					<text class="sh-title">本周最值得复制</text>
 				</view>
 				<text class="sh-more" @tap="toSkillTab">全部 ›</text>
@@ -90,7 +92,9 @@
 			<!-- ③ 低消耗高收益 -->
 			<view class="section-head">
 				<view class="sh-left">
-					<text class="sh-badge">💡</text>
+					<view class="sh-badge">
+						<uni-icons type="wallet-filled" size="20" color="#2F8A57" />
+					</view>
 					<text class="sh-title">低消耗高收益</text>
 				</view>
 				<text class="sh-more" @tap="toSkillTab">更多 ›</text>
@@ -126,7 +130,9 @@
 			<!-- ④ 热门场景 -->
 			<view class="section-head">
 				<view class="sh-left">
-					<text class="sh-badge">🎯</text>
+					<view class="sh-badge">
+						<uni-icons type="navigate-filled" size="20" color="#E45C1A" />
+					</view>
 					<text class="sh-title">热门场景</text>
 				</view>
 			</view>
@@ -137,7 +143,7 @@
 					class="scene-item"
 					@tap="toSkillByScene(scene.name)"
 				>
-					<text class="scene-icon">{{ scene.icon }}</text>
+					<uni-icons class="scene-icon" :type="scene.icon" :color="scene.color" size="26" />
 					<text class="scene-name">{{ scene.name }}</text>
 				</view>
 			</view>
@@ -145,7 +151,9 @@
 			<!-- ⑤ 热门创作者 -->
 			<view class="section-head">
 				<view class="sh-left">
-					<text class="sh-badge">⭐</text>
+					<view class="sh-badge">
+						<uni-icons type="person-filled" size="20" color="#7B5B3C" />
+					</view>
 					<text class="sh-title">热门创作者</text>
 				</view>
 			</view>
@@ -182,7 +190,9 @@
 			<!-- ⑥ 今日趋势摘要 -->
 			<view class="section-head">
 				<view class="sh-left">
-					<text class="sh-badge">📊</text>
+					<view class="sh-badge">
+						<uni-icons type="bars" size="20" color="#5E738A" />
+					</view>
 					<text class="sh-title">今日趋势摘要</text>
 				</view>
 				<text class="sh-more" @tap="toTrend">查看完整 ›</text>
@@ -215,69 +225,102 @@
 
 	const topSkills = ref([
 		{
-			id: 's1', title: '万能长文写作框架', scene: '写作',
-			summary: '输入主题和受众，输出完整文章结构+段落，适合知乎、公众号、行业报告',
-			avgToken: '3.2k', copyCount: '12.4k', successRate: '94%',
-			author: '林小雨', authorColor: '#7C3AED', featured: true
+			id: 's1',
+			title: 'PS 人像精修提示词（参数版）',
+			scene: '设计',
+			summary: '给出可执行修图步骤和参数区间，适合人像精修、电商主图和写真后期',
+			avgToken: '1.9k',
+			copyCount: '8.3k',
+			successRate: '93%',
+			author: '阿泽修图',
+			authorColor: '#D6943A',
+			featured: true
 		},
 		{
-			id: 's2', title: '代码审查专家 Prompt', scene: '编程',
-			summary: '帮你找出 Bug、安全隐患、性能问题，并给出改进建议，支持多语言',
-			avgToken: '2.1k', copyCount: '8.9k', successRate: '91%',
-			author: '张开源', authorColor: '#0891B2', featured: false
+			id: 's2',
+			title: '前端 Bug 定位与修复助手',
+			scene: '编程',
+			summary: '线上报错先定位根因再修复，附最小补丁和回归清单',
+			avgToken: '2.1k',
+			copyCount: '7.6k',
+			successRate: '90%',
+			author: '周知行',
+			authorColor: '#9A6530',
+			featured: false
 		},
 		{
-			id: 's3', title: '爆款自媒体选题生成', scene: '自媒体',
-			summary: '输入你的账号定位，输出 20 个带热点预测的选题，附带参考角度',
-			avgToken: '1.8k', copyCount: '6.7k', successRate: '87%',
-			author: '王创作', authorColor: '#D97706', featured: true
+			id: 's3',
+			title: '会议纪要行动项提取器',
+			scene: '办公',
+			summary: '会议原文一键拆成决策、待办、负责人和截止时间',
+			avgToken: '1.1k',
+			copyCount: '6.9k',
+			successRate: '93%',
+			author: '刘效率',
+			authorColor: '#2F8A57',
+			featured: true
 		}
 	])
 
 	const efficiencySkills = ref([
 		{
-			id: 'e1', title: '极简翻译润色器', scene: '写作/翻译',
-			label: '低成本高收益', labelType: 'label-green',
-			avgToken: '800', copyCount: '5.2k', successRate: '96%'
+			id: 's4',
+			title: '电商主图卖点文案生成器',
+			scene: '电商',
+			label: '转化友好',
+			labelType: 'label-green',
+			avgToken: '1.5k',
+			copyCount: '5.9k',
+			successRate: '91%'
 		},
 		{
-			id: 'e2', title: '会议纪要速记模板', scene: '办公',
-			label: '新手友好', labelType: 'label-blue',
-			avgToken: '1.2k', copyCount: '4.1k', successRate: '92%'
+			id: 's5',
+			title: '短视频口播脚本生成器',
+			scene: '自媒体',
+			label: '新手友好',
+			labelType: 'label-blue',
+			avgToken: '1.8k',
+			copyCount: '5.1k',
+			successRate: '89%'
 		},
 		{
-			id: 'e3', title: '商品描述批量生成', scene: '电商',
-			label: '输出稳定', labelType: 'label-purple',
-			avgToken: '1.5k', copyCount: '3.8k', successRate: '89%'
+			id: 's6',
+			title: '英语口语陪练教练',
+			scene: '学习',
+			label: '输出稳定',
+			labelType: 'label-purple',
+			avgToken: '1.6k',
+			copyCount: '4.4k',
+			successRate: '88%'
 		}
 	])
 
 	const hotScenes = ref([
-		{ icon: '✍️', name: '写作' },
-		{ icon: '💻', name: '编程' },
-		{ icon: '📱', name: '自媒体' },
-		{ icon: '💼', name: '办公' },
-		{ icon: '📣', name: '运营' },
-		{ icon: '📚', name: '学习' },
-		{ icon: '🎨', name: '设计' },
-		{ icon: '🛍️', name: '电商' }
+		{ icon: 'compose', name: '写作', color: '#C84634' },
+		{ icon: 'gear-filled', name: '编程', color: '#5E738A' },
+		{ icon: 'videocam-filled', name: '自媒体', color: '#7B5B3C' },
+		{ icon: 'calendar-filled', name: '办公', color: '#4F6C82' },
+		{ icon: 'notification-filled', name: '运营', color: '#E45C1A' },
+		{ icon: 'staff-filled', name: '学习', color: '#2F8A57' },
+		{ icon: 'color-filled', name: '设计', color: '#B9893D' },
+		{ icon: 'shop-filled', name: '电商', color: '#9A6530' }
 	])
 
 	const hotCreators = ref([
 		{
-			id: 'c1', name: '林晓峰', color: '#7C3AED',
+			id: 'c1', name: '林晓峰', color: '#D6943A',
 			badge: '长文高手', skillCount: '23', weekCopies: '8.4k'
 		},
 		{
-			id: 'c2', name: '陈省钱', color: '#0891B2',
+			id: 'c2', name: '陈省钱', color: '#9A6530',
 			badge: '低耗大神', skillCount: '17', weekCopies: '6.1k'
 		},
 		{
-			id: 'c3', name: '张代码', color: '#059669',
+			id: 'c3', name: '张代码', color: '#2F8A57',
 			badge: '编程强者', skillCount: '31', weekCopies: '5.3k'
 		},
 		{
-			id: 'c4', name: '王爆款', color: '#D97706',
+			id: 'c4', name: '王爆款', color: '#7B5B3C',
 			badge: '爆款创作', skillCount: '14', weekCopies: '4.7k'
 		}
 	])
@@ -323,12 +366,12 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	/* 导航栏 */
 	.navbar {
-		background: #F5F3EF;
+		background: #FFFFFF;
 		flex-shrink: 0;
 		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
@@ -383,8 +426,8 @@
 				width: 14rpx;
 				height: 14rpx;
 				border-radius: 50%;
-				background: #FF5D5D;
-				border: 2rpx solid #0B0D12;
+				background: #C84634;
+				border: 2rpx solid #1A1A1A;
 			}
 		}
 	}
@@ -407,7 +450,7 @@
 			right: -60rpx;
 			width: 300rpx;
 			height: 300rpx;
-			background: radial-gradient(circle, rgba(255,122,26,0.2) 0%, rgba(255,122,26,0) 70%);
+			background: radial-gradient(circle, rgba(228, 92, 26,0.2) 0%, rgba(228, 92, 26,0) 70%);
 			pointer-events: none;
 		}
 	}
@@ -429,7 +472,7 @@
 		.hero-subtitle {
 			display: block;
 			font-size: 26rpx;
-			color: rgba(255,255,255,0.55);
+			color: rgba(0,0,0,0.55);
 			line-height: 1.6;
 			margin-bottom: 36rpx;
 		}
@@ -442,12 +485,12 @@
 			.hero-btn-primary {
 				flex: 1;
 				height: 80rpx;
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				border-radius: 20rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				box-shadow: 0 8rpx 24rpx rgba(255,122,26,0.35);
+				box-shadow: 0 8rpx 24rpx rgba(228, 92, 26, 0.2);
 
 				.hero-btn-text { font-size: 28rpx; font-weight: 700; color: #fff; }
 			}
@@ -462,7 +505,7 @@
 				align-items: center;
 				justify-content: center;
 
-				.hero-btn-text-sec { font-size: 28rpx; font-weight: 700; color: rgba(255,255,255,0.85); }
+				.hero-btn-text-sec { font-size: 28rpx; font-weight: 700; color: rgba(0,0,0,0.72); }
 			}
 		}
 
@@ -475,7 +518,14 @@
 				align-items: center;
 				gap: 6rpx;
 
-				.hero-tag-dot { font-size: 20rpx; color: #4CD964; font-weight: 700; }
+				.hero-tag-dot {
+					width: 24rpx;
+					height: 24rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
 				.hero-tag-text { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 			}
 		}
@@ -493,7 +543,14 @@
 			align-items: center;
 			gap: 10rpx;
 
-			.sh-badge { font-size: 28rpx; }
+			.sh-badge {
+				width: 36rpx;
+				height: 36rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
 			.sh-title { font-size: 30rpx; font-weight: 700; color: #1A1A1A; }
 		}
 
@@ -539,8 +596,8 @@
 
 			.slc-featured {
 				font-size: 18rpx;
-				color: #FFC24A;
-				background: rgba(255,194,74,0.15);
+				color: #D6943A;
+				background: rgba(214, 148, 58,0.15);
 				padding: 4rpx 12rpx;
 				border-radius: 100rpx;
 				font-weight: 600;
@@ -585,8 +642,8 @@
 
 				.slc-meta-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.slc-meta-val { font-size: 24rpx; font-weight: 700; color: #1A1A1A; }
-				.slc-meta-val.orange { color: #FF7A1A; }
-				.slc-meta-val.green { color: #4CD964; }
+				.slc-meta-val.orange { color: #E45C1A; }
+				.slc-meta-val.green { color: #2F8A57; }
 			}
 
 			.slc-meta-div {
@@ -617,14 +674,14 @@
 					.slc-av-t { font-size: 20rpx; color: #fff; font-weight: 700; }
 				}
 
-				.slc-author-name { font-size: 22rpx; color: rgba(255,255,255,0.55); }
+				.slc-author-name { font-size: 22rpx; color: rgba(0,0,0,0.55); }
 			}
 
 			.copy-btn {
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				padding: 12rpx 24rpx;
 				border-radius: 100rpx;
-				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.3);
+				box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.18);
 
 				.copy-btn-text { font-size: 22rpx; color: #fff; font-weight: 700; }
 			}
@@ -661,9 +718,9 @@
 					border-radius: 8rpx;
 					text-align: center;
 
-					&.label-green { color: #4CD964; background: rgba(76,217,100,0.1); }
-					&.label-blue { color: #5DA9FF; background: rgba(93,169,255,0.1); }
-					&.label-purple { color: #A78BFA; background: rgba(167,139,250,0.1); }
+					&.label-green { color: #2F8A57; background: rgba(47, 138, 87,0.1); }
+					&.label-blue { color: #5E738A; background: rgba(94, 115, 138,0.1); }
+					&.label-purple { color: #C7A06A; background: rgba(199, 160, 106,0.1); }
 				}
 
 				.eff-scene { font-size: 20rpx; color: rgba(0,0,0,0.40); text-align: center; }
@@ -688,7 +745,7 @@
 					align-items: baseline;
 					gap: 2rpx;
 
-					.eff-token-val { font-size: 22rpx; font-weight: 700; color: #FF7A1A; }
+					.eff-token-val { font-size: 22rpx; font-weight: 700; color: #E45C1A; }
 					.eff-token-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 				}
 
@@ -700,17 +757,17 @@
 
 				.eff-copies { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.eff-rate { font-size: 20rpx; }
-				.green-text { color: #4CD964; }
+				.green-text { color: #2F8A57; }
 			}
 
 			.eff-copy-btn {
-				background: rgba(255,122,26,0.15);
-				border: 1rpx solid rgba(255,122,26,0.3);
+				background: rgba(228, 92, 26,0.15);
+				border: 1rpx solid rgba(228, 92, 26, 0.18);
 				padding: 10rpx 20rpx;
 				border-radius: 100rpx;
 				flex-shrink: 0;
 
-				.eff-copy-text { font-size: 22rpx; color: #FF7A1A; font-weight: 600; }
+				.eff-copy-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
 			}
 		}
 	}
@@ -732,7 +789,13 @@
 			align-items: center;
 			gap: 12rpx;
 
-			.scene-icon { font-size: 44rpx; }
+			.scene-icon {
+				width: 52rpx;
+				height: 52rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 			.scene-name { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500; }
 		}
 	}
@@ -766,8 +829,8 @@
 
 		.creator-badge {
 			font-size: 18rpx;
-			color: #FFC24A;
-			background: rgba(255,194,74,0.12);
+			color: #D6943A;
+			background: rgba(214, 148, 58,0.12);
 			padding: 4rpx 14rpx;
 			border-radius: 100rpx;
 		}
@@ -785,7 +848,7 @@
 				gap: 4rpx;
 
 				.cst-val { font-size: 26rpx; font-weight: 800; color: #1A1A1A; }
-				.cst-val.orange { color: #FF7A1A; }
+				.cst-val.orange { color: #E45C1A; }
 				.cst-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 			}
 		}
@@ -827,17 +890,17 @@
 
 				.trend-label { display: block; font-size: 20rpx; color: rgba(0,0,0,0.40); margin-bottom: 8rpx; }
 				.trend-val { display: block; font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
-				.trend-val.orange { color: #FF7A1A; }
-				.trend-val.green { color: #4CD964; }
+				.trend-val.orange { color: #E45C1A; }
+				.trend-val.green { color: #2F8A57; }
 			}
 		}
 
 		.trend-footer {
 			padding: 20rpx 28rpx;
-			background: rgba(255,122,26,0.06);
-			border-top: 1rpx solid rgba(255,122,26,0.1);
+			background: rgba(228, 92, 26,0.06);
+			border-top: 1rpx solid rgba(228, 92, 26,0.1);
 
-			.trend-footer-text { font-size: 24rpx; color: #FF7A1A; font-weight: 600; }
+			.trend-footer-text { font-size: 24rpx; color: #E45C1A; font-weight: 600; }
 		}
 	}
 

@@ -11,7 +11,7 @@
 			>
 				<uni-icons
 					:type="selected === i ? item.activeIcon : item.icon"
-					:color="selected === i ? '#FF7A1A' : 'rgba(255,255,255,0.35)'"
+					:color="selected === i ? '#E45C1A' : 'rgba(26, 26, 26,0.35)'"
 					size="24"
 				/>
 				<text class="tab-label">{{ item.label }}</text>
@@ -19,7 +19,11 @@
 
 			<view class="tab-center" @tap="go(2, '/pages/publish/index')">
 				<view class="pub-btn" :class="{ active: selected === 2 }">
-					<text class="pub-plus">+</text>
+					<uni-icons
+						:type="selected === 2 ? 'plus-filled' : 'plusempty'"
+						:color="selected === 2 ? '#FFFFFF' : '#E45C1A'"
+						size="22"
+					/>
 				</view>
 				<text class="tab-label">发布</text>
 			</view>
@@ -33,7 +37,7 @@
 			>
 				<uni-icons
 					:type="selected === i + 3 ? item.activeIcon : item.icon"
-					:color="selected === i + 3 ? '#FF7A1A' : 'rgba(255,255,255,0.35)'"
+					:color="selected === i + 3 ? '#E45C1A' : 'rgba(26, 26, 26,0.35)'"
 					size="24"
 				/>
 				<text class="tab-label">{{ item.label }}</text>
@@ -85,9 +89,9 @@ export default {
 
 	.tab-bar-inner {
 		display: flex;
-		align-items: flex-end;
-		height: 108rpx;
-		padding: 0 4rpx 14rpx;
+		align-items: center;
+		height: 104rpx;
+		padding: 0 8rpx;
 	}
 
 	.tab-item {
@@ -96,18 +100,18 @@ export default {
 		flex-direction: column;
 		align-items: center;
 		gap: 6rpx;
-		padding-bottom: 2rpx;
+		justify-content: center;
 
 		.tab-label {
-			font-size: 18rpx;
-			color: rgba(255, 255, 255, 0.35);
-			font-weight: 400;
+			font-size: 20rpx;
+			color: rgba(0,0,0,0.42);
+			font-weight: 500;
 			line-height: 1;
 		}
 
 		&.active .tab-label {
-			color: #FF7A1A;
-			font-weight: 600;
+			color: #E45C1A;
+			font-weight: 700;
 		}
 	}
 
@@ -116,34 +120,31 @@ export default {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 8rpx;
+		gap: 6rpx;
+		justify-content: center;
 
 		.pub-btn {
-			width: 80rpx;
-			height: 80rpx;
-			border-radius: 50%;
-			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+			width: 58rpx;
+			height: 58rpx;
+			border-radius: 16rpx;
+			background: rgba(228, 92, 26, 0.08);
+			border: 1rpx solid rgba(228, 92, 26, 0.32);
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			box-shadow: 0 4rpx 20rpx rgba(255, 122, 26, 0.45);
-			margin-top: -28rpx;
+			transition: all 0.2s ease;
 
-			&.active { opacity: 0.85; }
-		}
-
-		.pub-plus {
-			font-size: 52rpx;
-			color: #fff;
-			line-height: 1;
-			font-weight: 300;
-			margin-top: -6rpx;
+			&.active {
+				background: #E45C1A;
+				border-color: #E45C1A;
+				box-shadow: 0 6rpx 18rpx rgba(228, 92, 26, 0.24);
+			}
 		}
 
 		.tab-label {
-			font-size: 18rpx;
-			color: rgba(255, 255, 255, 0.35);
-			font-weight: 400;
+			font-size: 20rpx;
+			color: rgba(0,0,0,0.42);
+			font-weight: 500;
 			line-height: 1;
 		}
 	}

@@ -4,7 +4,7 @@
 		<!-- 顶部 Hero -->
 		<view class="profile-hero" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="back-btn" @tap="goBack">
-				<text class="back-icon">←</text>
+				<uni-icons class="back-icon" type="left" size="20" color="#FFFFFF" />
 			</view>
 
 			<!-- 渐变封面 -->
@@ -87,7 +87,10 @@
 					</view>
 					<text class="sc-title">{{ skill.title }}</text>
 					<view class="sc-meta">
-						<text class="sc-token orange">⚡ {{ skill.avgToken }}</text>
+						<view class="sc-token-wrap">
+							<uni-icons type="fire-filled" size="13" color="#E45C1A" />
+							<text class="sc-token orange">{{ skill.avgToken }}</text>
+						</view>
 						<text class="sc-rate green">{{ skill.successRate }} 复现</text>
 						<text class="sc-copies">{{ skill.copyCount }} 复制</text>
 					</view>
@@ -103,12 +106,15 @@
 					<view class="fb-head">
 						<text class="fb-skill">{{ fb.skillTitle }}</text>
 						<view class="fb-status" :class="'status-' + fb.status">
-							<text class="fb-status-text">{{ fb.status === 'success' ? '✅ 成功' : '🆗 一般' }}</text>
+							<text class="fb-status-text">{{ fb.status === 'success' ? '成功' : '一般' }}</text>
 						</view>
 					</view>
 					<view class="fb-tokens">
 						<text class="fb-model">{{ fb.model }}</text>
-						<text class="fb-token orange">⚡ {{ fb.totalToken }}</text>
+						<view class="fb-token-wrap">
+							<uni-icons type="fire-filled" size="12" color="#E45C1A" />
+							<text class="fb-token orange">{{ fb.totalToken }}</text>
+						</view>
 					</view>
 					<text class="fb-comment">{{ fb.comment }}</text>
 				</view>
@@ -136,7 +142,7 @@
 
 	const author = reactive({
 		name: '林小雨',
-		color: '#7C3AED',
+		color: '#D6943A',
 		bio: '专注AI写作提效，分享经过验证的高复现率Skill',
 		tags: ['写作', '自媒体', 'AI效率'],
 		totalCopies: '8.4k',
@@ -196,7 +202,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	/* 顶部 Hero */
@@ -218,13 +224,19 @@
 			align-items: center;
 			justify-content: center;
 
-			.back-icon { font-size: 34rpx; color: #fff; }
+			.back-icon {
+				width: 32rpx;
+				height: 32rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 		}
 
 		.cover-bg {
 			width: 100%;
 			height: 280rpx;
-			background: linear-gradient(160deg, #1A1025 0%, #2D1B69 50%, #141922 100%);
+			background: linear-gradient(160deg, #1E2228 0%, #252A31 50%, #191D23 100%);
 		}
 
 		.hero-bottom {
@@ -239,7 +251,7 @@
 					width: 120rpx;
 					height: 120rpx;
 					border-radius: 50%;
-					border: 4rpx solid #0B0D12;
+					border: 4rpx solid #1A1A1A;
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -250,10 +262,10 @@
 			}
 
 			.follow-btn {
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				border-radius: 100rpx;
 				padding: 18rpx 40rpx;
-				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.3);
+				box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.18);
 
 				.follow-text { font-size: 26rpx; color: #fff; font-weight: 600; }
 
@@ -311,8 +323,8 @@
 			gap: 4rpx;
 
 			.stat-n { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
-			.stat-n.orange { color: #FF7A1A; }
-			.stat-n.green { color: #4CD964; }
+			.stat-n.orange { color: #E45C1A; }
+			.stat-n.green { color: #2F8A57; }
 			.stat-l { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 		}
 
@@ -340,7 +352,7 @@
 			.ct-tab-text { font-size: 26rpx; color: rgba(0,0,0,0.40); font-weight: 500; }
 
 			&.active {
-				.ct-tab-text { color: #FF7A1A; font-weight: 700; }
+				.ct-tab-text { color: #E45C1A; font-weight: 700; }
 
 				&::after {
 					content: '';
@@ -350,7 +362,7 @@
 					transform: translateX(-50%);
 					width: 40rpx;
 					height: 4rpx;
-					background: #FF7A1A;
+					background: #E45C1A;
 					border-radius: 999rpx;
 				}
 			}
@@ -361,7 +373,7 @@
 	.content-scroll {
 		flex: 1;
 		overflow: hidden;
-		background: #F5F3EF;
+		background: #FFFFFF;
 
 		.scroll-bottom { height: 40rpx; }
 	}
@@ -379,7 +391,7 @@
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
 
-			&:active { background: #F0EDE8; }
+			&:active { background: #F5F7FA; }
 
 			.sc-head {
 				display: flex;
@@ -411,22 +423,28 @@
 				gap: 20rpx;
 				margin-bottom: 16rpx;
 
+				.sc-token-wrap {
+					display: flex;
+					align-items: center;
+					gap: 4rpx;
+				}
+
 				.sc-token { font-size: 22rpx; font-weight: 600; }
-				.orange { color: #FF7A1A; }
+				.orange { color: #E45C1A; }
 				.sc-rate { font-size: 22rpx; font-weight: 600; }
-				.green { color: #4CD964; }
+				.green { color: #2F8A57; }
 				.sc-copies { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.sc-copy-btn {
 				width: 100%;
 				height: 72rpx;
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				border-radius: 16rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.25);
+				box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.16);
 
 				.sc-copy-text { font-size: 26rpx; font-weight: 700; color: #fff; }
 			}
@@ -459,8 +477,8 @@
 					padding: 4rpx 14rpx;
 					border-radius: 100rpx;
 
-					&.status-success { color: #4CD964; background: rgba(76,217,100,0.12); }
-					&.status-normal { color: #5DA9FF; background: rgba(93,169,255,0.12); }
+					&.status-success { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+					&.status-normal { color: #5E738A; background: rgba(94, 115, 138,0.12); }
 
 					.fb-status-text { font-weight: 600; }
 				}
@@ -473,8 +491,13 @@
 				margin-bottom: 12rpx;
 
 				.fb-model { font-size: 20rpx; color: rgba(0,0,0,0.40); }
+				.fb-token-wrap {
+					display: flex;
+					align-items: center;
+					gap: 4rpx;
+				}
 				.fb-token { font-size: 22rpx; font-weight: 600; }
-				.orange { color: #FF7A1A; }
+				.orange { color: #E45C1A; }
 			}
 
 			.fb-comment { font-size: 24rpx; color: rgba(0,0,0,0.60); line-height: 1.6; }

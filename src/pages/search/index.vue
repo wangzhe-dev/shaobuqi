@@ -4,7 +4,7 @@
 		<!-- 搜索输入行 -->
 		<view class="search-bar">
 			<view class="search-input-wrap">
-				<text class="search-icon">🔍</text>
+				<uni-icons class="search-icon" type="search" size="16" color="rgba(0,0,0,0.45)" />
 				<input
 					v-model="keyword"
 					class="search-input"
@@ -16,7 +16,7 @@
 					@input="onInput"
 				/>
 				<view v-if="keyword" class="clear-btn" @tap="clearSearch">
-					<text class="clear-icon">✕</text>
+					<uni-icons class="clear-icon" type="clear" size="14" color="rgba(0,0,0,0.40)" />
 				</view>
 			</view>
 			<text class="cancel-btn" @tap="goBack">取消</text>
@@ -29,7 +29,7 @@
 			<view class="section">
 				<view class="section-header">
 					<text class="section-title">热门搜索</text>
-					<text class="section-icon">🔥</text>
+					<uni-icons class="section-icon" type="fire-filled" size="16" color="#C84634" />
 				</view>
 				<view class="hot-tags">
 					<view
@@ -60,7 +60,7 @@
 						class="recent-tag"
 						@tap="searchTerm(term)"
 					>
-						<text class="recent-icon">⏱</text>
+						<uni-icons class="recent-icon" type="reload" size="12" color="rgba(0,0,0,0.35)" />
 						<text class="recent-text">{{ term }}</text>
 					</view>
 				</view>
@@ -119,7 +119,10 @@
 										</view>
 										<text class="rp-author">{{ post.author }}</text>
 										<text class="rp-sep">·</text>
-										<text class="rp-likes">♥ {{ post.likes }}</text>
+										<view class="rp-likes">
+											<uni-icons type="heart" size="12" color="rgba(0,0,0,0.40)" />
+											<text class="rp-likes-text">{{ post.likes }}</text>
+										</view>
 									</view>
 								</view>
 								<image v-if="post.cover" :src="post.cover" class="rp-cover" mode="aspectFill" lazy-load />
@@ -134,7 +137,7 @@
 						</view>
 						<view v-for="skill in searchSkillResults" :key="skill.id" class="result-skill-card" @tap="toSkill(skill.id)">
 							<view class="rsk-icon">
-								<text class="rsk-emoji">{{ skill.icon }}</text>
+								<uni-icons class="rsk-emoji" :type="skill.icon" :color="skill.color" size="24" />
 							</view>
 							<view class="rsk-info">
 								<text class="rsk-title">{{ skill.title }}</text>
@@ -201,21 +204,21 @@
 
 	const searchPostResults = ref([
 		{
-			id: 'sp1', author: '林晓珊', color: '#7C3AED',
+			id: 'sp1', author: '林晓珊', color: '#D6943A',
 			cover: 'https://picsum.photos/seed/sr1/200/200',
 			title: '用 AI 写出了让甲方满意的文案',
 			content: '昨天用 Skill 广场里的「甲方文案生成」试了一下，效果出乎意料地好...',
 			likes: 238
 		},
 		{
-			id: 'sp2', author: '高远', color: '#7C3AED',
+			id: 'sp2', author: '高远', color: '#D6943A',
 			cover: 'https://picsum.photos/seed/sr2/200/200',
 			title: '用这个 Prompt 写出了10W+ 文章',
 			content: '最近在研究如何用 AI 辅助写作，这个 Prompt 框架真的让我的写作速度提升了3倍...',
 			likes: 1204
 		},
 		{
-			id: 'sp3', author: '周雯雯', color: '#BE185D',
+			id: 'sp3', author: '周雯雯', color: '#8A5C43',
 			cover: null,
 			title: null,
 			content: '刚刚发现一个宝藏工具！可以一键把文章转成小红书格式，再也不用手动排版了...',
@@ -224,9 +227,9 @@
 	])
 
 	const searchSkillResults = ref([
-		{ id: 's1', icon: '✍️', title: '万能文案生成器', desc: '30秒输出3套方案，格式全覆盖', tags: ['文案', '营销'] },
-		{ id: 's2', icon: '📝', title: '周报一键生成', desc: '帮你生成让领导满意的专业周报', tags: ['职场', '效率'] },
-		{ id: 's3', icon: '📱', title: '小红书爆款标题生成', desc: '批量生成高点击标题，告别标题焦虑', tags: ['写作', '小红书'] }
+		{ id: 's1', icon: 'compose', color: '#C84634', title: '万能文案生成器', desc: '30秒输出3套方案，格式全覆盖', tags: ['文案', '营销'] },
+		{ id: 's2', icon: 'list', color: '#5E738A', title: '周报一键生成', desc: '帮你生成让领导满意的专业周报', tags: ['职场', '效率'] },
+		{ id: 's3', icon: 'videocam-filled', color: '#7B5B3C', title: '小红书爆款标题生成', desc: '批量生成高点击标题，告别标题焦虑', tags: ['写作', '小红书'] }
 	])
 
 	const useSkill = (_skill: any) => {
@@ -251,7 +254,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	/* 搜索栏 */
@@ -260,7 +263,7 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 24rpx;
-		background: #F5F3EF;
+		background: #FFFFFF;
 		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
@@ -275,7 +278,11 @@
 			gap: 12rpx;
 
 			.search-icon {
-				font-size: 28rpx;
+				width: 28rpx;
+				height: 28rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
 				flex-shrink: 0;
 			}
 
@@ -288,16 +295,23 @@
 			}
 
 			.clear-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
 				.clear-icon {
-					font-size: 24rpx;
-					color: rgba(0,0,0,0.40);
+					width: 24rpx;
+					height: 24rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 				}
 			}
 		}
 
 		.cancel-btn {
 			font-size: 28rpx;
-			color: #FF7A1A;
+			color: #E45C1A;
 			flex-shrink: 0;
 		}
 	}
@@ -322,7 +336,11 @@
 				}
 
 				.section-icon {
-					font-size: 26rpx;
+					width: 26rpx;
+					height: 26rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 				}
 
 				.clear-history-btn {
@@ -352,7 +370,7 @@
 					width: 40rpx;
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #FF5D5D;
+					color: #C84634;
 					text-align: center;
 				}
 
@@ -386,7 +404,11 @@
 				border: 1rpx solid rgba(0,0,0,0.07);
 
 				.recent-icon {
-					font-size: 22rpx;
+					width: 22rpx;
+					height: 22rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 				}
 
 				.recent-text {
@@ -402,13 +424,13 @@
 			gap: 12rpx;
 
 			.label-tag {
-				background: rgba(255, 122, 26, 0.1);
+				background: rgba(228, 92, 26, 0.1);
 				border-radius: 40rpx;
 				padding: 12rpx 24rpx;
 
 				.label-tag-text {
 					font-size: 24rpx;
-					color: #FF7A1A;
+					color: #E45C1A;
 					font-weight: 500;
 				}
 			}
@@ -451,7 +473,7 @@
 					width: 32rpx;
 					height: 4rpx;
 					border-radius: 2rpx;
-					background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+					background: #E45C1A;
 				}
 			}
 		}
@@ -541,8 +563,14 @@
 					}
 
 					.rp-likes {
-						font-size: 22rpx;
-						color: rgba(0,0,0,0.40);
+						display: flex;
+						align-items: center;
+						gap: 4rpx;
+
+						.rp-likes-text {
+							font-size: 22rpx;
+							color: rgba(0,0,0,0.40);
+						}
 					}
 				}
 			}
@@ -570,7 +598,7 @@
 		.rsk-icon {
 			width: 80rpx;
 			height: 80rpx;
-			background: rgba(255,122,26,0.1);
+			background: rgba(228, 92, 26,0.1);
 			border-radius: 18rpx;
 			display: flex;
 			align-items: center;
@@ -578,7 +606,11 @@
 			flex-shrink: 0;
 
 			.rsk-emoji {
-				font-size: 40rpx;
+				width: 42rpx;
+				height: 42rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 		}
 
@@ -605,8 +637,8 @@
 
 				.rsk-tag {
 					font-size: 20rpx;
-					color: #FF7A1A;
-					background: rgba(255, 122, 26, 0.1);
+					color: #E45C1A;
+					background: rgba(228, 92, 26, 0.1);
 					padding: 3rpx 12rpx;
 					border-radius: 10rpx;
 				}
@@ -614,7 +646,7 @@
 		}
 
 		.rsk-use-btn {
-			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+			background: #E45C1A;
 			padding: 12rpx 24rpx;
 			border-radius: 30rpx;
 			flex-shrink: 0;

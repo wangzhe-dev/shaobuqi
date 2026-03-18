@@ -532,11 +532,11 @@ function dismissUpdate() {
 	gap: 10rpx;
 	padding: 18rpx 24rpx;
 	border-radius: 999rpx;
-	background: linear-gradient(135deg, #5B5BD6 0%, #4338CA 100%);
+	background: #E45C1A;
 	box-shadow:
-		0 16rpx 36rpx rgba(67, 56, 202, 0.24),
+		0 16rpx 36rpx rgba(173, 79, 20, 0.24),
 		0 4rpx 10rpx rgba(0, 0, 0, 0.12);
-	color: #ffffff;
+	color: #FFFFFF;
 }
 
 .pwa-entry__icon {
@@ -574,13 +574,13 @@ function dismissUpdate() {
 	}
 
 	&__content {
-		background: #ffffff;
+		background: #FFFFFF;
 		border-radius: 28rpx;
 		padding: 40rpx 36rpx 32rpx;
 		box-shadow:
-			0 8rpx 40rpx rgba(91, 91, 214, 0.16),
+			0 8rpx 40rpx rgba(228, 92, 26, 0.16),
 			0 2rpx 8rpx rgba(0, 0, 0, 0.06);
-		border: 1rpx solid rgba(91, 91, 214, 0.1);
+		border: 1rpx solid rgba(228, 92, 26, 0.1);
 		position: relative;
 
 		&--row {
@@ -596,7 +596,7 @@ function dismissUpdate() {
 		top: 24rpx;
 		right: 28rpx;
 		font-size: 28rpx;
-		color: #9CA3AF;
+		color: #999999;
 		line-height: 1;
 		padding: 8rpx;
 	}
@@ -604,13 +604,13 @@ function dismissUpdate() {
 	&__icon-wrap {
 		width: 100rpx;
 		height: 100rpx;
-		background: linear-gradient(135deg, #5B5BD6 0%, #7c3aed 100%);
+		background: #E45C1A;
 		border-radius: 24rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		margin: 0 auto 24rpx;
-		box-shadow: 0 8rpx 20rpx rgba(91, 91, 214, 0.3);
+		box-shadow: 0 8rpx 20rpx rgba(228, 92, 26, 0.18);
 	}
 
 	&__icon-wrap--small {
@@ -631,8 +631,8 @@ function dismissUpdate() {
 		min-width: 72rpx;
 		height: 72rpx;
 		border-radius: 20rpx;
-		background: #F4F5FF;
-		color: #4338CA;
+		background: #F6F8FA;
+		color: #E06420;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -649,7 +649,7 @@ function dismissUpdate() {
 	&__title {
 		font-size: 30rpx;
 		font-weight: 700;
-		color: #1A1A2E;
+		color: #1E2228;
 		line-height: 1.3;
 		display: block;
 		text-align: center;
@@ -662,7 +662,7 @@ function dismissUpdate() {
 
 	&__desc {
 		font-size: 24rpx;
-		color: #6B7280;
+		color: #666666;
 		line-height: 1.5;
 		display: block;
 		text-align: center;
@@ -685,7 +685,7 @@ function dismissUpdate() {
 		display: flex;
 		align-items: center;
 		gap: 12rpx;
-		background: #F8F7FF;
+		background: #FAFBFC;
 		border-radius: 16rpx;
 		padding: 18rpx 20rpx;
 	}
@@ -693,7 +693,7 @@ function dismissUpdate() {
 	&__step-num {
 		width: 36rpx;
 		height: 36rpx;
-		background: #5B5BD6;
+		background: #E45C1A;
 		color: #fff;
 		border-radius: 50%;
 		font-size: 22rpx;
@@ -708,7 +708,7 @@ function dismissUpdate() {
 
 	&__step-text {
 		font-size: 26rpx;
-		color: #374151;
+		color: #4A5563;
 		line-height: 1.4;
 	}
 
@@ -737,13 +737,13 @@ function dismissUpdate() {
 		white-space: nowrap;
 
 		&--update {
-			background: #5B5BD6;
-			color: #ffffff;
+			background: #E45C1A;
+			color: #FFFFFF;
 		}
 
 		&--dismiss {
-			background: #F3F4F6;
-			color: #6B7280;
+			background: #F6F8FA;
+			color: #666666;
 		}
 	}
 }

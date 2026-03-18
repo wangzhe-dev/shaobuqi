@@ -4,9 +4,9 @@
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "烧不起",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black",
-				"backgroundColor": "#F5F3EF",
+				"backgroundColor": "#FFFFFF",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -14,7 +14,7 @@
 			"path": "pages/community/index",
 			"style": {
 				"navigationBarTitleText": "趋势",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": false
 			}
@@ -23,7 +23,7 @@
 			"path": "pages/publish/index",
 			"style": {
 				"navigationBarTitleText": "发布",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -31,7 +31,7 @@
 			"path": "pages/skill/index",
 			"style": {
 				"navigationBarTitleText": "Skill",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": false
 			}
@@ -47,7 +47,7 @@
 			"path": "pages/detail/post",
 			"style": {
 				"navigationBarTitleText": "",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -67,7 +67,7 @@
 			"path": "pages/search/index",
 			"style": {
 				"navigationBarTitleText": "搜索",
-				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
 			}
 		}
@@ -83,49 +83,94 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "烧不起",
-		"navigationBarBackgroundColor": "#F5F3EF",
-		"backgroundColor": "#F5F3EF",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#FFFFFF",
 		"app-plus": {
-			"background": "#F5F3EF",
+			"background": "#FFFFFF",
 			"scrollIndicator": "none",
 			"bounce": "none"
 		}
 	},
 	"tabBar": {
+		// #ifdef MP-WEIXIN
 		"custom": true,
-		"color": "rgba(0,0,0,0.4)",
-		"selectedColor": "#FF7A1A",
-		"borderStyle": "white",
+		// #endif
+		// #ifdef MP-QQ
+		"custom": true,
+		// #endif
+		"height": "54px",
+		"fontSize": "11px",
+		"iconWidth": "24px",
+		"spacing": "4px",
+		"color": "#94979F",
+		"selectedColor": "#E45C1A",
+		"borderStyle": "black",
 		"backgroundColor": "#FFFFFF",
+		"iconfontSrc": "/static/fonts/uniicons.ttf",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"iconPath": "static/images/tabbar/index.png",
-				"selectedIconPath": "static/images/tabbar/index-select.png",
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/homeactive.png",
+				"iconfont": {
+					"text": "\ue662",
+					"selectedText": "\ue663",
+					"fontSize": "24px",
+					"color": "#94979F",
+					"selectedColor": "#E45C1A"
+				},
 				"text": "首页"
 			},
 			{
 				"pagePath": "pages/community/index",
-				"iconPath": "static/images/tabbar/community.png",
-				"selectedIconPath": "static/images/tabbar/community-select.png",
-				"text": "烧榜"
+				"iconPath": "static/tabbar/guanzhu.png",
+				"selectedIconPath": "static/tabbar/guanzhuactive.png",
+				"iconfont": {
+					"text": "\ue6a1",
+					"selectedText": "\ue6c5",
+					"fontSize": "24px",
+					"color": "#94979F",
+					"selectedColor": "#E45C1A"
+				},
+				"text": "趋势"
 			},
 			{
 				"pagePath": "pages/publish/index",
-				"iconPath": "static/images/tabbar/publish.png",
-				"selectedIconPath": "static/images/tabbar/publish-select.png",
+				"iconPath": "static/tabbar/add.png",
+				"selectedIconPath": "static/tabbar/addactive.png",
+				"iconfont": {
+					"text": "\ue67b",
+					"selectedText": "\ue6c7",
+					"fontSize": "25px",
+					"color": "#94979F",
+					"selectedColor": "#E45C1A"
+				},
 				"text": "发布"
 			},
 			{
 				"pagePath": "pages/skill/index",
-				"iconPath": "static/images/tabbar/skill.png",
-				"selectedIconPath": "static/images/tabbar/skill-select.png",
+				"iconPath": "static/tabbar/news.png",
+				"selectedIconPath": "static/tabbar/newsactive.png",
+				"iconfont": {
+					"text": "\ue688",
+					"selectedText": "\ue68f",
+					"fontSize": "24px",
+					"color": "#94979F",
+					"selectedColor": "#E45C1A"
+				},
 				"text": "Skill"
 			},
 			{
 				"pagePath": "pages/my/my",
-				"iconPath": "static/images/tabbar/my.png",
-				"selectedIconPath": "static/images/tabbar/my-select.png",
+				"iconPath": "static/tabbar/me.png",
+				"selectedIconPath": "static/tabbar/meactive.png",
+				"iconfont": {
+					"text": "\ue699",
+					"selectedText": "\ue69d",
+					"fontSize": "24px",
+					"color": "#94979F",
+					"selectedColor": "#E45C1A"
+				},
 				"text": "我的"
 			}
 		]

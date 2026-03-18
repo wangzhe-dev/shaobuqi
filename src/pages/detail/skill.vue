@@ -5,22 +5,21 @@
 		<view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="navbar-inner">
 				<view class="nav-back" @tap="goBack">
-					<text class="nav-back-icon">←</text>
+					<uni-icons class="nav-back-icon" type="left" size="20" color="#1A1A1A" />
 				</view>
 				<text class="nav-title">Skill 详情</text>
 				<view class="nav-actions">
 					<view class="nav-btn" @tap="shareSkill">
-						<text class="nav-btn-icon">📤</text>
+						<uni-icons class="nav-btn-icon" type="paperplane" size="20" color="rgba(0,0,0,0.70)" />
 					</view>
 					<view class="nav-btn" @tap="reportSkill">
-						<text class="nav-btn-icon">⋯</text>
+						<uni-icons class="nav-btn-icon" type="more-filled" size="20" color="rgba(0,0,0,0.70)" />
 					</view>
 				</view>
 			</view>
 		</view>
 
 		<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
-
 			<!-- 1. 顶部概览区 -->
 			<view class="overview-section">
 				<view class="scene-tag">{{ skill.scene }}</view>
@@ -34,17 +33,6 @@
 					<text class="publish-time">{{ skill.publishTime }}</text>
 					<view class="follow-btn" @tap="followAuthor">
 						<text class="follow-btn-text">关注</text>
-					</view>
-				</view>
-
-				<!-- 主 CTA -->
-				<view class="main-cta-row">
-					<view class="copy-main-btn" @tap="copySkill">
-						<text class="copy-main-icon">⚡</text>
-						<text class="copy-main-text">复制 Skill</text>
-					</view>
-					<view class="fav-btn" :class="{ favorited: isFavorited }" @tap="toggleFavorite">
-						<text class="fav-icon">{{ isFavorited ? '★' : '☆' }}</text>
 					</view>
 				</view>
 
@@ -72,49 +60,26 @@
 				</view>
 			</view>
 
-			<!-- 2. 结果证明区（先于Skill正文展示） -->
-			<view class="section-card">
-				<view class="section-header">
-					<text class="section-badge">🎯</text>
-					<text class="section-title">这个 Skill 能做什么</text>
-				</view>
+      <!-- 简介 -->
+      <view class="skill-intro">
+        <text class="si-title">简介</text>
+        <text class="si-text">{{ skill.brief }}</text>
+      </view>
 
-				<view class="result-proof-card">
-					<view class="rp-row">
-						<text class="rp-label">适合谁用</text>
-						<text class="rp-val">{{ skill.suitableFor }}</text>
-					</view>
-					<view class="rp-divider" />
-					<view class="rp-row">
-						<text class="rp-label">输入什么</text>
-						<text class="rp-val">{{ skill.inputDesc }}</text>
-					</view>
-					<view class="rp-divider" />
-					<view class="rp-row">
-						<text class="rp-label">输出什么</text>
-						<text class="rp-val">{{ skill.outputDesc }}</text>
-					</view>
-					<view class="rp-divider" />
-					<view class="rp-row">
-						<text class="rp-label rp-label-red">不适合</text>
-						<text class="rp-val rp-val-dim">{{ skill.notFor }}</text>
-					</view>
-				</view>
-
-				<!-- 示例结果卡 -->
-				<view class="sample-result-card">
-					<view class="sr-header">
-						<text class="sr-title">示例输出片段</text>
-					</view>
-					<text class="sr-content">{{ skill.sampleOutput }}</text>
-				</view>
-			</view>
-
+      <!-- 使用场景 -->
+      <view class="scene-block">
+        <text class="sb-title">使用场景</text>
+        <view class="scene-chip-list">
+          <view v-for="scene in skill.useScenes" :key="scene" class="scene-chip">
+            <text class="scene-chip-text">{{ scene }}</text>
+          </view>
+        </view>
+      </view>
 			<!-- 3. 消耗证据区（橙色强调） -->
-			<view class="section-card token-section">
+			<view v-if="hasConsumeData" class="section-card token-section">
 				<view class="section-header">
-					<text class="section-badge">⚡</text>
-					<text class="section-title">消耗证据</text>
+					<uni-icons class="section-badge" type="fire-filled" size="18" color="#E45C1A" />
+					<text class="section-title">消耗</text>
 					<text class="section-subtitle">社区真实使用数据</text>
 				</view>
 
@@ -169,68 +134,37 @@
 				</view>
 			</view>
 
-			<!-- 4. Skill 正文区 -->
-			<view class="section-card">
-				<view class="section-header">
-					<text class="section-badge">📋</text>
-					<text class="section-title">Skill 内容</text>
-					<view class="copy-all-btn" @tap="copyAll">
-						<text class="copy-all-text">复制全部</text>
-					</view>
-				</view>
-
-				<!-- System Prompt -->
-				<view class="prompt-block">
-					<view class="pb-label-row">
-						<text class="pb-label">System Prompt</text>
-						<view class="pb-copy-btn" @tap="copyBlock('system')">
-							<text class="pb-copy-text">复制</text>
-						</view>
-					</view>
-					<view class="pb-content">
-						<text class="pb-text">{{ skill.systemPrompt }}</text>
-					</view>
-				</view>
-
-				<!-- 用户输入模板 -->
-				<view class="prompt-block">
-					<view class="pb-label-row">
-						<text class="pb-label">用户输入模板</text>
-						<view class="pb-copy-btn" @tap="copyBlock('user')">
-							<text class="pb-copy-text">复制</text>
-						</view>
-					</view>
-					<view class="pb-content">
-						<text class="pb-text">{{ skill.userPromptTemplate }}</text>
-					</view>
-				</view>
-
-				<!-- 变量说明 -->
-				<view class="variables-section">
-					<text class="var-title">可替换变量</text>
-					<view class="var-list">
-						<view v-for="v in skill.variables" :key="v.name" class="var-item">
-							<view class="var-name-wrap">
-								<text class="var-name">{{ '{' + v.name + '}' }}</text>
+				<!-- 4. Skill 正文区 -->
+					<view class="section-card skill-content-card">
+						<view class="section-header">
+							<uni-icons class="section-badge" type="list" size="18" color="#5E738A" />
+							<text class="section-title">Skill 内容</text>
+							<view class="copy-all-btn" @tap="copyAll">
+								<uni-icons class="copy-all-icon" type="list" size="13" color="#E45C1A" />
+								<text class="copy-all-text">复制全部</text>
 							</view>
-							<text class="var-desc">{{ v.desc }}</text>
 						</view>
-					</view>
-				</view>
 
-				<!-- 注意事项 -->
-				<view class="notes-block">
-					<text class="notes-title">⚠️ 注意事项</text>
-					<text class="notes-text">{{ skill.notes }}</text>
-				</view>
+					<view class="skill-content-panel">
+						<text class="scp-text">{{ skill.fullPrompt }}</text>
+					</view>
 			</view>
 
-			<!-- 5. 使用步骤 -->
-			<view class="section-card">
+			<view v-if="variableNotesText" class="section-card variable-notes-card">
 				<view class="section-header">
-					<text class="section-badge">🚀</text>
-					<text class="section-title">使用步骤</text>
+					<uni-icons class="section-badge" type="info-filled" size="18" color="#7B5B3C" />
+					<text class="section-title">变量说明</text>
 				</view>
+				<text class="vn-text">{{ variableNotesText }}</text>
+			</view>
+
+				<!-- 5. 使用步骤 -->
+				<view class="section-card">
+					<view class="section-header">
+						<uni-icons class="section-badge" type="paperplane-filled" size="18" color="#2F8A57" />
+						<text class="section-title">使用步骤</text>
+						<text class="section-subtitle">复制后按顺序操作</text>
+					</view>
 
 				<view class="steps-list">
 					<view v-for="(step, idx) in skill.steps" :key="idx" class="step-item">
@@ -245,7 +179,7 @@
 			<!-- 6. 复现反馈区（结构化，非普通评论区） -->
 			<view class="section-card">
 				<view class="section-header">
-					<text class="section-badge">💬</text>
+					<uni-icons class="section-badge" type="chatbubble-filled" size="18" color="#5E738A" />
 					<text class="section-title">复现反馈</text>
 					<view class="write-feedback-btn" @tap="writeFeedback">
 						<text class="write-fb-text">写反馈</text>
@@ -295,7 +229,7 @@
 			<!-- 7. 相似推荐 -->
 			<view class="section-card">
 				<view class="section-header">
-					<text class="section-badge">✨</text>
+					<uni-icons class="section-badge" type="star-filled" size="18" color="#D6943A" />
 					<text class="section-title">相似推荐</text>
 				</view>
 
@@ -305,7 +239,10 @@
 							<text class="si-tag">{{ s.tag }}</text>
 							<text class="si-title">{{ s.title }}</text>
 							<view class="si-meta">
-								<text class="si-token orange">⚡ {{ s.avgToken }}</text>
+								<view class="si-token-wrap">
+									<uni-icons type="fire-filled" size="12" color="#E45C1A" />
+									<text class="si-token orange">{{ s.avgToken }}</text>
+								</view>
 								<text class="si-rate green">{{ s.successRate }} 复现</text>
 							</view>
 						</view>
@@ -322,11 +259,16 @@
 		<!-- 底部固定操作栏 -->
 		<view class="bottom-bar">
 			<view class="bb-fav" @tap="toggleFavorite">
-				<text class="bb-fav-icon">{{ isFavorited ? '★' : '☆' }}</text>
+				<uni-icons
+					class="bb-fav-icon"
+					:type="isFavorited ? 'star-filled' : 'star'"
+					size="18"
+					:color="isFavorited ? '#E45C1A' : 'rgba(0,0,0,0.50)'"
+				/>
 				<text class="bb-fav-text">收藏</text>
 			</view>
 			<view class="bb-copy-btn" @tap="copySkill">
-				<text class="bb-copy-icon">⚡</text>
+				<uni-icons class="bb-copy-icon" type="fire-filled" size="16" color="#FFFFFF" />
 				<text class="bb-copy-text">复制 Skill</text>
 			</view>
 		</view>
@@ -334,19 +276,22 @@
 		<!-- 复制成功引导弹层 -->
 		<view v-if="showCopyGuide" class="copy-guide-overlay" @tap="showCopyGuide = false">
 			<view class="copy-guide-sheet" @tap.stop>
-				<text class="cg-title">✅ 已复制 Skill！</text>
+				<view class="cg-title-row">
+					<uni-icons type="checkmarkempty" size="18" color="#2F8A57" />
+					<text class="cg-title">已复制 Skill！</text>
+				</view>
 				<text class="cg-subtitle">接下来你想做什么？</text>
 				<view class="cg-actions">
 					<view class="cg-btn" @tap="goUse">
-						<text class="cg-btn-icon">🚀</text>
+						<uni-icons class="cg-btn-icon" type="paperplane-filled" size="18" color="#E45C1A" />
 						<text class="cg-btn-text">去使用</text>
 					</view>
 					<view class="cg-btn" @tap="saveFavorite">
-						<text class="cg-btn-icon">⭐</text>
+						<uni-icons class="cg-btn-icon" type="star-filled" size="18" color="#D6943A" />
 						<text class="cg-btn-text">收藏到我的 Skill</text>
 					</view>
 					<view class="cg-btn" @tap="recordResult">
-						<text class="cg-btn-icon">📝</text>
+						<uni-icons class="cg-btn-icon" type="compose" size="18" color="#5E738A" />
 						<text class="cg-btn-text">记录一次结果</text>
 					</view>
 				</view>
@@ -360,88 +305,453 @@
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
 	const isFavorited = ref(false)
 	const showCopyGuide = ref(false)
 
-	const skill = ref({
-		id: 's1',
-		title: '万能长文写作框架',
-		scene: '写作',
-		author: '林小雨',
-		authorColor: '#7C3AED',
-		publishTime: '2025-12-20',
-		copyCount: '12.4k',
-		favoriteCount: '3.1k',
-		successRate: '94%',
-		feedbackCount: '286',
+	const SKILL_LIBRARY: Record<string, any> = {
+		s1: {
+			id: 's1',
+			title: 'PS 人像精修提示词（参数版）',
+			scene: '设计',
+			author: '阿泽修图',
+			authorColor: '#D6943A',
+			publishTime: '2026-03-18',
+			copyCount: '8.3k',
+			favoriteCount: '2.1k',
+			successRate: '93%',
+			feedbackCount: '168',
+			brief: '适合把“照片问题”变成可执行的 PS 操作步骤，包含工具、顺序和参数区间。',
+			useScenes: ['人像精修', '电商主图', '写真后期', '证件照优化'],
+			avgInputToken: '0.7k',
+			avgOutputToken: '1.2k',
+			avgTotalToken: '1.9k',
+			estimatedCost: '¥0.02~0.06',
+			recommendedModel: 'GPT-4.1',
+			commonModel: 'Claude Sonnet',
+			showConsume: true,
+			totalUses: '2,986',
+			weekUses: '746',
+			fullPrompt: `【你是谁】
+你是一名资深 PS 修图师，熟悉 Camera Raw、曲线、HSL、高低频、蒙版、液化等常用工具。
 
-		// 结果证明
-		suitableFor: '需要写知乎长文、行业分析报告、公众号深度文章的用户',
-		inputDesc: '主题/话题 + 目标读者 + 期望字数（可选）',
-		outputDesc: '完整文章结构、各段落核心内容、开头引子、结语',
-		notFor: '短文、朋友圈文案、产品 slogan 等短内容创作',
-		sampleOutput: '【结构预览】\n一、当前痛点：为什么大家都在用 AI 写作但效果差强人意\n二、核心原因：Prompt 设计缺乏结构化思维\n三、解决方案：万能长文框架的三步走方法\n...',
+【你要做什么】
+根据我提供的照片问题，给我一套“可直接照着做”的修图方案。
+请按“先后顺序”写清楚每一步，不要只讲概念。
 
-		// 消耗证据
-		avgInputToken: '1.2k',
-		avgOutputToken: '2.0k',
-		avgTotalToken: '3.2k',
-		estimatedCost: '¥0.05~0.15',
-		recommendedModel: 'Claude Sonnet',
-		commonModel: 'Claude Sonnet',
-		totalUses: '4,821',
-		weekUses: '1,203',
+【输出要求】
+1. 先给“问题诊断”：这张图主要问题是什么。
+2. 再给“修图步骤”：每步写工具、操作方式、建议参数范围。
+3. 最后给“避坑提醒”：哪些地方容易修过头。
+4. 如果我给的信息不够，不要反问，直接按默认参数给完整方案。
 
-		// Skill 正文
-		systemPrompt: '你是一位专业的中文长文写作专家，擅长知乎专栏、公众号深度文章和行业分析报告。你的文章具有清晰的逻辑结构、丰富的论据和引人入胜的叙述方式。请根据用户提供的主题和要求，创作一篇结构完整的长文。',
-		userPromptTemplate: '请帮我写一篇关于【{topic}】的长文。\n目标读者：{audience}\n期望字数：{length}（可选）\n写作风格：{tone}\n重点强调：{focus}',
-		variables: [
-			{ name: 'topic', desc: '文章主题，如"AI 对教育的影响"' },
-			{ name: 'audience', desc: '目标读者群，如"职场新人"、"创业者"' },
-			{ name: 'length', desc: '期望字数，如"3000字"（可不填）' },
-			{ name: 'tone', desc: '写作风格，如"专业理性"、"轻松幽默"' },
-			{ name: 'focus', desc: '重点强调内容，如"数据支撑"、"案例丰富"' }
-		],
-		notes: '此 Prompt 对 Claude 系列效果最佳。GPT-4o 也适用但输出结构可能稍有差异。建议先生成文章大纲，确认后再让模型展开每个部分，可有效控制 token 消耗。',
+【固定参数（默认执行）】
+- 输出步骤数量：6~8步
+- 每步包含：工具 + 操作 + 参数范围
+- 默认参数：曝光 +0.25、对比 +12、高光 -35、阴影 +18、清晰度 +8
+- 磨皮强度默认中等，保留皮肤纹理
+- 禁止先提问，直接给修图方案
 
-		// 使用步骤
-		steps: [
-			'复制 System Prompt，粘贴到模型的"系统设置"或对话开始处',
-			'复制用户输入模板，替换 {} 中的变量为你的实际需求',
-			'建议使用 Claude Sonnet，在温度设置 0.7 左右效果最佳',
-			'若要省 token：先让模型只生成大纲，确认后再逐段展开'
-		],
+【我会提供这些信息】
+照片类型：{照片类型}
+当前问题：{当前问题}
+目标风格：{目标风格}
+软件版本：{软件版本}
+是否商用：{是否商用}`,
+			variables: [
+				{ name: '照片类型', desc: '如“室内人像”“电商白底图”' },
+				{ name: '当前问题', desc: '如“肤色发灰、噪点重、背景脏”' },
+				{ name: '目标风格', desc: '如“自然通透”“高级胶片感”' },
+				{ name: '软件版本', desc: '如“Photoshop 2024”' },
+				{ name: '是否商用', desc: '是/否，商用时更强调自然和合规' }
+			],
+			variableNotes: `{当前问题}尽量写具体，结果会更稳
+{目标风格}不要写太泛，建议给参考方向
+{是否商用}会影响修图强度建议`,
+			steps: [
+				'复制 Skill 到对话框',
+				'把照片问题按变量补充完整',
+				'按 AI 给的顺序在 PS 里执行',
+				'根据“避坑提醒”回看并微调'
+			],
+			feedbacks: [
+				{ id: 's1-f1', userName: '林楠', userColor: '#9A6530', time: '2天前', model: 'GPT-4.1', inputToken: '0.6k', outputToken: '1.1k', totalToken: '1.7k', status: 'success', comment: '给到的参数区间很实用，电商图返修率明显下降。' },
+				{ id: 's1-f2', userName: '小莫', userColor: '#7B5B3C', time: '4天前', model: 'Claude Sonnet', inputToken: '0.8k', outputToken: '1.3k', totalToken: '2.1k', status: 'success', comment: '以前只会乱调，现在按步骤做，肤色稳定很多。' }
+			],
+			similarSkills: [
+				{ id: 's4', title: '电商主图卖点文案生成器', tag: '电商', avgToken: '1.5k', successRate: '91%' },
+				{ id: 's5', title: '短视频口播脚本生成器', tag: '自媒体', avgToken: '1.8k', successRate: '89%' },
+				{ id: 's2', title: '前端 Bug 定位与修复助手', tag: '编程', avgToken: '2.1k', successRate: '90%' }
+			]
+		},
+		s2: {
+			id: 's2',
+			title: '前端 Bug 定位与修复助手',
+			scene: '编程',
+			author: '周知行',
+			authorColor: '#9A6530',
+			publishTime: '2026-03-15',
+			copyCount: '7.6k',
+			favoriteCount: '2.0k',
+			successRate: '90%',
+			feedbackCount: '142',
+			brief: '先定位再修复，输出最小可行补丁和回归测试点，适合 Vue/React 项目。',
+			useScenes: ['线上报错', '页面白屏', '接口异常', '性能抖动'],
+			avgInputToken: '1.1k',
+			avgOutputToken: '1.0k',
+			avgTotalToken: '2.1k',
+			estimatedCost: '¥0.03~0.08',
+			recommendedModel: 'Claude Sonnet',
+			commonModel: 'GPT-4.1',
+			showConsume: true,
+			totalUses: '2,541',
+			weekUses: '611',
+			fullPrompt: `【你是谁】
+你是一名资深前端工程师，擅长快速定位线上问题并给出最小改动修复方案。
 
-		// 复现反馈
-		feedbacks: [
-			{
-				id: 'f1', userName: '张晴晴', userColor: '#0891B2', time: '3天前',
-				model: 'Claude Sonnet', inputToken: '1.1k', outputToken: '2.3k', totalToken: '3.4k',
-				status: 'success', comment: '完全按步骤来的，一次成功！输出的文章结构非常清晰，稍加润色直接发布了。'
-			},
-			{
-				id: 'f2', userName: '李明远', userColor: '#D97706', time: '1周前',
-				model: 'GPT-4o', inputToken: '1.4k', outputToken: '1.8k', totalToken: '3.2k',
-				status: 'normal', comment: '用GPT-4o跑了一下，结果差不多，但输出的段落不如Claude流畅，需要自己再调整一下。'
-			},
-			{
-				id: 'f3', userName: '王小红', userColor: '#059669', time: '2周前',
-				model: 'Claude Sonnet', inputToken: '0.9k', outputToken: '2.1k', totalToken: '3.0k',
-				status: 'success', comment: '写了篇关于职场晋升的文章，质量超出预期。按建议先生成大纲节省了不烧token。'
-			}
-		],
+【你要做什么】
+我会给你报错信息和代码片段，你需要：
+1. 先判断最可能的根因（按概率排序）
+2. 给出最小可行修复代码
+3. 给出回归测试清单，防止改坏其他功能
 
-		// 相似推荐
-		similarSkills: [
-			{ id: 'r1', title: '爆款自媒体选题生成', tag: '自媒体', avgToken: '1.8k', successRate: '87%' },
-			{ id: 'r2', title: '极简翻译润色器', tag: '写作·省token', avgToken: '800', successRate: '96%' },
-			{ id: 'r3', title: '报告摘要提炼器', tag: '办公', avgToken: '2.4k', successRate: '90%' }
+【输出格式】
+根因判断：
+- 高概率：
+- 中概率：
+
+修复方案：
+- 改动点：
+- 代码示例：
+
+回归检查：
+- 检查项1
+- 检查项2
+
+【固定参数（默认执行）】
+- 只输出最小可行修复（避免大改）
+- 默认技术栈：Vue3 + TypeScript + Vite
+- 如果缺运行环境，按“现代浏览器 + Node 18”处理
+- 代码示例优先给可直接替换片段
+- 禁止先提问，直接给排查与修复结果
+
+【我会提供这些信息】
+错误信息：{错误信息}
+相关代码：{相关代码}
+运行环境：{运行环境}
+期望结果：{期望结果}`,
+			variables: [
+				{ name: '错误信息', desc: '完整报错堆栈或控制台错误' },
+				{ name: '相关代码', desc: '最小可复现片段' },
+				{ name: '运行环境', desc: '如“Vue3 + Vite + iOS Safari”' },
+				{ name: '期望结果', desc: '修复后希望达到的行为' }
+			],
+			variableNotes: '',
+			steps: ['复制 Skill', '贴入报错和代码', '先看根因排序再改代码', '按回归清单逐项验证'],
+			feedbacks: [
+				{ id: 's2-f1', userName: '张开源', userColor: '#2F8A57', time: '3天前', model: 'Claude Sonnet', inputToken: '1.2k', outputToken: '1.0k', totalToken: '2.2k', status: 'success', comment: '给出的最小补丁非常干净，20分钟就修完线上问题。' },
+				{ id: 's2-f2', userName: '阿青', userColor: '#7B5B3C', time: '1周前', model: 'GPT-4.1', inputToken: '1.0k', outputToken: '1.1k', totalToken: '2.1k', status: 'normal', comment: '定位很准，回归清单很有用。' }
+			],
+			similarSkills: [
+				{ id: 's3', title: '会议纪要行动项提取器', tag: '办公', avgToken: '1.2k', successRate: '93%' },
+				{ id: 's6', title: '英语口语陪练教练', tag: '学习', avgToken: '1.6k', successRate: '88%' },
+				{ id: 's1', title: 'PS 人像精修提示词（参数版）', tag: '设计', avgToken: '1.9k', successRate: '93%' }
+			]
+		},
+		s3: {
+			id: 's3',
+			title: '会议纪要行动项提取器',
+			scene: '办公',
+			author: '刘效率',
+			authorColor: '#2F8A57',
+			publishTime: '2026-03-14',
+			copyCount: '6.9k',
+			favoriteCount: '1.8k',
+			successRate: '93%',
+			feedbackCount: '126',
+			brief: '把会议记录拆成决策、行动项、负责人和截止日期，直接可发到群里执行。',
+			useScenes: ['项目例会', '产品评审', '销售复盘', '跨部门沟通'],
+			avgInputToken: '0.8k',
+			avgOutputToken: '0.4k',
+			avgTotalToken: '1.2k',
+			estimatedCost: '¥0.01~0.04',
+			recommendedModel: 'GPT-4o-mini',
+			commonModel: 'GPT-4o-mini',
+			showConsume: true,
+			totalUses: '2,210',
+			weekUses: '589',
+			fullPrompt: `【你是谁】
+你是一名项目管理助理，擅长把杂乱会议内容整理成可执行清单。
+
+【你要做什么】
+把会议内容整理成：
+1. 已确认决策
+2. 待办事项（负责人+截止时间）
+3. 风险与阻塞
+4. 下一次同步时间建议
+
+【输出格式】
+请用表格输出“待办事项”，其余用分点列出。
+如果会议内容里没有负责人或截止时间，请明确标注“待补充”。
+
+【固定参数（默认执行）】
+- 必须输出：决策、待办、风险、下次同步建议
+- 截止时间默认：今天起 +3 个工作日
+- 负责人缺失时默认标“待分配”
+- 每条待办默认一句“可验收标准”
+- 禁止先提问，直接给整理结果
+
+【我会提供这些信息】
+会议原文：{会议原文}
+项目名称：{项目名称}
+今天日期：{今天日期}`,
+			variables: [
+				{ name: '会议原文', desc: '录音转文字或手记原文' },
+				{ name: '项目名称', desc: '方便归档和追踪' },
+				{ name: '今天日期', desc: '用于推断截止日期' }
+			],
+			variableNotes: '',
+			steps: ['粘贴会议原文', '补项目名和日期', '核对负责人/时间是否完整', '直接发布到团队群'],
+			feedbacks: [
+				{ id: 's3-f1', userName: '孟涛', userColor: '#9A6530', time: '1天前', model: 'GPT-4o-mini', inputToken: '0.7k', outputToken: '0.5k', totalToken: '1.2k', status: 'success', comment: '输出特别规整，抄过去就能执行。' },
+				{ id: 's3-f2', userName: '阿丽', userColor: '#7B5B3C', time: '4天前', model: 'GPT-4o-mini', inputToken: '0.9k', outputToken: '0.4k', totalToken: '1.3k', status: 'success', comment: '以前做纪要要40分钟，现在10分钟内搞定。' }
+			],
+			similarSkills: [
+				{ id: 's2', title: '前端 Bug 定位与修复助手', tag: '编程', avgToken: '2.1k', successRate: '90%' },
+				{ id: 's4', title: '电商主图卖点文案生成器', tag: '电商', avgToken: '1.5k', successRate: '91%' },
+				{ id: 's5', title: '短视频口播脚本生成器', tag: '自媒体', avgToken: '1.8k', successRate: '89%' }
+			]
+		},
+		s4: {
+			id: 's4',
+			title: '电商主图卖点文案生成器',
+			scene: '电商',
+			author: '许稳稳',
+			authorColor: '#7B5B3C',
+			publishTime: '2026-03-12',
+			copyCount: '5.9k',
+			favoriteCount: '1.7k',
+			successRate: '91%',
+			feedbackCount: '117',
+			brief: '聚焦主图一句话卖点，适合淘宝/拼多多/抖店等电商平台。',
+			useScenes: ['主图卖点', '详情页首屏', '活动海报', '直播间贴片'],
+			avgInputToken: '0.6k',
+			avgOutputToken: '0.9k',
+			avgTotalToken: '1.5k',
+			estimatedCost: '¥0.02~0.05',
+			recommendedModel: 'GPT-4.1',
+			commonModel: 'Claude Sonnet',
+			showConsume: true,
+			totalUses: '1,982',
+			weekUses: '502',
+			fullPrompt: `【你是谁】
+你是一位电商文案策划，擅长把产品特性写成“用户一眼看懂”的卖点话术。
+
+【你要做什么】
+请根据产品信息，输出 5 条主图卖点文案，每条不超过 16 个字。
+另外再给 3 条副标题补充说明，每条不超过 24 个字。
+
+【要求】
+1. 不要夸大宣传，不写虚假承诺
+2. 优先突出差异化和使用结果
+3. 语气要像真实商家，不要像机器
+
+【固定参数（默认执行）】
+- 主图文案：5条，每条 <=16字
+- 副标题：3条，每条 <=24字
+- 语气默认：直接、利落、可感知
+- 若缺竞品短板：默认按“同价位功能一般”处理
+- 禁止先提问，直接输出可用文案
+
+【我会提供这些信息】
+产品名称：{产品名称}
+核心优势：{核心优势}
+目标人群：{目标人群}
+竞品短板：{竞品短板}
+禁用词：{禁用词}`,
+			variables: [
+				{ name: '产品名称', desc: '你的商品名' },
+				{ name: '核心优势', desc: '建议1~3条' },
+				{ name: '目标人群', desc: '主要购买人群' },
+				{ name: '竞品短板', desc: '有助于写差异化' },
+				{ name: '禁用词', desc: '品牌合规词库' }
+			],
+			variableNotes: '',
+			steps: ['补全商品信息', '先选3条主图卖点', '再选副标题组合', '投放后按转化复盘'],
+			feedbacks: [
+				{ id: 's4-f1', userName: '小妍', userColor: '#D6943A', time: '3天前', model: 'GPT-4.1', inputToken: '0.6k', outputToken: '0.8k', totalToken: '1.4k', status: 'success', comment: '主图点击率比原来提升了12%。' }
+			],
+			similarSkills: [
+				{ id: 's1', title: 'PS 人像精修提示词（参数版）', tag: '设计', avgToken: '1.9k', successRate: '93%' },
+				{ id: 's5', title: '短视频口播脚本生成器', tag: '自媒体', avgToken: '1.8k', successRate: '89%' },
+				{ id: 's3', title: '会议纪要行动项提取器', tag: '办公', avgToken: '1.2k', successRate: '93%' }
+			]
+		},
+		s5: {
+			id: 's5',
+			title: '短视频口播脚本生成器',
+			scene: '自媒体',
+			author: '王创作',
+			authorColor: '#7B5B3C',
+			publishTime: '2026-03-10',
+			copyCount: '5.1k',
+			favoriteCount: '1.6k',
+			successRate: '89%',
+			feedbackCount: '102',
+			brief: '适合 30~60 秒短视频口播，含开场钩子、核心内容和结尾引导。',
+			useScenes: ['抖音口播', '小红书视频', '知识分享', '产品种草'],
+			avgInputToken: '0.8k',
+			avgOutputToken: '1.0k',
+			avgTotalToken: '1.8k',
+			estimatedCost: '¥0.02~0.06',
+			recommendedModel: 'Claude Sonnet',
+			commonModel: 'GPT-4o',
+			showConsume: true,
+			totalUses: '1,744',
+			weekUses: '433',
+			fullPrompt: `【你是谁】
+你是一位短视频编导，擅长把一个主题快速整理成有节奏的口播脚本。
+
+【你要做什么】
+输出 30~60 秒口播稿，必须包含：
+1. 开场 3 秒钩子
+2. 中段核心观点（2~3点）
+3. 结尾互动引导
+
+【写作要求】
+1. 句子短，口语化，读出来顺口
+2. 每段不超过 2 行
+3. 不要空泛鸡汤，要有具体信息
+
+【固定参数（默认执行）】
+- 默认时长：45秒
+- 默认结构：开场钩子(3秒) + 3个观点 + 结尾引导
+- 默认语速：每句不超过 18 字
+- 若缺内容角度：默认“干货+案例”风格
+- 禁止先提问，直接输出口播稿
+
+【我会提供这些信息】
+视频主题：{视频主题}
+目标人群：{目标人群}
+内容角度：{内容角度}
+语气风格：{语气风格}
+时长要求：{时长要求}`,
+			variables: [
+				{ name: '视频主题', desc: '这条视频讲什么' },
+				{ name: '目标人群', desc: '希望打动谁' },
+				{ name: '内容角度', desc: '故事型/干货型/测评型等' },
+				{ name: '语气风格', desc: '热情/冷静/幽默等' },
+				{ name: '时长要求', desc: '如30秒、45秒、60秒' }
+			],
+			variableNotes: '',
+			steps: ['填变量', '生成3版脚本', '挑1版口播试拍', '按完播率再改开场钩子'],
+			feedbacks: [
+				{ id: 's5-f1', userName: '阿欣', userColor: '#9A6530', time: '6天前', model: 'Claude Sonnet', inputToken: '0.8k', outputToken: '1.1k', totalToken: '1.9k', status: 'normal', comment: '框架很好用，开场钩子我自己再改一下效果更好。' }
+			],
+			similarSkills: [
+				{ id: 's4', title: '电商主图卖点文案生成器', tag: '电商', avgToken: '1.5k', successRate: '91%' },
+				{ id: 's1', title: 'PS 人像精修提示词（参数版）', tag: '设计', avgToken: '1.9k', successRate: '93%' },
+				{ id: 's6', title: '英语口语陪练教练', tag: '学习', avgToken: '1.6k', successRate: '88%' }
+			]
+		},
+		s6: {
+			id: 's6',
+			title: '英语口语陪练教练',
+			scene: '学习',
+			author: '陈可',
+			authorColor: '#2F8A57',
+			publishTime: '2026-03-09',
+			copyCount: '4.4k',
+			favoriteCount: '1.3k',
+			successRate: '88%',
+			feedbackCount: '88',
+			brief: '按真实对话场景做英语口语训练，先纠错再给更自然表达。',
+			useScenes: ['面试英语', '出国旅行', '商务会议', '日常口语'],
+			avgInputToken: '0.9k',
+			avgOutputToken: '0.7k',
+			avgTotalToken: '1.6k',
+			estimatedCost: '¥0.02~0.05',
+			recommendedModel: 'GPT-4o',
+			commonModel: 'GPT-4o-mini',
+			showConsume: true,
+			totalUses: '1,508',
+			weekUses: '366',
+			fullPrompt: `【你是谁】
+你是一位英语口语教练，风格严格但鼓励，重点纠正“能听懂但不会说”的问题。
+
+【你要做什么】
+我给你中文或英文表达后，你按下面流程回答：
+1. 先给更自然的英文表达
+2. 再解释为什么这样说更地道
+3. 最后给 2 句可替换说法
+
+【要求】
+1. 用简单好记的表达，不要过于书面
+2. 每次只纠正 1~2 个关键点，避免信息过载
+3. 如果我说“继续练习”，请自动出下一题
+
+【固定参数（默认执行）】
+- 每轮输出：改写句 + 解释 + 2句替换说法
+- 词汇级别默认：CEFR B1
+- 语气默认：礼貌自然、不过分正式
+- 若缺练习场景：默认“日常沟通”
+- 禁止先提问，直接开始训练
+
+【我会提供这些信息】
+练习场景：{练习场景}
+我的原句：{我的原句}
+我的水平：{我的水平}`,
+			variables: [
+				{ name: '练习场景', desc: '如“面试自我介绍”' },
+				{ name: '我的原句', desc: '你想表达的话' },
+				{ name: '我的水平', desc: '如“初级/中级”' }
+			],
+			variableNotes: '',
+			steps: ['复制 Skill', '输入场景和原句', '跟读并复述改写句', '说“继续练习”进入下一轮'],
+			feedbacks: [
+				{ id: 's6-f1', userName: '小溪', userColor: '#7B5B3C', time: '1周前', model: 'GPT-4o', inputToken: '0.9k', outputToken: '0.7k', totalToken: '1.6k', status: 'success', comment: '解释很清楚，能马上用到口语里。' }
+			],
+			similarSkills: [
+				{ id: 's5', title: '短视频口播脚本生成器', tag: '自媒体', avgToken: '1.8k', successRate: '89%' },
+				{ id: 's3', title: '会议纪要行动项提取器', tag: '办公', avgToken: '1.2k', successRate: '93%' },
+				{ id: 's2', title: '前端 Bug 定位与修复助手', tag: '编程', avgToken: '2.1k', successRate: '90%' }
+			]
+		}
+	}
+
+	const cloneSkill = (id: string) => {
+		const source = SKILL_LIBRARY[id] || SKILL_LIBRARY.s1
+		return JSON.parse(JSON.stringify(source))
+	}
+
+	const skill = ref(cloneSkill('s1'))
+
+	const hasConsumeData = computed(() => {
+		if (skill.value.showConsume === false) return false
+		const values = [
+			skill.value.avgInputToken,
+			skill.value.avgOutputToken,
+			skill.value.avgTotalToken,
+			skill.value.estimatedCost
 		]
+		return values.some((item) => {
+			const text = `${item ?? ''}`.trim()
+			return !!text && text !== '--' && text !== '0'
+		})
+	})
+
+	const variableNotesText = computed(() => {
+		const direct = `${skill.value.variableNotes || ''}`.trim()
+		if (direct) return direct
+		if (!Array.isArray(skill.value.variables) || !skill.value.variables.length) return ''
+		return skill.value.variables
+			.map((item: any) => `{${item.name}}：${item.desc}`)
+			.join('\n')
 	})
 
 	const statusLabel = (status: string) => {
-		return { success: '✅ 成功', normal: '🆗 一般', fail: '❌ 翻车' }[status] || status
+		return { success: '成功', normal: '一般', fail: '翻车' }[status] || status
 	}
 
 	const copySkill = () => {
@@ -450,18 +760,58 @@
 
 	const copyAll = () => {
 		uni.setClipboardData({
-			data: skill.value.systemPrompt + '\n\n' + skill.value.userPromptTemplate,
+			data: skill.value.fullPrompt,
 			success: () => uni.showToast({ title: '已复制全部内容', icon: 'success' })
 		})
 	}
 
-	const copyBlock = (type: string) => {
-		const text = type === 'system' ? skill.value.systemPrompt : skill.value.userPromptTemplate
-		uni.setClipboardData({
-			data: text,
-			success: () => uni.showToast({ title: '已复制', icon: 'success' })
-		})
+	const applyPublishedSkill = (payload: any) => {
+		if (!payload || typeof payload !== 'object') return
+		skill.value = {
+			...skill.value,
+			id: payload.id ?? skill.value.id,
+			title: payload.title ?? skill.value.title,
+			scene: payload.scene ?? skill.value.scene,
+			author: payload.author ?? skill.value.author,
+			authorColor: payload.authorColor ?? skill.value.authorColor,
+			publishTime: payload.publishTime ?? skill.value.publishTime,
+			copyCount: payload.copyCount ?? skill.value.copyCount,
+			favoriteCount: payload.favoriteCount ?? skill.value.favoriteCount,
+			successRate: payload.successRate ?? skill.value.successRate,
+			feedbackCount: payload.feedbackCount ?? skill.value.feedbackCount,
+			brief: payload.brief ?? skill.value.brief,
+			useScenes: Array.isArray(payload.useScenes) && payload.useScenes.length ? payload.useScenes : skill.value.useScenes,
+			avgInputToken: payload.avgInputToken ?? skill.value.avgInputToken,
+			avgOutputToken: payload.avgOutputToken ?? skill.value.avgOutputToken,
+			avgTotalToken: payload.avgTotalToken ?? skill.value.avgTotalToken,
+			estimatedCost: payload.estimatedCost ?? skill.value.estimatedCost,
+			recommendedModel: payload.recommendedModel ?? skill.value.recommendedModel,
+			commonModel: payload.commonModel ?? skill.value.commonModel,
+			showConsume: typeof payload.showConsume === 'boolean' ? payload.showConsume : skill.value.showConsume,
+			totalUses: payload.totalUses ?? skill.value.totalUses,
+			weekUses: payload.weekUses ?? skill.value.weekUses,
+			fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
+			variableNotes: payload.variableNotes ?? skill.value.variableNotes,
+			variables: Array.isArray(payload.variables) && payload.variables.length ? payload.variables : skill.value.variables,
+			steps: Array.isArray(payload.steps) && payload.steps.length ? payload.steps : skill.value.steps,
+			feedbacks: Array.isArray(payload.feedbacks) ? payload.feedbacks : skill.value.feedbacks,
+			similarSkills: Array.isArray(payload.similarSkills) ? payload.similarSkills : skill.value.similarSkills
+		}
 	}
+
+	onLoad((query: any) => {
+		const isFromPublish = `${query?.fromPublish || ''}` === '1'
+		if (isFromPublish) {
+			const payload = uni.getStorageSync(PUBLISHED_SKILL_PREVIEW_KEY)
+			if (!payload) return
+			applyPublishedSkill(payload)
+			uni.showToast({ title: '已加载刚发布内容', icon: 'none' })
+			return
+		}
+
+		const skillId = `${query?.id || 's1'}`
+		skill.value = cloneSkill(skillId)
+	})
 
 	const toggleFavorite = () => {
 		isFavorited.value = !isFavorited.value
@@ -498,7 +848,7 @@
 
 	const goUse = () => {
 		showCopyGuide.value = false
-		uni.showToast({ title: '打开你的 AI 工具使用吧 🚀', icon: 'none' })
+		uni.showToast({ title: '打开你的 AI 工具使用吧', icon: 'none' })
 	}
 
 	const saveFavorite = () => {
@@ -518,12 +868,12 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F5F3EF;
+		background: #FFFFFF;
 	}
 
 	/* 自定义导航栏 */
 	.navbar {
-		background: #F5F3EF;
+		background: #FFFFFF;
 		flex-shrink: 0;
 		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
@@ -545,7 +895,13 @@
 			border-radius: 20rpx;
 			flex-shrink: 0;
 
-			.nav-back-icon { font-size: 32rpx; color: #1A1A1A; }
+			.nav-back-icon {
+				width: 32rpx;
+				height: 32rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 		}
 
 		.nav-title {
@@ -567,7 +923,13 @@
 				align-items: center;
 				justify-content: center;
 
-				.nav-btn-icon { font-size: 34rpx; }
+				.nav-btn-icon {
+					width: 30rpx;
+					height: 30rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
 			}
 		}
 	}
@@ -589,9 +951,108 @@
 		gap: 10rpx;
 		margin-bottom: 24rpx;
 
-		.section-badge { font-size: 28rpx; }
+		.section-badge {
+			width: 32rpx;
+			height: 32rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
 		.section-title { font-size: 28rpx; font-weight: 700; color: #1A1A1A; flex: 1; }
 		.section-subtitle { font-size: 20rpx; color: rgba(0,0,0,0.35); }
+	}
+
+	.copy-all-btn {
+		height: 52rpx;
+		padding: 0 18rpx;
+		border-radius: 999rpx;
+		background: rgba(228, 92, 26, 0.1);
+		border: 1rpx solid rgba(228, 92, 26, 0.16);
+		display: flex;
+		align-items: center;
+		gap: 6rpx;
+		justify-content: center;
+
+		.copy-all-icon {
+			width: 20rpx;
+			height: 20rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
+
+		.copy-all-text {
+			font-size: 20rpx;
+			color: #E45C1A;
+			font-weight: 600;
+		}
+	}
+
+	/* 2. 简介与场景 */
+	.skill-intro {
+		margin: 20rpx 24rpx 0;
+		background: #FFFFFF;
+		border: 1rpx solid rgba(228, 92, 26, 0.14);
+		border-radius: 24rpx;
+		padding: 24rpx;
+		box-shadow: 0 10rpx 30rpx rgba(228, 92, 26, 0.08);
+
+		.si-title {
+			display: block;
+			font-size: 24rpx;
+			font-weight: 700;
+			color: #B74914;
+			margin-bottom: 12rpx;
+		}
+
+		.si-text {
+			display: block;
+			font-size: 25rpx;
+			color: rgba(0,0,0,0.74);
+			line-height: 1.72;
+		}
+	}
+
+	.scene-block {
+		margin: 12rpx 24rpx 0;
+		background: #FFFFFF;
+		border: 1rpx solid rgba(228, 92, 26, 0.1);
+		border-radius: 24rpx;
+		padding: 24rpx 24rpx 20rpx;
+
+		.sb-title {
+			display: block;
+			font-size: 24rpx;
+			font-weight: 700;
+			color: #B74914;
+			margin-bottom: 14rpx;
+		}
+
+		.scene-chip-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12rpx;
+		}
+
+		.scene-chip {
+			height: 52rpx;
+			padding: 0 18rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(228, 92, 26, 0.08);
+			border: 1rpx solid rgba(228, 92, 26, 0.18);
+			border-radius: 999rpx;
+
+			.scene-chip-text {
+				font-size: 22rpx;
+				color: #C24F16;
+				font-weight: 600;
+				line-height: 1;
+			}
+		}
 	}
 
 	/* 1. 顶部概览区 */
@@ -640,57 +1101,16 @@
 				.author-av-t { font-size: 22rpx; color: #fff; font-weight: 700; }
 			}
 
-			.author-name { font-size: 26rpx; color: rgba(255,255,255,0.8); font-weight: 600; }
+			.author-name { font-size: 26rpx; color: rgba(0,0,0,0.8); font-weight: 600; }
 			.publish-time { font-size: 22rpx; color: rgba(0,0,0,0.40); flex: 1; }
 
 			.follow-btn {
-				background: rgba(255,122,26,0.15);
-				border: 1rpx solid rgba(255,122,26,0.35);
+				background: rgba(228, 92, 26,0.15);
+				border: 1rpx solid rgba(228, 92, 26, 0.2);
 				padding: 10rpx 24rpx;
 				border-radius: 100rpx;
 
-				.follow-btn-text { font-size: 22rpx; color: #FF7A1A; font-weight: 600; }
-			}
-		}
-
-		.main-cta-row {
-			display: flex;
-			gap: 16rpx;
-			margin-bottom: 28rpx;
-
-			.copy-main-btn {
-				flex: 1;
-				height: 88rpx;
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
-				border-radius: 24rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				gap: 12rpx;
-				box-shadow: 0 8rpx 28rpx rgba(255,122,26,0.4);
-
-				.copy-main-icon { font-size: 32rpx; }
-				.copy-main-text { font-size: 30rpx; font-weight: 700; color: #fff; }
-			}
-
-			.fav-btn {
-				width: 88rpx;
-				height: 88rpx;
-				border-radius: 24rpx;
-				background: rgba(0,0,0,0.06);
-				border: 1rpx solid rgba(0,0,0,0.09);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-
-				.fav-icon { font-size: 36rpx; color: rgba(0,0,0,0.50); }
-
-				&.favorited {
-					background: rgba(255,194,74,0.15);
-					border-color: rgba(255,194,74,0.35);
-
-					.fav-icon { color: #FFC24A; }
-				}
+				.follow-btn-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
 			}
 		}
 
@@ -709,7 +1129,7 @@
 				gap: 6rpx;
 
 				.ov-stat-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
-				.ov-stat-val.green { color: #4CD964; }
+				.ov-stat-val.green { color: #2F8A57; }
 				.ov-stat-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
@@ -721,70 +1141,9 @@
 		}
 	}
 
-	/* 2. 结果证明区 */
-	.result-proof-card {
-		background: rgba(0,0,0,0.03);
-		border-radius: 20rpx;
-		overflow: hidden;
-		margin-bottom: 20rpx;
-
-		.rp-row {
-			display: flex;
-			gap: 20rpx;
-			padding: 18rpx 20rpx;
-
-			.rp-label {
-				font-size: 22rpx;
-				color: rgba(0,0,0,0.40);
-				flex-shrink: 0;
-				width: 100rpx;
-				padding-top: 2rpx;
-			}
-
-			.rp-label-red { color: #FF5D5D; }
-
-			.rp-val {
-				flex: 1;
-				font-size: 24rpx;
-				color: rgba(255,255,255,0.8);
-				line-height: 1.6;
-			}
-
-			.rp-val-dim { color: rgba(0,0,0,0.40); }
-		}
-
-		.rp-divider {
-			height: 1rpx;
-			background: rgba(0,0,0,0.05);
-			margin: 0 20rpx;
-		}
-	}
-
-	.sample-result-card {
-		background: rgba(255,122,26,0.06);
-		border-radius: 20rpx;
-		border: 1rpx solid rgba(255,122,26,0.15);
-		overflow: hidden;
-
-		.sr-header {
-			padding: 16rpx 20rpx 12rpx;
-			border-bottom: 1rpx solid rgba(255,122,26,0.1);
-
-			.sr-title { font-size: 22rpx; font-weight: 600; color: rgba(255,122,26,0.8); }
-		}
-
-		.sr-content {
-			display: block;
-			font-size: 24rpx;
-			color: rgba(0,0,0,0.60);
-			line-height: 1.7;
-			padding: 16rpx 20rpx;
-		}
-	}
-
 	/* 3. 消耗证据区 */
 	.token-section {
-		border-color: rgba(255,122,26,0.15);
+		border-color: rgba(228, 92, 26,0.15);
 	}
 
 	.token-grid {
@@ -803,10 +1162,10 @@
 			gap: 8rpx;
 
 			.ti-val { font-size: 30rpx; font-weight: 800; color: rgba(0,0,0,0.70); }
-			.ti-val.orange { font-size: 40rpx; color: #FF7A1A; }
+			.ti-val.orange { font-size: 40rpx; color: #E45C1A; }
 			.ti-label { font-size: 20rpx; color: rgba(0,0,0,0.40); text-align: center; }
 
-			&.token-item-main { background: rgba(255,122,26,0.08); border: 1rpx solid rgba(255,122,26,0.2); }
+			&.token-item-main { background: rgba(228, 92, 26,0.08); border: 1rpx solid rgba(228, 92, 26,0.2); }
 		}
 	}
 
@@ -827,7 +1186,7 @@
 
 			.cost-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			.cost-val { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
-			.cost-val.orange { color: #FF7A1A; }
+			.cost-val.orange { color: #E45C1A; }
 		}
 
 		.cost-divider {
@@ -855,87 +1214,46 @@
 			& + .us-item { margin-left: 12rpx; }
 
 			.us-val { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
-			.us-val.green { color: #4CD964; }
-			.us-val.blue { color: #5DA9FF; }
+			.us-val.green { color: #2F8A57; }
+			.us-val.blue { color: #5E738A; }
 			.us-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 		}
 	}
 
 	/* 4. Skill 正文区 */
-	.prompt-block {
-		margin-bottom: 20rpx;
+	.skill-content-card {
+		padding-top: 20rpx;
 
-		.pb-label-row {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			margin-bottom: 12rpx;
-
-			.pb-label { font-size: 22rpx; font-weight: 600; color: rgba(255,255,255,0.6); }
-
-			.pb-copy-btn {
-				background: rgba(255,122,26,0.12);
-				border: 1rpx solid rgba(255,122,26,0.25);
-				padding: 6rpx 18rpx;
-				border-radius: 100rpx;
-
-				.pb-copy-text { font-size: 20rpx; color: #FF7A1A; font-weight: 600; }
-			}
+		.section-header {
+			margin-bottom: 18rpx;
 		}
 
-		.pb-content {
-			background: #F5F3EF;
-			border-radius: 16rpx;
-			border: 1rpx solid rgba(0,0,0,0.06);
-			padding: 20rpx;
+		.skill-content-panel {
+			background: #191A31;
+			border-radius: 26rpx;
+			padding: 28rpx;
+			border: 1rpx solid rgba(255,255,255,0.06);
+		}
 
-			.pb-text {
-				font-size: 24rpx;
-				color: rgba(255,255,255,0.75);
-				line-height: 1.75;
-				font-family: 'Menlo', 'Courier New', monospace;
-			}
+		.scp-text {
+			display: block;
+			font-size: 24rpx;
+			color: #AEB7FF;
+			line-height: 1.72;
+			white-space: pre-wrap;
+			word-break: break-word;
 		}
 	}
 
-	.variables-section {
-		margin-bottom: 20rpx;
-
-		.var-title { display: block; font-size: 22rpx; font-weight: 600; color: rgba(255,255,255,0.6); margin-bottom: 14rpx; }
-
-		.var-list {
-			display: flex;
-			flex-direction: column;
-			gap: 10rpx;
-
-			.var-item {
-				display: flex;
-				align-items: flex-start;
-				gap: 14rpx;
-
-				.var-name-wrap {
-					background: rgba(93,169,255,0.12);
-					border: 1rpx solid rgba(93,169,255,0.25);
-					padding: 6rpx 14rpx;
-					border-radius: 8rpx;
-					flex-shrink: 0;
-
-					.var-name { font-size: 20rpx; color: #5DA9FF; font-weight: 600; font-family: monospace; }
-				}
-
-				.var-desc { font-size: 22rpx; color: rgba(0,0,0,0.50); line-height: 1.5; padding-top: 4rpx; }
-			}
+	.variable-notes-card {
+		.vn-text {
+			display: block;
+			font-size: 24rpx;
+			color: rgba(0, 0, 0, 0.72);
+			line-height: 1.7;
+			white-space: pre-wrap;
+			word-break: break-word;
 		}
-	}
-
-	.notes-block {
-		background: rgba(255,93,93,0.06);
-		border-radius: 16rpx;
-		border: 1rpx solid rgba(255,93,93,0.15);
-		padding: 18rpx 20rpx;
-
-		.notes-title { display: block; font-size: 22rpx; font-weight: 600; color: #FF5D5D; margin-bottom: 10rpx; }
-		.notes-text { font-size: 24rpx; color: rgba(255,255,255,0.6); line-height: 1.65; }
 	}
 
 	/* 5. 使用步骤 */
@@ -953,7 +1271,7 @@
 				width: 48rpx;
 				height: 48rpx;
 				border-radius: 50%;
-				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				background: #E45C1A;
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -963,18 +1281,18 @@
 				.step-num-text { font-size: 22rpx; color: #fff; font-weight: 800; }
 			}
 
-			.step-text { font-size: 26rpx; color: rgba(255,255,255,0.75); line-height: 1.65; flex: 1; }
+			.step-text { font-size: 26rpx; color: rgba(0,0,0,0.75); line-height: 1.65; flex: 1; }
 		}
 	}
 
 	/* 6. 复现反馈区 */
 	.write-feedback-btn {
-		background: rgba(255,122,26,0.12);
-		border: 1rpx solid rgba(255,122,26,0.25);
+		background: rgba(228, 92, 26,0.12);
+		border: 1rpx solid rgba(228, 92, 26, 0.16);
 		padding: 8rpx 20rpx;
 		border-radius: 100rpx;
 
-		.write-fb-text { font-size: 22rpx; color: #FF7A1A; font-weight: 600; }
+		.write-fb-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
 	}
 
 	.feedback-list {
@@ -1008,7 +1326,7 @@
 				.fb-meta {
 					flex: 1;
 
-					.fb-name { display: block; font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.8); }
+					.fb-name { display: block; font-size: 24rpx; font-weight: 600; color: rgba(0,0,0,0.8); }
 					.fb-time { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				}
 
@@ -1017,9 +1335,9 @@
 					padding: 6rpx 14rpx;
 					border-radius: 100rpx;
 
-					&.status-success { color: #4CD964; background: rgba(76,217,100,0.12); }
-					&.status-normal { color: #5DA9FF; background: rgba(93,169,255,0.12); }
-					&.status-fail { color: #FF5D5D; background: rgba(255,93,93,0.12); }
+					&.status-success { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+					&.status-normal { color: #5E738A; background: rgba(94, 115, 138,0.12); }
+					&.status-fail { color: #C84634; background: rgba(200, 70, 52,0.12); }
 
 					.fb-status-text { font-weight: 600; }
 				}
@@ -1042,8 +1360,8 @@
 
 					.fbt-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 					.fbt-val { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.70); }
-					.fbt-val.orange { color: #FF7A1A; }
-					.fbt-val.model { font-size: 20rpx; color: #A78BFA; }
+					.fbt-val.orange { color: #E45C1A; }
+					.fbt-val.model { font-size: 20rpx; color: #C7A06A; }
 				}
 			}
 
@@ -1089,21 +1407,27 @@
 					display: flex;
 					gap: 16rpx;
 
+					.si-token-wrap {
+						display: flex;
+						align-items: center;
+						gap: 4rpx;
+					}
+
 					.si-token { font-size: 22rpx; }
-					.orange { color: #FF7A1A; }
+					.orange { color: #E45C1A; }
 					.si-rate { font-size: 22rpx; }
-					.green { color: #4CD964; }
+					.green { color: #2F8A57; }
 				}
 			}
 
 			.si-copy-btn {
-				background: rgba(255,122,26,0.12);
-				border: 1rpx solid rgba(255,122,26,0.25);
+				background: rgba(228, 92, 26,0.12);
+				border: 1rpx solid rgba(228, 92, 26, 0.16);
 				padding: 12rpx 24rpx;
 				border-radius: 100rpx;
 				flex-shrink: 0;
 
-				.si-copy-text { font-size: 22rpx; color: #FF7A1A; font-weight: 600; }
+				.si-copy-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
 			}
 		}
 	}
@@ -1117,8 +1441,8 @@
 		right: 0;
 		bottom: 0;
 		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
-		background: rgba(11,13,18,0.95);
-		backdrop-filter: blur(20px);
+		background: #FFFFFF;
+		backdrop-filter: blur(12px);
 		border-top: 1rpx solid rgba(0,0,0,0.07);
 		display: flex;
 		gap: 16rpx;
@@ -1136,22 +1460,35 @@
 			justify-content: center;
 			gap: 4rpx;
 
-			.bb-fav-icon { font-size: 30rpx; color: rgba(0,0,0,0.50); }
+			.bb-fav-icon {
+				width: 30rpx;
+				height: 30rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 			.bb-fav-text { font-size: 18rpx; color: rgba(0,0,0,0.50); }
 		}
 
 		.bb-copy-btn {
 			flex: 1;
 			height: 88rpx;
-			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+			background: #E45C1A;
 			border-radius: 24rpx;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			gap: 12rpx;
-			box-shadow: 0 8rpx 28rpx rgba(255,122,26,0.4);
+			box-shadow: 0 8rpx 28rpx rgba(228, 92, 26, 0.24);
 
-			.bb-copy-icon { font-size: 28rpx; }
+			.bb-copy-icon {
+				width: 24rpx;
+				height: 24rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
 			.bb-copy-text { font-size: 30rpx; font-weight: 700; color: #fff; }
 		}
 	}
@@ -1176,12 +1513,19 @@
 		border-top: 1rpx solid rgba(0,0,0,0.08);
 		padding: 40rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
 
+		.cg-title-row {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8rpx;
+			margin-bottom: 10rpx;
+		}
+
 		.cg-title {
 			display: block;
 			font-size: 34rpx;
 			font-weight: 800;
 			color: #1A1A1A;
-			margin-bottom: 10rpx;
 			text-align: center;
 		}
 
@@ -1209,12 +1553,19 @@
 				padding: 0 28rpx;
 
 				&:first-child {
-					background: rgba(255,122,26,0.12);
-					border-color: rgba(255,122,26,0.25);
+					background: rgba(228, 92, 26,0.12);
+					border-color: rgba(228, 92, 26, 0.16);
 				}
 
-				.cg-btn-icon { font-size: 32rpx; }
-				.cg-btn-text { font-size: 28rpx; font-weight: 600; color: rgba(255,255,255,0.85); }
+				.cg-btn-icon {
+					width: 28rpx;
+					height: 28rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
+				.cg-btn-text { font-size: 28rpx; font-weight: 600; color: rgba(0,0,0,0.85); }
 			}
 		}
 	}
