@@ -17,6 +17,11 @@
       </view>
     </view>
 
+    <!-- ── FAB：记一笔（仅消耗记录 Tab 可见）── -->
+    <view v-if="activeTab === 0" class="fab" @tap="toCreateRecord">
+      <uni-icons type="compose" size="22" color="#fff" />
+    </view>
+
     <!-- ── 左右滑动内容区 ── -->
     <swiper
       class="tab-swiper"
@@ -48,10 +53,11 @@ onShow(() => {
 })
 
 const activeTab = ref(0)
-const feedTabs  = ['消耗记录', 'Skill']
+const feedTabs  = ['消耗', 'Skill']
 
 const switchTab      = (i: number)  => { activeTab.value = i }
 const onSwiperChange = (e: any)     => { activeTab.value = e.detail.current }
+const toCreateRecord = ()           => uni.navigateTo({ url: '/pages/publish/record' })
 </script>
 
 <style lang="scss" scoped>
@@ -118,6 +124,23 @@ const onSwiperChange = (e: any)     => { activeTab.value = e.detail.current }
   margin-left: auto;
   width: 64rpx; height: 64rpx;
   display: flex; align-items: center; justify-content: center;
+}
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: calc(108rpx + env(safe-area-inset-bottom));
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #FF7A45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 28rpx rgba(255, 122, 69, 0.45);
+  z-index: 100;
+  &:active { opacity: 0.85; }
 }
 
 /* ── Swiper ── */
