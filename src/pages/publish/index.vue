@@ -681,7 +681,9 @@
 	watch(form, scheduleDraftSave, { deep: true })
 
 	onShow(() => {
-		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
+		// #ifdef MP-WEIXIN
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 1 })
+		// #endif
 		if (!hasFormContent.value) loadDraft()
 	})
 

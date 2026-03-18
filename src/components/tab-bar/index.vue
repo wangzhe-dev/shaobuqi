@@ -48,13 +48,11 @@
 	const props = defineProps<{ current: string }>()
 
 	const leftTabs = [
-		{ path: '/pages/index/index',    label: '首页', icon: 'home',   activeIcon: 'home-filled' },
-		{ path: '/pages/community/index',label: '趋势', icon: 'fire',   activeIcon: 'fire-filled' }
+		{ path: '/pages/index/index', label: '首页', icon: 'home', activeIcon: 'home-filled' },
 	]
 
 	const rightTabs = [
-		{ path: '/pages/skill/index', label: 'Skill', icon: 'star',   activeIcon: 'star-filled' },
-		{ path: '/pages/my/my',       label: '我的',  icon: 'person', activeIcon: 'person-filled' }
+		{ path: '/pages/my/my', label: '我的', icon: 'person', activeIcon: 'person-filled' },
 	]
 
 	const publishTab = { path: '/pages/publish/index' }

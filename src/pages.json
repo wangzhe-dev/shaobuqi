@@ -107,8 +107,6 @@
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"iconPath": "static/tabbar/home.png",
-				"selectedIconPath": "static/tabbar/homeactive.png",
 				"iconfont": {
 					"text": "\ue662",
 					"selectedText": "\ue663",
@@ -119,22 +117,7 @@
 				"text": "首页"
 			},
 			{
-				"pagePath": "pages/community/index",
-				"iconPath": "static/tabbar/guanzhu.png",
-				"selectedIconPath": "static/tabbar/guanzhuactive.png",
-				"iconfont": {
-					"text": "\ue6a1",
-					"selectedText": "\ue6c5",
-					"fontSize": "24px",
-					"color": "#94979F",
-					"selectedColor": "#E45C1A"
-				},
-				"text": "趋势"
-			},
-			{
 				"pagePath": "pages/publish/index",
-				"iconPath": "static/tabbar/add.png",
-				"selectedIconPath": "static/tabbar/addactive.png",
 				"iconfont": {
 					"text": "\ue67b",
 					"selectedText": "\ue6c7",
@@ -145,22 +128,7 @@
 				"text": "发布"
 			},
 			{
-				"pagePath": "pages/skill/index",
-				"iconPath": "static/tabbar/news.png",
-				"selectedIconPath": "static/tabbar/newsactive.png",
-				"iconfont": {
-					"text": "\ue688",
-					"selectedText": "\ue68f",
-					"fontSize": "24px",
-					"color": "#94979F",
-					"selectedColor": "#E45C1A"
-				},
-				"text": "Skill"
-			},
-			{
 				"pagePath": "pages/my/my",
-				"iconPath": "static/tabbar/me.png",
-				"selectedIconPath": "static/tabbar/meactive.png",
 				"iconfont": {
 					"text": "\ue699",
 					"selectedText": "\ue69d",
