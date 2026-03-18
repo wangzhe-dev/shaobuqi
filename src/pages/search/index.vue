@@ -251,7 +251,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F7F8FA;
+		background: #0B0D12;
 	}
 
 	/* 搜索栏 */
@@ -260,16 +260,17 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 24rpx;
-		background: #fff;
-		border-bottom: 1rpx solid #F3F4F6;
+		background: #0B0D12;
+		border-bottom: 1rpx solid rgba(255,255,255,0.06);
 		flex-shrink: 0;
 
 		.search-input-wrap {
 			flex: 1;
 			display: flex;
 			align-items: center;
-			background: #F3F4F6;
+			background: rgba(255,255,255,0.07);
 			border-radius: 20rpx;
+			border: 1rpx solid rgba(255,255,255,0.1);
 			padding: 16rpx 20rpx;
 			gap: 12rpx;
 
@@ -281,7 +282,7 @@
 			.search-input {
 				flex: 1;
 				font-size: 28rpx;
-				color: #1A1A2E;
+				color: #F5F7FA;
 				height: 40rpx;
 				line-height: 40rpx;
 			}
@@ -289,14 +290,14 @@
 			.clear-btn {
 				.clear-icon {
 					font-size: 24rpx;
-					color: #9CA3AF;
+					color: rgba(255,255,255,0.4);
 				}
 			}
 		}
 
 		.cancel-btn {
 			font-size: 28rpx;
-			color: #5B5BD6;
+			color: #FF7A1A;
 			flex-shrink: 0;
 		}
 	}
@@ -317,7 +318,7 @@
 				.section-title {
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #1A1A2E;
+					color: #F5F7FA;
 				}
 
 				.section-icon {
@@ -329,7 +330,7 @@
 
 					.clear-history-text {
 						font-size: 24rpx;
-						color: #9CA3AF;
+						color: rgba(255,255,255,0.4);
 					}
 				}
 			}
@@ -345,19 +346,19 @@
 				align-items: center;
 				gap: 16rpx;
 				padding: 18rpx 0;
-				border-bottom: 1rpx solid #F3F4F6;
+				border-bottom: 1rpx solid rgba(255,255,255,0.06);
 
 				.hot-rank {
 					width: 40rpx;
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #EF4444;
+					color: #FF5D5D;
 					text-align: center;
 				}
 
 				.hot-text {
 					font-size: 28rpx;
-					color: #1A1A2E;
+					color: #F5F7FA;
 				}
 
 				&:not(.hot-top) .hot-rank {
@@ -379,10 +380,10 @@
 				display: flex;
 				align-items: center;
 				gap: 8rpx;
-				background: #fff;
+				background: #141922;
 				border-radius: 40rpx;
 				padding: 12rpx 20rpx;
-				border: 1rpx solid #E5E7EB;
+				border: 1rpx solid rgba(255,255,255,0.08);
 
 				.recent-icon {
 					font-size: 22rpx;
@@ -390,7 +391,7 @@
 
 				.recent-text {
 					font-size: 24rpx;
-					color: #6B7280;
+					color: rgba(255,255,255,0.5);
 				}
 			}
 		}
@@ -401,13 +402,13 @@
 			gap: 12rpx;
 
 			.label-tag {
-				background: rgba(91, 91, 214, 0.08);
+				background: rgba(255, 122, 26, 0.1);
 				border-radius: 40rpx;
 				padding: 12rpx 24rpx;
 
 				.label-tag-text {
 					font-size: 24rpx;
-					color: #5B5BD6;
+					color: #FF7A1A;
 					font-weight: 500;
 				}
 			}
@@ -423,9 +424,9 @@
 
 		.result-tabs {
 			display: flex;
-			background: #fff;
+			background: #141922;
 			padding: 0 20rpx;
-			border-bottom: 1rpx solid #F3F4F6;
+			border-bottom: 1rpx solid rgba(255,255,255,0.06);
 			flex-shrink: 0;
 
 			.rtab {
@@ -434,11 +435,11 @@
 
 				.rtab-text {
 					font-size: 28rpx;
-					color: #9CA3AF;
+					color: rgba(255,255,255,0.4);
 				}
 
 				&.active .rtab-text {
-					color: #1A1A2E;
+					color: #F5F7FA;
 					font-weight: 700;
 				}
 
@@ -450,7 +451,7 @@
 					width: 32rpx;
 					height: 4rpx;
 					border-radius: 2rpx;
-					background: #5B5BD6;
+					background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
 				}
 			}
 		}
@@ -472,15 +473,15 @@
 	.result-section-title {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #9CA3AF;
+		color: rgba(255,255,255,0.4);
 		padding: 8rpx 0 12rpx;
-		border-bottom: 1rpx solid #F3F4F6;
+		border-bottom: 1rpx solid rgba(255,255,255,0.06);
 		margin-bottom: 12rpx;
 	}
 
 	/* 帖子结果卡片 */
 	.result-post-card {
-		background: #fff;
+		background: #141922;
 		border-radius: 16rpx;
 		padding: 20rpx;
 		margin-bottom: 12rpx;
@@ -499,12 +500,12 @@
 				.rp-title {
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #1A1A2E;
+					color: #F5F7FA;
 				}
 
 				.rp-content {
 					font-size: 24rpx;
-					color: #6B7280;
+					color: rgba(255,255,255,0.5);
 					line-height: 1.6;
 				}
 
@@ -531,17 +532,17 @@
 
 					.rp-author {
 						font-size: 22rpx;
-						color: #9CA3AF;
+						color: rgba(255,255,255,0.4);
 					}
 
 					.rp-sep {
 						font-size: 22rpx;
-						color: #D1D5DB;
+						color: rgba(255,255,255,0.2);
 					}
 
 					.rp-likes {
 						font-size: 22rpx;
-						color: #9CA3AF;
+						color: rgba(255,255,255,0.4);
 					}
 				}
 			}
@@ -557,7 +558,7 @@
 
 	/* Skill 结果卡片 */
 	.result-skill-card {
-		background: #fff;
+		background: #141922;
 		border-radius: 16rpx;
 		padding: 20rpx;
 		margin-bottom: 12rpx;
@@ -569,7 +570,7 @@
 		.rsk-icon {
 			width: 80rpx;
 			height: 80rpx;
-			background: #F0F0FD;
+			background: rgba(255,122,26,0.1);
 			border-radius: 18rpx;
 			display: flex;
 			align-items: center;
@@ -590,12 +591,12 @@
 			.rsk-title {
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #1A1A2E;
+				color: #F5F7FA;
 			}
 
 			.rsk-desc {
 				font-size: 22rpx;
-				color: #9CA3AF;
+				color: rgba(255,255,255,0.4);
 			}
 
 			.rsk-tags {
@@ -604,8 +605,8 @@
 
 				.rsk-tag {
 					font-size: 20rpx;
-					color: #5B5BD6;
-					background: rgba(91, 91, 214, 0.08);
+					color: #FF7A1A;
+					background: rgba(255, 122, 26, 0.1);
 					padding: 3rpx 12rpx;
 					border-radius: 10rpx;
 				}
@@ -613,7 +614,7 @@
 		}
 
 		.rsk-use-btn {
-			background: #5B5BD6;
+			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
 			padding: 12rpx 24rpx;
 			border-radius: 30rpx;
 			flex-shrink: 0;

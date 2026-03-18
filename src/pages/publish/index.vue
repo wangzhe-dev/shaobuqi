@@ -1,940 +1,929 @@
 <template>
 	<view class="page">
 
-		<view class="page-head">
-			<view class="page-head-copy">
-				<text class="page-kicker">发布</text>
-				<text class="page-title">这次你想发哪一种？</text>
-				<text class="page-sub">一条烧榜动态，或者一个可复用的 Skill。入口只做这两件事。</text>
+		<!-- 入口选择（默认视图） -->
+		<view v-if="!activeMode" class="entry-view">
+			<view class="entry-header">
+				<text class="entry-title">发布</text>
+				<text class="entry-subtitle">选择你想发布的内容类型</text>
 			</view>
-			<view class="page-head-icon">
-				<uni-icons type="compose" color="#FFFFFF" size="24" />
-			</view>
-		</view>
 
-		<view class="daily-strip">
-			<uni-notice-bar
-				show-icon
-				show-get-more
-				more-text="去看看"
-				text="今日已有 3,847 人记录了烧榜"
-				background-color="rgba(239, 68, 68, 0.08)"
-				color="#B91C1C"
-				more-color="#5B5BD6"
-				@click="goLogBurn"
-				@getmore="goLogBurn"
-			/>
-		</view>
-
-		<view class="section-copy">
-			<text class="section-title">1. 发一条烧榜动态</text>
-			<text class="section-desc">核心就是花了多少、现在什么心情、想吐槽什么。</text>
-		</view>
-
-		<view class="action-card burn-entry" @tap="goLogBurn">
-			<view class="card-deco burn-deco" />
-			<view class="card-head">
-				<view class="card-badge card-badge-burn">
-					<uni-icons type="fire-filled" color="#FCA5A5" size="12" />
-					<text>烧榜动态</text>
+			<view class="entry-cards">
+				<!-- 入口A：发布 Skill -->
+				<view class="entry-card entry-card-skill" @tap="startPublishSkill">
+					<view class="ec-icon-wrap">
+						<text class="ec-icon">⚡</text>
+					</view>
+					<view class="ec-body">
+						<text class="ec-title">发布 Skill</text>
+						<text class="ec-desc">分享可复制、可复用的 AI 话术模板。让更多人复制你验证过的 Skill。</text>
+						<view class="ec-tags">
+							<text class="ec-tag">可复制模板</text>
+							<text class="ec-tag">变量参数化</text>
+							<text class="ec-tag">token透明</text>
+						</view>
+					</view>
+					<text class="ec-arrow">→</text>
 				</view>
-				<text class="card-head-tip">适合即时发一笔今天的真实消耗</text>
-			</view>
-			<view class="card-main">
-				<view class="card-icon burn-icon-wrap">
-					<uni-icons type="fire-filled" color="#FFF7ED" size="28" />
-				</view>
-				<view class="card-copy">
-					<text class="card-title light">我今天烧了多少</text>
-					<text class="card-desc light">带上金额、心情和一句吐槽，发出去就是一条完整动态。</text>
+
+				<!-- 入口B：记录一次使用 -->
+				<view class="entry-card entry-card-record" @tap="startRecord">
+					<view class="ec-icon-wrap ec-icon-wrap-blue">
+						<text class="ec-icon">📝</text>
+					</view>
+					<view class="ec-body">
+						<text class="ec-title">记录一次使用</text>
+						<text class="ec-desc">记录你的一次 AI 使用经历，包括模型、消耗和效果，沉淀为社区数据。</text>
+						<view class="ec-tags">
+							<text class="ec-tag">模型+token</text>
+							<text class="ec-tag">效果评价</text>
+							<text class="ec-tag">关联Skill</text>
+						</view>
+					</view>
+					<text class="ec-arrow">→</text>
 				</view>
 			</view>
 
-			<view class="burn-field-row" @tap.stop>
-				<view class="burn-field amount-field">
-					<text class="field-label">花了多少</text>
-					<view class="amount-input-wrap">
-						<text class="amount-currency">¥</text>
-						<uni-easyinput
-							v-model="burnAmount"
-							class="amount-input"
-							type="digit"
-							placeholder="0.00"
-							:input-border="false"
-							:clearable="false"
-							:styles="amountInputStyles"
+			<!-- 草稿箱 -->
+			<view class="draft-row" @tap="toDraftBox">
+				<text class="draft-icon">📂</text>
+				<text class="draft-text">草稿箱 (2)</text>
+				<text class="draft-arrow">›</text>
+			</view>
+		</view>
+
+		<!-- 发布 Skill —— 4步分步表单 -->
+		<view v-if="activeMode === 'skill'" class="form-view">
+			<!-- 步骤进度条 -->
+			<view class="step-progress">
+				<view class="sp-header">
+					<view class="sp-back" @tap="backToEntry">
+						<text class="sp-back-icon">←</text>
+					</view>
+					<text class="sp-title">发布 Skill</text>
+					<view class="sp-draft-btn" @tap="saveDraft">
+						<text class="sp-draft-text">存草稿</text>
+					</view>
+				</view>
+				<view class="sp-bar">
+					<view
+						v-for="i in 4" :key="i"
+						class="sp-segment"
+						:class="{ active: skillStep >= i, done: skillStep > i }"
+					/>
+				</view>
+				<text class="sp-hint">步骤 {{ skillStep }} / 4 · {{ stepHints[skillStep - 1] }}</text>
+			</view>
+
+			<scroll-view class="form-scroll" scroll-y :show-scrollbar="false">
+
+				<!-- Step 1: 基本信息 -->
+				<view v-if="skillStep === 1" class="form-step">
+					<text class="form-section-title">基本信息</text>
+
+					<view class="form-field">
+						<text class="field-label">Skill 标题 *</text>
+						<input class="field-input" v-model="form.title" placeholder="简洁有力的标题，20字以内" maxlength="20" />
+					</view>
+
+					<view class="form-field">
+						<text class="field-label">一句话简介 *</text>
+						<input class="field-input" v-model="form.summary" placeholder="描述这个Skill能做什么，40字以内" maxlength="40" />
+					</view>
+
+					<view class="form-field">
+						<text class="field-label">场景分类 *</text>
+						<view class="field-chips">
+							<view
+								v-for="s in scenes"
+								:key="s"
+								class="field-chip"
+								:class="{ active: form.scene === s }"
+								@tap="form.scene = s"
+							>
+								<text class="field-chip-text">{{ s }}</text>
+							</view>
+						</view>
+					</view>
+
+					<view class="form-field">
+						<text class="field-label">标签（最多3个）</text>
+						<input class="field-input" v-model="tagInput" placeholder="输入后按空格添加" @confirm="addTag" />
+						<view class="tag-list">
+							<view v-for="(tag, idx) in form.tags" :key="idx" class="added-tag">
+								<text class="added-tag-text">{{ tag }}</text>
+								<text class="added-tag-del" @tap="removeTag(idx)">×</text>
+							</view>
+						</view>
+					</view>
+				</view>
+
+				<!-- Step 2: Skill 内容 -->
+				<view v-if="skillStep === 2" class="form-step">
+					<text class="form-section-title">Skill 内容</text>
+
+					<view class="form-field">
+						<view class="field-label-row">
+							<text class="field-label">System Prompt *</text>
+							<text class="field-count">{{ form.systemPrompt.length }}/500</text>
+						</view>
+						<textarea
+							class="field-textarea"
+							v-model="form.systemPrompt"
+							placeholder="你的 System Prompt，告诉模型它是什么角色"
+							:maxlength="500"
+							:auto-height="true"
+						/>
+					</view>
+
+					<view class="form-field">
+						<view class="field-label-row">
+							<text class="field-label">用户输入模板 *</text>
+							<text class="field-count">{{ form.userTemplate.length }}/300</text>
+						</view>
+						<textarea
+							class="field-textarea"
+							v-model="form.userTemplate"
+							placeholder="用{变量名}标记可替换的部分，如{topic}、{audience}"
+							:maxlength="300"
+							:auto-height="true"
+						/>
+						<text class="field-tip">使用 {变量名} 格式标记可替换内容</text>
+					</view>
+
+					<view class="form-field">
+						<view class="field-label-row">
+							<text class="field-label">使用说明</text>
+						</view>
+						<textarea
+							class="field-textarea"
+							v-model="form.usage"
+							placeholder="可选：说明如何使用这个Skill，注意事项等"
+							:maxlength="200"
+							:auto-height="true"
 						/>
 					</view>
 				</view>
-				<view class="burn-field mood-field">
-					<text class="field-label">现在心情</text>
-					<view class="mood-pills">
-						<uni-data-checkbox
-							v-model="selectedMood"
-							mode="tag"
-							wrap
-							:selectedColor="'rgba(251, 191, 36, 0.2)'"
-							selectedTextColor="#FDE68A"
-							:localdata="quickMoodOptions"
+
+				<!-- Step 3: 消耗信息 -->
+				<view v-if="skillStep === 3" class="form-step">
+					<text class="form-section-title">消耗信息</text>
+					<text class="step-desc">这是烧不起的核心特色，帮助用户判断值不值得使用</text>
+
+					<view class="form-field">
+						<text class="field-label">推荐模型 *</text>
+						<view class="field-chips">
+							<view
+								v-for="m in models"
+								:key="m"
+								class="field-chip"
+								:class="{ active: form.recommendedModel === m }"
+								@tap="form.recommendedModel = m"
+							>
+								<text class="field-chip-text">{{ m }}</text>
+							</view>
+						</view>
+					</view>
+
+					<view class="token-inputs">
+						<view class="form-field ti-field">
+							<text class="field-label">预计输入 token</text>
+							<input class="field-input" v-model="form.avgInputToken" placeholder="如：1200" type="number" />
+						</view>
+						<view class="form-field ti-field">
+							<text class="field-label">预计输出 token</text>
+							<input class="field-input" v-model="form.avgOutputToken" placeholder="如：2000" type="number" />
+						</view>
+					</view>
+
+					<view class="token-preview" v-if="totalToken">
+						<text class="tp-label">预计总 token</text>
+						<text class="tp-val">{{ totalToken }}</text>
+					</view>
+
+					<view class="form-field">
+						<view class="field-label-row">
+							<text class="field-label">示例输出（可选）</text>
+						</view>
+						<textarea
+							class="field-textarea"
+							v-model="form.sampleOutput"
+							placeholder="粘贴一段实际输出，帮助用户判断质量"
+							:maxlength="400"
+							:auto-height="true"
 						/>
 					</view>
 				</view>
-			</view>
 
-			<view class="rant-box" @tap.stop>
-				<text class="field-label">吐槽一句</text>
-				<textarea
-					v-model="burnRant"
-					class="rant-textarea"
-					auto-height
-					maxlength="80"
-					placeholder="比如：来回改了 9 版，最后客户说还是第一版好。"
-					placeholder-class="rant-placeholder"
-				/>
-				<view class="rant-meta">
-					<text class="rant-meta-text">写一句场景或吐槽，动态会更有共鸣。</text>
-					<text class="rant-count">{{ burnRant.length }}/80</text>
+				<!-- Step 4: 预览与发布 -->
+				<view v-if="skillStep === 4" class="form-step">
+					<text class="form-section-title">预览与发布</text>
+
+					<!-- 预览卡 -->
+					<view class="preview-card">
+						<view class="prev-head">
+							<view class="prev-scene-tag">{{ form.scene || '未分类' }}</view>
+						</view>
+						<text class="prev-title">{{ form.title || '(未填写标题)' }}</text>
+						<text class="prev-summary">{{ form.summary || '(未填写简介)' }}</text>
+						<view class="prev-meta">
+							<view class="pm-item">
+								<text class="pm-icon">⚡</text>
+								<text class="pm-val orange">{{ totalToken || '--' }} tokens</text>
+							</view>
+							<view class="pm-item">
+								<text class="pm-label">推荐模型</text>
+								<text class="pm-val">{{ form.recommendedModel || '--' }}</text>
+							</view>
+						</view>
+					</view>
+
+					<!-- 发布校验 -->
+					<view class="publish-checklist">
+						<text class="pcl-title">发布前检查</text>
+						<view v-for="check in publishChecks" :key="check.label" class="pcl-item">
+							<text class="pcl-icon" :class="check.pass ? 'pass' : 'fail'">
+								{{ check.pass ? '✓' : '✗' }}
+							</text>
+							<text class="pcl-label" :class="{ 'pcl-fail': !check.pass }">{{ check.label }}</text>
+						</view>
+					</view>
 				</view>
-			</view>
 
-			<view class="burn-model-box" @tap.stop>
-				<text class="field-label">顺手补充模型</text>
-				<view class="model-pills">
-					<uni-data-checkbox
-						v-model="selectedModel"
-						mode="tag"
-						wrap
-						:selectedColor="'rgba(239, 68, 68, 0.3)'"
-						selectedTextColor="#FCA5A5"
-						:localdata="quickModelOptions"
-					/>
+				<view class="form-bottom" />
+			</scroll-view>
+
+			<!-- 步骤按钮 -->
+			<view class="step-actions">
+				<view v-if="skillStep > 1" class="step-prev-btn" @tap="prevStep">
+					<text class="step-prev-text">上一步</text>
 				</view>
-			</view>
-
-			<view class="preview-block">
-				<text class="preview-label">动态预览</text>
-				<text class="preview-text">{{ burnPostPreview }}</text>
-			</view>
-
-			<view class="card-foot">
-				<view class="foot-copy light">
-					<uni-icons type="chatboxes-filled" color="#FBBF24" size="15" />
-					<text class="foot-copy-text">{{ burnHelperText }}</text>
+				<view
+					v-if="skillStep < 4"
+					class="step-next-btn"
+					:class="{ disabled: !canNext }"
+					@tap="nextStep"
+				>
+					<text class="step-next-text">下一步</text>
 				</view>
-				<view class="card-cta burn-cta" @tap.stop="goLogBurn">
-					<text class="card-cta-text">去发烧榜动态</text>
-					<uni-icons type="arrowright" color="#FFFFFF" size="15" />
+				<view v-if="skillStep === 4" class="step-publish-btn" :class="{ disabled: !canPublish }" @tap="publishSkill">
+					<text class="step-publish-text">发布 Skill</text>
 				</view>
 			</view>
 		</view>
 
-		<view class="section-copy section-gap-top">
-			<text class="section-title">2. 发布一个 Skill</text>
-			<text class="section-desc">不是发情绪，而是沉淀一个能反复被别人使用的内容。</text>
-		</view>
-
-		<view class="action-card skill-entry" @tap="goPublishSkill">
-			<view class="card-deco skill-deco" />
-			<view class="card-head">
-				<view class="card-badge card-badge-skill">
-					<uni-icons type="star-filled" color="#5B5BD6" size="12" />
-					<text>Skill 发布</text>
-				</view>
-				<text class="card-head-tip dark">适合沉淀提示词、模板、工作流</text>
-			</view>
-			<view class="card-main">
-				<view class="card-icon skill-icon-wrap">
-					<uni-icons type="compose" color="#FFFFFF" size="26" />
-				</view>
-				<view class="card-copy">
-					<text class="card-title dark">把经验整理成一个 Skill</text>
-					<text class="card-desc dark">别人点进去后应该能直接拿走内容，用完就有结果。</text>
-				</view>
-			</view>
-
-			<view class="skill-type-box" @tap.stop>
-				<text class="field-label dark">这次准备发布什么</text>
-				<view class="skill-type-pills">
-					<uni-data-checkbox
-						v-model="selectedSkillType"
-						mode="tag"
-						wrap
-						:selectedColor="'rgba(91, 91, 214, 0.14)'"
-						selectedTextColor="#5B5BD6"
-						:localdata="skillTypeOptions"
-					/>
-				</view>
-			</view>
-
-			<view class="skill-outline">
-				<view v-for="item in skillOutline" :key="item.title" class="skill-outline-item">
-					<view class="skill-outline-index">{{ item.index }}</view>
-					<view class="skill-outline-copy">
-						<text class="skill-outline-title">{{ item.title }}</text>
-						<text class="skill-outline-desc">{{ item.desc }}</text>
+		<!-- 记录一次使用 -->
+		<view v-if="activeMode === 'record'" class="form-view">
+			<view class="step-progress">
+				<view class="sp-header">
+					<view class="sp-back" @tap="backToEntry">
+						<text class="sp-back-icon">←</text>
+					</view>
+					<text class="sp-title">记录一次使用</text>
+					<view class="sp-draft-btn" @tap="saveDraft">
+						<text class="sp-draft-text">存草稿</text>
 					</view>
 				</view>
 			</view>
 
-			<view class="skill-tags">
-				<uni-tag v-for="tag in skillTags" :key="tag" :text="tag" type="primary" size="mini" circle inverted />
-			</view>
+			<scroll-view class="form-scroll" scroll-y :show-scrollbar="false">
+				<view class="form-step">
+					<text class="form-section-title">使用记录</text>
 
-			<view class="card-foot">
-				<view class="foot-copy dark">
-					<uni-icons type="folder-add-filled" color="#5B5BD6" size="15" />
-					<text class="foot-copy-text">Skill 更看重可复用、可收藏、可搜索，不是即时吐槽。</text>
-				</view>
-				<view class="card-cta skill-cta" @tap.stop="goPublishSkill">
-					<text class="card-cta-text skill-text">去发布 Skill</text>
-					<uni-icons type="arrowright" color="#5B5BD6" size="15" />
-				</view>
-			</view>
-		</view>
+					<view class="form-field">
+						<text class="field-label">我做了什么任务 *</text>
+						<textarea
+							class="field-textarea"
+							v-model="record.task"
+							placeholder="简单描述这次AI使用的任务"
+							:maxlength="100"
+							:auto-height="true"
+						/>
+					</view>
 
-		<view class="support-wrap">
-			<view class="draft-entry" @tap="goDraft">
-				<view class="draft-left">
-					<view class="draft-icon-wrap">
-						<uni-icons type="compose" color="#5B5BD6" size="20" />
+					<view class="form-field">
+						<text class="field-label">用了什么模型 *</text>
+						<view class="field-chips">
+							<view
+								v-for="m in models"
+								:key="m"
+								class="field-chip"
+								:class="{ active: record.model === m }"
+								@tap="record.model = m"
+							>
+								<text class="field-chip-text">{{ m }}</text>
+							</view>
+						</view>
 					</view>
-					<view class="draft-copy">
-						<text class="draft-title">草稿箱</text>
-						<text class="draft-sub">{{ draftSummary }}</text>
-					</view>
-				</view>
-				<view class="draft-right">
-					<uni-badge class="draft-count" :text="draftCount" type="primary" size="small" />
-					<uni-icons type="arrowright" color="#CBD5E1" size="15" />
-				</view>
-			</view>
 
-			<view class="notice-block">
-				<view class="notice-head">
-					<uni-icons type="info-filled" color="#5B5BD6" size="16" />
-					<text class="notice-title">发布前确认</text>
-				</view>
-				<view class="notice-list">
-					<view v-for="item in noticeItems" :key="item" class="notice-row">
-						<uni-icons type="checkmarkempty" color="#5B5BD6" size="14" />
-						<text class="notice-item">{{ item }}</text>
+					<view class="token-inputs">
+						<view class="form-field ti-field">
+							<text class="field-label">输入 token</text>
+							<input class="field-input" v-model="record.inputToken" placeholder="如：1200" type="number" />
+						</view>
+						<view class="form-field ti-field">
+							<text class="field-label">输出 token</text>
+							<input class="field-input" v-model="record.outputToken" placeholder="如：2000" type="number" />
+						</view>
 					</view>
+
+					<view class="form-field">
+						<text class="field-label">最终效果 *</text>
+						<view class="field-chips">
+							<view
+								v-for="e in ['成功 ✅', '一般 🆗', '翻车 ❌']"
+								:key="e"
+								class="field-chip"
+								:class="{ active: record.result === e }"
+								@tap="record.result = e"
+							>
+								<text class="field-chip-text">{{ e }}</text>
+							</view>
+						</view>
+					</view>
+
+					<view class="form-field">
+						<text class="field-label">简短感受（可选）</text>
+						<textarea
+							class="field-textarea"
+							v-model="record.comment"
+							placeholder="用几句话描述你的体验"
+							:maxlength="150"
+							:auto-height="true"
+						/>
+					</view>
+				</view>
+
+				<view class="form-bottom" />
+			</scroll-view>
+
+			<view class="step-actions">
+				<view class="step-publish-btn" @tap="publishRecord">
+					<text class="step-publish-text">发布记录</text>
 				</view>
 			</view>
 		</view>
 
-		<!-- #ifdef H5 -->
-		<view class="tab-bar-placeholder" />
-		<!-- #endif -->
-
-		<tab-bar current="/pages/publish/index" />
+		<tab-bar v-if="!activeMode" current="/pages/publish/index" />
 	</view>
 </template>
 
 <script setup lang="ts">
-	const quickModels = ['Claude', 'GPT-4o', 'DeepSeek', 'Gemini']
-	const quickMoods = [
-		{ emoji: '✅', label: '值了' },
-		{ emoji: '😐', label: '还行' },
-		{ emoji: '😭', label: '后悔了' },
-		{ emoji: '🔥', label: '上瘾了' }
-	]
-	const skillTypes = ['提示词', '模板', '工作流']
-	const skillOutline = [
-		{ index: '01', title: '写清标题和用途', desc: '别人一眼就知道这个 Skill 是解决什么问题的。' },
-		{ index: '02', title: '放入可直接复用内容', desc: '不是讲思路，而是把提示词、模板或步骤给全。' },
-		{ index: '03', title: '补充标签和场景', desc: '方便别人搜索、收藏和判断适不适合自己。' }
-	]
-	const skillTags = ['提示词', '模板', '工作流']
-	const noticeItems = [
-		'烧榜动态请填写真实消费数据，不允许虚构',
-		'Skill 内容需经过真实验证，发出去后能直接使用',
-		'禁止发布违法、广告、引流等内容'
-	]
+	const activeMode = ref<'skill' | 'record' | null>(null)
+	const skillStep = ref(1)
+	const tagInput = ref('')
 
-	const selectedModel = ref('Claude')
-	const selectedMood = ref('值了')
-	const selectedSkillType = ref('提示词')
-	const burnAmount = ref('')
-	const burnRant = ref('')
-	const draftCount = ref(2)
-
-	const quickModelOptions = quickModels.map((model) => ({ text: model, value: model }))
-	const quickMoodOptions = quickMoods.map((mood) => ({ text: `${mood.emoji} ${mood.label}`, value: mood.label }))
-	const skillTypeOptions = skillTypes.map((type) => ({ text: type, value: type }))
-
-	const amountInputStyles = {
-		color: '#FFFFFF',
-		backgroundColor: 'transparent',
-		borderColor: 'transparent',
-		disableColor: 'transparent'
-	}
-
-	const hasBurnAmount = computed(() => burnAmount.value.trim() !== '' && !Number.isNaN(Number(burnAmount.value)))
-	const burnAmountNumber = computed(() => Number(burnAmount.value) || 0)
-	const burnAmountLabel = computed(() => (hasBurnAmount.value ? `¥${burnAmountNumber.value.toFixed(2)}` : '一笔新的花费'))
-	const burnRantLabel = computed(() => burnRant.value.trim() || '还没开始吐槽，但已经想发了。')
-	const burnPostPreview = computed(() => `今天用 ${selectedModel.value} 烧了 ${burnAmountLabel.value}，现在感觉 ${selectedMood.value}。${burnRantLabel.value}`)
-	const burnHelperText = computed(() => {
-		if (!burnRant.value.trim()) return '先写一句吐槽或场景，动态会更像真实分享。'
-		if (!hasBurnAmount.value) return '金额还没填，别人会更关心你这次到底烧了多少。'
-		return '这条动态的信息已经够完整了，发出去会更容易引发共鸣。'
+	const form = reactive({
+		title: '',
+		summary: '',
+		scene: '',
+		tags: [] as string[],
+		systemPrompt: '',
+		userTemplate: '',
+		usage: '',
+		recommendedModel: '',
+		avgInputToken: '',
+		avgOutputToken: '',
+		sampleOutput: ''
 	})
-	const draftSummary = computed(() => `还有 ${draftCount.value} 条内容没发完，可以继续接着写`)
 
-	const goLogBurn = () => {
-		uni.showToast({ title: '烧榜记录功能开发中', icon: 'none' })
+	const record = reactive({
+		task: '',
+		model: '',
+		inputToken: '',
+		outputToken: '',
+		result: '',
+		comment: ''
+	})
+
+	const scenes = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+	const models = ['Claude Sonnet', 'Claude Opus', 'GPT-4o', 'GPT-4o-mini', 'DeepSeek', 'Gemini Pro']
+
+	const stepHints = ['填写基本信息', '填写Skill内容', '填写消耗信息', '预览并发布']
+
+	const totalToken = computed(() => {
+		const i = parseInt(form.avgInputToken) || 0
+		const o = parseInt(form.avgOutputToken) || 0
+		if (!i && !o) return ''
+		return ((i + o) / 1000).toFixed(1) + 'k'
+	})
+
+	const canNext = computed(() => {
+		if (skillStep.value === 1) return form.title && form.summary && form.scene
+		if (skillStep.value === 2) return form.systemPrompt && form.userTemplate
+		if (skillStep.value === 3) return form.recommendedModel
+		return true
+	})
+
+	const publishChecks = computed(() => [
+		{ label: '已填写标题', pass: !!form.title },
+		{ label: '已填写简介', pass: !!form.summary },
+		{ label: '已选择场景', pass: !!form.scene },
+		{ label: '已填写 System Prompt', pass: !!form.systemPrompt },
+		{ label: '已填写用户输入模板', pass: !!form.userTemplate },
+		{ label: '已选择推荐模型', pass: !!form.recommendedModel }
+	])
+
+	const canPublish = computed(() => publishChecks.value.every(c => c.pass))
+
+	const addTag = () => {
+		const t = tagInput.value.trim()
+		if (t && form.tags.length < 3 && !form.tags.includes(t)) {
+			form.tags.push(t)
+		}
+		tagInput.value = ''
 	}
 
-	const goPublishSkill = () => {
-		uni.showToast({ title: 'Skill 发布功能开发中', icon: 'none' })
+	const removeTag = (idx: number) => {
+		form.tags.splice(idx, 1)
 	}
 
-	const goDraft = () => {
+	const startPublishSkill = () => {
+		activeMode.value = 'skill'
+		skillStep.value = 1
+	}
+
+	const startRecord = () => {
+		activeMode.value = 'record'
+	}
+
+	const backToEntry = () => {
+		activeMode.value = null
+	}
+
+	const nextStep = () => {
+		if (canNext.value && skillStep.value < 4) skillStep.value++
+	}
+
+	const prevStep = () => {
+		if (skillStep.value > 1) skillStep.value--
+	}
+
+	const saveDraft = () => {
+		uni.showToast({ title: '已存入草稿箱', icon: 'success' })
+	}
+
+	const publishSkill = () => {
+		if (!canPublish.value) return
+		uni.showToast({ title: 'Skill 发布成功！', icon: 'success' })
+		setTimeout(() => {
+			activeMode.value = null
+			skillStep.value = 1
+		}, 1500)
+	}
+
+	const publishRecord = () => {
+		uni.showToast({ title: '使用记录发布成功！', icon: 'success' })
+		setTimeout(() => {
+			activeMode.value = null
+		}, 1500)
+	}
+
+	const toDraftBox = () => {
 		uni.showToast({ title: '草稿箱功能开发中', icon: 'none' })
 	}
 </script>
 
 <style lang="scss" scoped>
 	.page {
-		--ink: #0f172a;
-		--muted: #64748b;
-		--line: #e8edf5;
-		--burn-bg-1: #17143c;
-		--burn-bg-2: #35245f;
-		--burn-bg-3: #7c2d12;
-		padding: 24rpx 24rpx 190rpx;
-		min-height: 100vh;
-		background:
-			radial-gradient(circle at top left, rgba(91, 91, 214, 0.07), transparent 26%),
-			linear-gradient(180deg, #f4f6fb 0%, #f7f8fa 260rpx);
-	}
-
-	.page-head {
 		display: flex;
-		align-items: flex-start;
-		gap: 18rpx;
-		margin-bottom: 18rpx;
-		padding: 10rpx 4rpx 0;
+		flex-direction: column;
+		height: 100%;
+		background: #0B0D12;
 	}
 
-	.page-head-copy {
+	/* 入口视图 */
+	.entry-view {
 		flex: 1;
-	}
+		padding: 0 24rpx;
+		overflow-y: auto;
 
-	.page-kicker {
-		display: inline-block;
-		margin-bottom: 10rpx;
-		padding: 6rpx 12rpx;
-		border-radius: 999rpx;
-		font-size: 20rpx;
-		color: #5b5bd6;
-		background: rgba(91, 91, 214, 0.08);
-	}
+		.entry-header {
+			padding: 48rpx 0 32rpx;
 
-	.page-title {
-		display: block;
-		margin-bottom: 8rpx;
-		font-size: 42rpx;
-		line-height: 1.2;
-		font-weight: 800;
-		color: var(--ink);
-	}
-
-	.page-sub {
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: var(--muted);
-	}
-
-	.page-head-icon {
-		width: 78rpx;
-		height: 78rpx;
-		border-radius: 22rpx;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
-		box-shadow: 0 16rpx 30rpx rgba(91, 91, 214, 0.18);
-	}
-
-	.daily-strip {
-		margin-bottom: 18rpx;
-
-		:deep(.uni-noticebar) {
-			border-radius: 18rpx;
-			padding: 0 10rpx;
+			.entry-title { display: block; font-size: 44rpx; font-weight: 900; color: #F5F7FA; margin-bottom: 10rpx; }
+			.entry-subtitle { display: block; font-size: 26rpx; color: rgba(255,255,255,0.45); }
 		}
 
-		:deep(.uni-noticebar__content-text),
-		:deep(.uni-noticebar__more text) {
-			font-size: 24rpx !important;
+		.entry-cards {
+			display: flex;
+			flex-direction: column;
+			gap: 20rpx;
+			margin-bottom: 28rpx;
 		}
 	}
 
-	.section-copy {
-		margin-bottom: 14rpx;
-		padding: 0 4rpx;
-	}
-
-	.section-gap-top {
-		margin-top: 18rpx;
-	}
-
-	.section-title {
-		display: block;
-		margin-bottom: 6rpx;
-		font-size: 30rpx;
-		font-weight: 800;
-		color: var(--ink);
-	}
-
-	.section-desc {
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: var(--muted);
-	}
-
-	.action-card {
-		position: relative;
-		overflow: hidden;
+	.entry-card {
+		background: #141922;
 		border-radius: 28rpx;
-		padding: 24rpx;
-	}
-
-	.card-deco {
-		position: absolute;
-		right: -36rpx;
-		top: -28rpx;
-		width: 180rpx;
-		height: 180rpx;
-		border-radius: 50%;
-		filter: blur(6rpx);
-		opacity: 0.55;
-	}
-
-	.burn-deco {
-		background: rgba(249, 115, 22, 0.18);
-	}
-
-	.skill-deco {
-		background: rgba(91, 91, 214, 0.1);
-	}
-
-	.card-head,
-	.card-main,
-	.preview-block,
-	.card-foot {
-		position: relative;
-		z-index: 1;
-	}
-
-	.card-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12rpx;
-		margin-bottom: 18rpx;
-	}
-
-	.card-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 6rpx;
-		padding: 6rpx 14rpx;
-		border-radius: 999rpx;
-		font-size: 20rpx;
-		font-weight: 700;
-	}
-
-	.card-badge-burn {
-		color: #fca5a5;
-		background: rgba(239, 68, 68, 0.16);
-	}
-
-	.card-badge-skill {
-		color: #5b5bd6;
-		background: rgba(91, 91, 214, 0.08);
-	}
-
-	.card-head-tip {
-		font-size: 20rpx;
-	}
-
-	.card-head-tip.dark {
-		color: #94a3b8;
-	}
-
-	.card-main {
+		border: 1rpx solid rgba(255,255,255,0.08);
+		padding: 28rpx;
 		display: flex;
 		align-items: flex-start;
-		gap: 16rpx;
-		margin-bottom: 18rpx;
+		gap: 20rpx;
+
+		&:active { background: #1A2030; }
+
+		&.entry-card-skill { border-color: rgba(255,122,26,0.2); }
+		&.entry-card-record { border-color: rgba(93,169,255,0.2); }
+
+		.ec-icon-wrap {
+			width: 88rpx;
+			height: 88rpx;
+			border-radius: 24rpx;
+			background: rgba(255,122,26,0.15);
+			border: 1rpx solid rgba(255,122,26,0.25);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+
+			.ec-icon { font-size: 40rpx; }
+
+			&.ec-icon-wrap-blue {
+				background: rgba(93,169,255,0.15);
+				border-color: rgba(93,169,255,0.25);
+			}
+		}
+
+		.ec-body {
+			flex: 1;
+
+			.ec-title { display: block; font-size: 30rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 10rpx; }
+			.ec-desc { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 16rpx; }
+
+			.ec-tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10rpx;
+
+				.ec-tag {
+					font-size: 18rpx;
+					color: rgba(255,255,255,0.4);
+					background: rgba(255,255,255,0.06);
+					padding: 4rpx 14rpx;
+					border-radius: 8rpx;
+				}
+			}
+		}
+
+		.ec-arrow { font-size: 32rpx; color: rgba(255,255,255,0.3); flex-shrink: 0; margin-top: 24rpx; }
 	}
 
-	.card-icon {
-		width: 82rpx;
-		height: 82rpx;
-		border-radius: 22rpx;
+	.draft-row {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	.burn-icon-wrap {
-		background: linear-gradient(135deg, rgba(239, 68, 68, 0.34), rgba(251, 146, 60, 0.24));
-		box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.12);
-	}
-
-	.skill-icon-wrap {
-		background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
-		box-shadow: 0 12rpx 24rpx rgba(91, 91, 214, 0.16);
-	}
-
-	.card-copy {
-		flex: 1;
-	}
-
-	.card-title {
-		display: block;
-		margin-bottom: 8rpx;
-		font-size: 34rpx;
-		line-height: 1.25;
-		font-weight: 800;
-	}
-
-	.card-title.light,
-	.card-desc.light,
-	.card-head-tip,
-	.foot-copy.light,
-	.preview-label,
-	.preview-text,
-	.field-label,
-	.rant-meta-text,
-	.rant-count {
-		color: #ffffff;
-	}
-
-	.card-title.dark {
-		color: var(--ink);
-	}
-
-	.card-desc {
-		font-size: 24rpx;
-		line-height: 1.6;
-	}
-
-	.card-desc.light {
-		color: rgba(255, 255, 255, 0.7);
-	}
-
-	.card-desc.dark {
-		color: var(--muted);
-	}
-
-	.burn-entry {
-		background: linear-gradient(145deg, var(--burn-bg-1) 0%, var(--burn-bg-2) 52%, var(--burn-bg-3) 100%);
-		box-shadow: 0 22rpx 48rpx rgba(54, 31, 74, 0.16);
-	}
-
-	.burn-field-row {
-		position: relative;
-		z-index: 1;
-		display: grid;
-		grid-template-columns: 1.05fr 1.35fr;
 		gap: 14rpx;
-		margin-bottom: 14rpx;
-	}
-
-	.burn-field,
-	.rant-box,
-	.burn-model-box,
-	.preview-block {
-		border-radius: 18rpx;
-		background: rgba(255, 255, 255, 0.08);
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
-	}
-
-	.burn-field,
-	.rant-box,
-	.burn-model-box {
-		position: relative;
-		z-index: 1;
-		padding: 18rpx;
-	}
-
-	.field-label {
-		display: block;
-		margin-bottom: 10rpx;
-		font-size: 22rpx;
-		color: rgba(255, 255, 255, 0.58);
-	}
-
-	.field-label.dark {
-		color: #64748b;
-	}
-
-	.amount-input-wrap {
-		display: flex;
-		align-items: center;
-		gap: 8rpx;
-		min-height: 78rpx;
-		padding: 0 16rpx;
-		border-radius: 16rpx;
-		background: rgba(255, 255, 255, 0.08);
-	}
-
-	.amount-currency {
-		font-size: 30rpx;
-		font-weight: 800;
-		color: #fbbf24;
-	}
-
-	.amount-input {
-		flex: 1;
-
-		:deep(.uni-easyinput) {
-			width: 100%;
-		}
-
-		:deep(.uni-easyinput__content) {
-			background: transparent !important;
-			border: 0 !important;
-			padding-left: 0 !important;
-		}
-
-		:deep(.uni-easyinput__content-input) {
-			font-size: 30rpx !important;
-			font-weight: 800;
-			color: #ffffff !important;
-		}
-
-		:deep(.uni-easyinput__placeholder-class) {
-			color: rgba(255, 255, 255, 0.35);
-		}
-	}
-
-	.mood-pills,
-	.model-pills {
-		:deep(.checklist-group) {
-			gap: 8rpx;
-		}
-
-		:deep(.checklist-box.is--tag) {
-			margin: 0;
-			padding: 10rpx 14rpx;
-			border-radius: 14rpx;
-			background: rgba(255, 255, 255, 0.1);
-			border-color: rgba(255, 255, 255, 0.15);
-		}
-
-		:deep(.checklist-text) {
-			font-size: 22rpx;
-			color: rgba(255, 255, 255, 0.76);
-		}
-	}
-
-	.rant-box {
-		margin-bottom: 14rpx;
-	}
-
-	.rant-textarea {
-		width: 100%;
-		min-height: 128rpx;
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #ffffff;
-	}
-
-	.rant-placeholder {
-		color: rgba(255, 255, 255, 0.34);
-	}
-
-	.rant-meta {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12rpx;
-		margin-top: 8rpx;
-	}
-
-	.rant-meta-text,
-	.rant-count {
-		font-size: 20rpx;
-		color: rgba(255, 255, 255, 0.44);
-	}
-
-	.burn-model-box {
-		margin-bottom: 14rpx;
-	}
-
-	.preview-block {
-		margin-bottom: 14rpx;
-		padding: 18rpx;
-		background: rgba(251, 191, 36, 0.12);
-		border-color: rgba(251, 191, 36, 0.12);
-	}
-
-	.preview-label {
-		display: block;
-		margin-bottom: 8rpx;
-		font-size: 21rpx;
-		color: rgba(255, 255, 255, 0.54);
-	}
-
-	.preview-text {
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #ffffff;
-	}
-
-	.card-foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 14rpx;
-	}
-
-	.foot-copy {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 8rpx;
-	}
-
-	.foot-copy.dark {
-		color: var(--muted);
-	}
-
-	.foot-copy-text {
-		font-size: 22rpx;
-		line-height: 1.6;
-	}
-
-	.card-cta {
-		display: inline-flex;
-		align-items: center;
-		gap: 8rpx;
-		padding: 16rpx 18rpx;
-		border-radius: 16rpx;
-		flex-shrink: 0;
-	}
-
-	.card-cta-text {
-		font-size: 24rpx;
-		font-weight: 800;
-	}
-
-	.burn-cta {
-		background: linear-gradient(90deg, #ef4444, #f97316);
-		box-shadow: 0 14rpx 28rpx rgba(239, 68, 68, 0.18);
-	}
-
-	.skill-cta {
-		background: rgba(91, 91, 214, 0.08);
-	}
-
-	.skill-text {
-		color: #5b5bd6;
-	}
-
-	.skill-entry {
-		background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-		border: 1rpx solid #e8ebff;
-		box-shadow: 0 18rpx 36rpx rgba(91, 91, 214, 0.08);
-	}
-
-	.skill-type-box,
-	.skill-outline {
-		position: relative;
-		z-index: 1;
-		margin-bottom: 14rpx;
-	}
-
-	.skill-type-box {
-		padding: 18rpx;
-		border-radius: 18rpx;
-		background: rgba(91, 91, 214, 0.05);
-	}
-
-	.skill-type-pills {
-		:deep(.checklist-group) {
-			gap: 10rpx;
-		}
-
-		:deep(.checklist-box.is--tag) {
-			margin: 0;
-			padding: 10rpx 18rpx;
-			border-radius: 16rpx;
-			background: #ffffff;
-			border-color: rgba(91, 91, 214, 0.12);
-		}
-
-		:deep(.checklist-text) {
-			font-size: 22rpx;
-			color: #64748b;
-		}
-	}
-
-	.skill-outline {
-		display: flex;
-		flex-direction: column;
-		gap: 10rpx;
-	}
-
-	.skill-outline-item {
-		display: flex;
-		align-items: flex-start;
-		gap: 12rpx;
-		padding: 16rpx 18rpx;
-		border-radius: 18rpx;
-		background: #f8faff;
-		border: 1rpx solid #eef2ff;
-	}
-
-	.skill-outline-index {
-		width: 50rpx;
-		flex-shrink: 0;
-		font-size: 20rpx;
-		font-weight: 800;
-		color: #5b5bd6;
-	}
-
-	.skill-outline-copy {
-		flex: 1;
-	}
-
-	.skill-outline-title {
-		display: block;
-		margin-bottom: 4rpx;
-		font-size: 24rpx;
-		font-weight: 700;
-		color: var(--ink);
-	}
-
-	.skill-outline-desc {
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: var(--muted);
-	}
-
-	.skill-tags {
-		position: relative;
-		z-index: 1;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 10rpx;
-		margin-bottom: 14rpx;
-
-		:deep(.uni-tag) {
-			color: #5b5bd6 !important;
-			border-color: rgba(91, 91, 214, 0.14) !important;
-			background: rgba(91, 91, 214, 0.08) !important;
-		}
-	}
-
-	.support-wrap {
-		display: flex;
-		flex-direction: column;
-		gap: 16rpx;
-		margin-top: 18rpx;
-	}
-
-	.draft-entry,
-	.notice-block {
-		background: #ffffff;
-		border-radius: 22rpx;
-		padding: 22rpx;
-		border: 1rpx solid var(--line);
-		box-shadow: 0 14rpx 32rpx rgba(17, 24, 39, 0.05);
-	}
-
-	.draft-entry {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 14rpx;
-	}
-
-	.draft-left,
-	.draft-right {
-		display: flex;
-		align-items: center;
-	}
-
-	.draft-left {
-		flex: 1;
-		gap: 14rpx;
-	}
-
-	.draft-right {
-		gap: 10rpx;
-	}
-
-	.draft-icon-wrap {
-		width: 68rpx;
-		height: 68rpx;
+		background: rgba(255,255,255,0.05);
 		border-radius: 20rpx;
-		background: linear-gradient(135deg, rgba(91, 91, 214, 0.12), rgba(139, 92, 246, 0.08));
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
+		padding: 24rpx 28rpx;
+		margin-bottom: calc(160rpx + env(safe-area-inset-bottom));
+
+		.draft-icon { font-size: 32rpx; }
+		.draft-text { flex: 1; font-size: 26rpx; color: rgba(255,255,255,0.6); font-weight: 500; }
+		.draft-arrow { font-size: 28rpx; color: rgba(255,255,255,0.3); }
 	}
 
-	.draft-copy {
+	/* 表单视图 */
+	.form-view {
 		flex: 1;
-	}
-
-	.draft-title {
-		display: block;
-		margin-bottom: 6rpx;
-		font-size: 28rpx;
-		font-weight: 700;
-		color: var(--ink);
-	}
-
-	.draft-sub {
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: var(--muted);
-	}
-
-	.draft-count {
-		transform: scale(0.96);
-	}
-
-	.notice-head {
-		display: flex;
-		align-items: center;
-		gap: 10rpx;
-		margin-bottom: 14rpx;
-	}
-
-	.notice-title {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: var(--ink);
-	}
-
-	.notice-list {
 		display: flex;
 		flex-direction: column;
-		gap: 10rpx;
+		overflow: hidden;
 	}
 
-	.notice-row {
+	/* 步骤进度条 */
+	.step-progress {
+		padding: 20rpx 24rpx 16rpx;
+		background: #0B0D12;
+		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		flex-shrink: 0;
+
+		.sp-header {
+			display: flex;
+			align-items: center;
+			gap: 16rpx;
+			margin-bottom: 20rpx;
+
+			.sp-back {
+				width: 60rpx;
+				height: 60rpx;
+				background: rgba(255,255,255,0.07);
+				border-radius: 18rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+				.sp-back-icon { font-size: 28rpx; color: #F5F7FA; }
+			}
+
+			.sp-title { flex: 1; font-size: 30rpx; font-weight: 700; color: #F5F7FA; }
+
+			.sp-draft-btn {
+				background: rgba(255,255,255,0.07);
+				border-radius: 100rpx;
+				padding: 10rpx 22rpx;
+
+				.sp-draft-text { font-size: 22rpx; color: rgba(255,255,255,0.55); }
+			}
+		}
+
+		.sp-bar {
+			display: flex;
+			gap: 8rpx;
+			margin-bottom: 12rpx;
+
+			.sp-segment {
+				flex: 1;
+				height: 6rpx;
+				background: rgba(255,255,255,0.12);
+				border-radius: 3rpx;
+				transition: background 0.3s;
+
+				&.active { background: #FF7A1A; }
+				&.done { background: rgba(255,122,26,0.4); }
+			}
+		}
+
+		.sp-hint { font-size: 22rpx; color: rgba(255,255,255,0.45); }
+	}
+
+	.form-scroll { flex: 1; overflow: hidden; }
+
+	.form-step {
+		padding: 28rpx 24rpx 0;
+
+		.form-section-title {
+			display: block;
+			font-size: 30rpx;
+			font-weight: 700;
+			color: #F5F7FA;
+			margin-bottom: 8rpx;
+		}
+
+		.step-desc {
+			display: block;
+			font-size: 24rpx;
+			color: rgba(255,255,255,0.4);
+			line-height: 1.5;
+			margin-bottom: 28rpx;
+		}
+	}
+
+	.form-field {
+		margin-top: 28rpx;
+
+		.field-label {
+			display: block;
+			font-size: 24rpx;
+			font-weight: 600;
+			color: rgba(255,255,255,0.65);
+			margin-bottom: 14rpx;
+		}
+
+		.field-label-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 14rpx;
+
+			.field-label { margin-bottom: 0; }
+			.field-count { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+		}
+
+		.field-input {
+			width: 100%;
+			height: 80rpx;
+			background: #141922;
+			border-radius: 16rpx;
+			border: 1rpx solid rgba(255,255,255,0.1);
+			padding: 0 20rpx;
+			font-size: 26rpx;
+			color: #F5F7FA;
+
+			&:focus { border-color: rgba(255,122,26,0.4); }
+		}
+
+		.field-textarea {
+			width: 100%;
+			min-height: 160rpx;
+			background: #141922;
+			border-radius: 16rpx;
+			border: 1rpx solid rgba(255,255,255,0.1);
+			padding: 20rpx;
+			font-size: 26rpx;
+			color: #F5F7FA;
+			line-height: 1.65;
+		}
+
+		.field-tip {
+			display: block;
+			font-size: 20rpx;
+			color: rgba(255,122,26,0.6);
+			margin-top: 8rpx;
+		}
+
+		.field-chips {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12rpx;
+
+			.field-chip {
+				height: 64rpx;
+				padding: 0 24rpx;
+				background: rgba(255,255,255,0.07);
+				border-radius: 16rpx;
+				border: 1rpx solid rgba(255,255,255,0.1);
+				display: flex;
+				align-items: center;
+				transition: all 0.2s;
+
+				.field-chip-text { font-size: 24rpx; color: rgba(255,255,255,0.6); }
+
+				&.active {
+					background: rgba(255,122,26,0.15);
+					border-color: rgba(255,122,26,0.4);
+
+					.field-chip-text { color: #FF7A1A; font-weight: 600; }
+				}
+			}
+		}
+
+		.tag-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10rpx;
+			margin-top: 12rpx;
+
+			.added-tag {
+				display: flex;
+				align-items: center;
+				gap: 8rpx;
+				background: rgba(93,169,255,0.12);
+				border: 1rpx solid rgba(93,169,255,0.25);
+				padding: 6rpx 16rpx;
+				border-radius: 100rpx;
+
+				.added-tag-text { font-size: 22rpx; color: #5DA9FF; }
+				.added-tag-del { font-size: 24rpx; color: rgba(93,169,255,0.6); }
+			}
+		}
+	}
+
+	.token-inputs {
 		display: flex;
-		align-items: flex-start;
-		gap: 10rpx;
+		gap: 16rpx;
+
+		.ti-field { flex: 1; }
 	}
 
-	.notice-item {
-		flex: 1;
-		font-size: 22rpx;
-		line-height: 1.7;
-		color: var(--muted);
+	.token-preview {
+		margin-top: 16rpx;
+		background: rgba(255,122,26,0.08);
+		border-radius: 16rpx;
+		border: 1rpx solid rgba(255,122,26,0.2);
+		padding: 16rpx 24rpx;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+
+		.tp-label { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+		.tp-val { font-size: 30rpx; font-weight: 800; color: #FF7A1A; }
+	}
+
+	/* 预览卡 */
+	.preview-card {
+		background: rgba(255,255,255,0.04);
+		border-radius: 20rpx;
+		border: 1rpx solid rgba(255,255,255,0.08);
+		padding: 24rpx;
+		margin-bottom: 28rpx;
+
+		.prev-head { margin-bottom: 14rpx; }
+
+		.prev-scene-tag {
+			display: inline-flex;
+			font-size: 20rpx;
+			color: rgba(255,255,255,0.5);
+			background: rgba(255,255,255,0.08);
+			padding: 5rpx 16rpx;
+			border-radius: 8rpx;
+		}
+
+		.prev-title {
+			display: block;
+			font-size: 30rpx;
+			font-weight: 800;
+			color: #F5F7FA;
+			margin-bottom: 10rpx;
+		}
+
+		.prev-summary {
+			display: block;
+			font-size: 24rpx;
+			color: rgba(255,255,255,0.5);
+			line-height: 1.6;
+			margin-bottom: 18rpx;
+		}
+
+		.prev-meta {
+			display: flex;
+			gap: 24rpx;
+
+			.pm-item {
+				display: flex;
+				align-items: center;
+				gap: 8rpx;
+
+				.pm-icon { font-size: 22rpx; }
+				.pm-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.pm-val { font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.7); }
+				.pm-val.orange { color: #FF7A1A; }
+			}
+		}
+	}
+
+	/* 发布校验清单 */
+	.publish-checklist {
+		background: rgba(255,255,255,0.04);
+		border-radius: 20rpx;
+		padding: 24rpx;
+
+		.pcl-title {
+			display: block;
+			font-size: 24rpx;
+			font-weight: 600;
+			color: rgba(255,255,255,0.55);
+			margin-bottom: 18rpx;
+		}
+
+		.pcl-item {
+			display: flex;
+			align-items: center;
+			gap: 14rpx;
+			padding: 12rpx 0;
+			border-bottom: 1rpx solid rgba(255,255,255,0.05);
+
+			&:last-child { border-bottom: none; }
+
+			.pcl-icon {
+				font-size: 26rpx;
+				font-weight: 700;
+				width: 40rpx;
+				text-align: center;
+
+				&.pass { color: #4CD964; }
+				&.fail { color: rgba(255,255,255,0.2); }
+			}
+
+			.pcl-label { font-size: 24rpx; color: rgba(255,255,255,0.7); }
+			.pcl-fail { color: rgba(255,255,255,0.35); }
+		}
+	}
+
+	.form-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
+
+	/* 步骤操作按钮 */
+	.step-actions {
+		display: flex;
+		gap: 16rpx;
+		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+		background: rgba(11,13,18,0.95);
+		backdrop-filter: blur(20px);
+		border-top: 1rpx solid rgba(255,255,255,0.06);
+		flex-shrink: 0;
+
+		.step-prev-btn {
+			flex: 1;
+			height: 88rpx;
+			background: rgba(255,255,255,0.07);
+			border-radius: 24rpx;
+			border: 1rpx solid rgba(255,255,255,0.12);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			.step-prev-text { font-size: 28rpx; color: rgba(255,255,255,0.6); font-weight: 600; }
+		}
+
+		.step-next-btn, .step-publish-btn {
+			flex: 2;
+			height: 88rpx;
+			background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+			border-radius: 24rpx;
+			box-shadow: 0 8rpx 24rpx rgba(255,122,26,0.35);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			.step-next-text, .step-publish-text { font-size: 28rpx; color: #fff; font-weight: 700; }
+
+			&.disabled {
+				background: rgba(255,255,255,0.1);
+				box-shadow: none;
+
+				.step-next-text, .step-publish-text { color: rgba(255,255,255,0.35); }
+			}
+		}
 	}
 </style>

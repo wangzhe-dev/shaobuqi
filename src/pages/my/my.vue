@@ -3,228 +3,108 @@
 
 		<!-- 顶部 Profile 头 -->
 		<view class="profile-header" :style="{ paddingTop: statusBarHeight + 'px' }">
-
-			<!-- 右上角操作 -->
-			<view class="header-actions">
-				<view class="header-btn" @tap="toNotify">
-					<text class="header-icon">🔔</text>
-				</view>
-				<view class="header-btn" @tap="toSetting">
-					<text class="header-icon">⚙️</text>
-				</view>
-			</view>
-
-			<!-- 用户信息 -->
-			<view class="user-info">
-				<view class="av-wrap" @tap="changeAvatar">
-					<view class="av" style="background: #5B5BD6">
-						<text class="av-text">林</text>
+			<view class="ph-inner">
+				<view class="ph-avatar-wrap">
+					<view class="ph-avatar">
+						<text class="ph-avatar-t">林</text>
 					</view>
-					<view class="av-edit-dot">
-						<text class="av-edit-icon">✎</text>
+					<view class="ph-avatar-badge">Lv.4</view>
+				</view>
+				<view class="ph-info">
+					<text class="ph-name">林小雨</text>
+					<text class="ph-bio">不断验证Skill，不断分享经验</text>
+					<view class="ph-tags">
+						<view class="ph-tag">写作</view>
+						<view class="ph-tag">自媒体</view>
 					</view>
 				</view>
-				<view class="user-meta">
-					<text class="user-name">林晓珊</text>
-					<text class="user-bio">Claude 重度用户 · 产品人 · 少不起爱好者</text>
+				<view class="ph-edit-btn" @tap="editProfile">
+					<text class="ph-edit-icon">✏️</text>
 				</view>
 			</view>
 
-			<!-- 本月烧榜摘要 -->
-			<view class="burn-summary">
-				<view class="bs-item bs-main">
-					<text class="bs-label">本月已烧</text>
-					<text class="bs-value red">¥286.50</text>
+			<!-- 数据摘要 -->
+			<view class="ph-stats">
+				<view class="ph-stat-item">
+					<text class="ph-stat-val">23</text>
+					<text class="ph-stat-label">发布 Skill</text>
 				</view>
-				<view class="bs-divider" />
-				<view class="bs-item">
-					<text class="bs-label">最爱模型</text>
-					<text class="bs-value">Claude</text>
+				<view class="ph-stat-div" />
+				<view class="ph-stat-item">
+					<text class="ph-stat-val orange">8.4k</text>
+					<text class="ph-stat-label">被复制</text>
 				</view>
-				<view class="bs-divider" />
-				<view class="bs-item">
-					<text class="bs-label">获共鸣</text>
-					<text class="bs-value">4.7k</text>
+				<view class="ph-stat-div" />
+				<view class="ph-stat-item">
+					<text class="ph-stat-val">3.1k</text>
+					<text class="ph-stat-label">被收藏</text>
 				</view>
-			</view>
-
-			<!-- 社交数据行 -->
-			<view class="social-row">
-				<view class="social-item" @tap="toFans('posts')">
-					<text class="social-num">24</text>
-					<text class="social-label">记录</text>
-				</view>
-				<view class="social-item" @tap="toFans('following')">
-					<text class="social-num">138</text>
-					<text class="social-label">关注</text>
-				</view>
-				<view class="social-item" @tap="toFans('followers')">
-					<text class="social-num">2.1k</text>
-					<text class="social-label">粉丝</text>
-				</view>
-				<view class="social-item">
-					<text class="social-num">8.4k</text>
-					<text class="social-label">获赞</text>
-				</view>
-				<view class="edit-btn" @tap="toEditProfile">
-					<text class="edit-btn-text">编辑资料</text>
+				<view class="ph-stat-div" />
+				<view class="ph-stat-item">
+					<text class="ph-stat-val green">91%</text>
+					<text class="ph-stat-label">平均复现率</text>
 				</view>
 			</view>
-
 		</view>
 
-		<!-- 内容 Tab -->
-		<view class="content-tabs">
-			<uni-segmented-control
-				:current="activeTabIndex"
-				:values="tabValues"
-				style-type="text"
-				active-color="#5B5BD6"
-				@clickItem="onContentTabChange"
-			/>
-		</view>
-
-		<!-- 内容区 -->
-		<scroll-view class="content-scroll" scroll-y :show-scrollbar="false">
-
-			<!-- 我的发布 — 烧榜记录 -->
-			<view v-if="activeTab === 'posts'" class="burn-records">
+		<!-- 功能导航网格 -->
+		<view class="func-section">
+			<view class="func-grid">
 				<view
-					v-for="record in myBurnRecords"
-					:key="record.id"
-					class="record-card"
-					@tap="toPost(record.id)"
+					v-for="item in funcItems"
+					:key="item.label"
+					class="func-item"
+					@tap="item.action"
 				>
-					<view class="rc-head">
-						<view class="model-badge" :style="{ background: record.modelBg }">
-							<view class="model-dot" :style="{ background: record.modelDot }" />
-							<text class="model-badge-text">{{ record.model }}</text>
-						</view>
-						<text class="rc-time">{{ record.time }}</text>
-						<view class="rc-mood" :style="{ color: record.moodColor }">
-							<text class="rc-mood-text">{{ record.mood }}</text>
-						</view>
-					</view>
-					<view class="rc-data">
-						<text class="rc-cost">¥{{ record.cost }}</text>
-						<text class="rc-tokens">{{ record.tokens }}</text>
-					</view>
-					<text class="rc-content line-2">{{ record.content }}</text>
-					<view class="rc-foot">
-						<text class="rc-stat">♥ {{ record.likes }}</text>
-						<text class="rc-stat">😭 {{ record.resonates }} 共鸣</text>
-						<text class="rc-stat">💬 {{ record.comments }}</text>
+					<text class="func-icon">{{ item.icon }}</text>
+					<text class="func-label">{{ item.label }}</text>
+					<view v-if="item.count" class="func-count">
+						<text class="func-count-text">{{ item.count }}</text>
 					</view>
 				</view>
 			</view>
+		</view>
 
-			<!-- 我的收藏 -->
-			<view v-else-if="activeTab === 'favorites'">
-				<view class="fav-tabs">
-					<uni-segmented-control
-						:current="favTabIndex"
-						:values="favTabValues"
-						style-type="button"
-						active-color="#5B5BD6"
-						in-active-color="#EEF2FF"
-						@clickItem="onFavTabChange"
-					/>
-				</view>
-
-				<!-- 收藏的帖子 -->
-				<view v-if="favTab === 'posts'" class="burn-records">
-					<view
-						v-for="record in favPosts"
-						:key="record.id"
-						class="record-card"
-						@tap="toPost(record.id)"
-					>
-						<view class="rc-head">
-							<view class="fav-av" :style="{ background: record.color }">
-								<text class="fav-av-t">{{ record.author[0] }}</text>
-							</view>
-							<text class="fav-author">{{ record.author }}</text>
-							<view class="model-badge" :style="{ background: record.modelBg }">
-								<view class="model-dot" :style="{ background: record.modelDot }" />
-								<text class="model-badge-text">{{ record.model }}</text>
-							</view>
-							<text class="rc-time">{{ record.time }}</text>
-						</view>
-						<view class="rc-data">
-							<text class="rc-cost">¥{{ record.cost }}</text>
-							<text class="rc-tokens">{{ record.tokens }}</text>
-						</view>
-						<text class="rc-content line-2">{{ record.content }}</text>
+		<!-- 最近发布的 Skill -->
+		<view class="section-head">
+			<text class="sh-title">最近发布</text>
+			<text class="sh-more" @tap="toMyPublish">全部 ›</text>
+		</view>
+		<scroll-view class="my-scroll" scroll-y :show-scrollbar="false">
+			<view class="my-skills-list">
+				<view
+					v-for="skill in mySkills"
+					:key="skill.id"
+					class="my-skill-card"
+					@tap="toSkill(skill.id)"
+				>
+					<view class="msc-head">
+						<view class="msc-scene-tag">{{ skill.scene }}</view>
+						<text class="msc-time">{{ skill.time }}</text>
 					</view>
-				</view>
-
-				<!-- 收藏的 Skill -->
-				<view v-else class="fav-skills">
-					<view
-						v-for="skill in favSkills"
-						:key="skill.id"
-						class="fav-skill-card"
-						@tap="toSkill(skill.id)"
-					>
-						<view class="fsk-icon">
-							<text class="fsk-emoji">{{ skill.icon }}</text>
+					<text class="msc-title">{{ skill.title }}</text>
+					<view class="msc-stats">
+						<view class="msc-stat">
+							<text class="msc-stat-val orange">{{ skill.copyCount }}</text>
+							<text class="msc-stat-label">复制</text>
 						</view>
-						<view class="fsk-info">
-							<text class="fsk-title">{{ skill.title }}</text>
-							<text class="fsk-desc line-1">{{ skill.desc }}</text>
+						<view class="msc-stat">
+							<text class="msc-stat-val">{{ skill.favoriteCount }}</text>
+							<text class="msc-stat-label">收藏</text>
 						</view>
-						<view class="fsk-use-btn" @tap.stop="useSkill(skill)">
-							<text class="fsk-use-text">使用</text>
+						<view class="msc-stat">
+							<text class="msc-stat-val green">{{ skill.successRate }}</text>
+							<text class="msc-stat-label">复现率</text>
+						</view>
+						<view class="msc-stat">
+							<text class="msc-stat-val blue">{{ skill.feedbackCount }}</text>
+							<text class="msc-stat-label">反馈</text>
 						</view>
 					</view>
 				</view>
 			</view>
 
-			<!-- 烧榜统计 -->
-			<view v-else class="burn-stats">
-				<view class="bstat-month-card">
-					<text class="bstat-month-title">本月消费概览</text>
-					<view class="bstat-total-row">
-						<text class="bstat-total-label">总计花费</text>
-						<text class="bstat-total-val">¥286.50</text>
-					</view>
-					<view class="bstat-breakdown">
-						<view v-for="item in monthStats" :key="item.model" class="bstat-item">
-							<view class="bstat-bar-wrap">
-								<view class="bstat-bar" :style="{ width: item.pct + '%', background: item.color }" />
-							</view>
-							<view class="bstat-row">
-								<text class="bstat-model">{{ item.model }}</text>
-								<text class="bstat-amount">¥{{ item.amount }}</text>
-							</view>
-						</view>
-					</view>
-				</view>
-
-				<view class="bstat-history-title">
-					<text class="bstat-ht-text">历史记录</text>
-				</view>
-				<view class="burn-records">
-					<view
-						v-for="record in myBurnRecords"
-						:key="record.id"
-						class="record-card"
-						@tap="toPost(record.id)"
-					>
-						<view class="rc-head">
-							<view class="model-badge" :style="{ background: record.modelBg }">
-								<view class="model-dot" :style="{ background: record.modelDot }" />
-								<text class="model-badge-text">{{ record.model }}</text>
-							</view>
-							<text class="rc-time">{{ record.time }}</text>
-							<text class="rc-cost-mini">¥{{ record.cost }}</text>
-						</view>
-						<text class="rc-content line-1">{{ record.content }}</text>
-					</view>
-				</view>
-			</view>
-
-			<view class="content-bottom" />
+			<view class="list-bottom" />
 		</scroll-view>
 
 		<tab-bar current="/pages/my/my" />
@@ -237,128 +117,59 @@
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
 
-	const TABS = [
-		{ key: 'posts', label: '我的记录' },
-		{ key: 'favorites', label: '我的收藏' },
-		{ key: 'stats', label: '烧榜统计' }
+	const funcItems = [
+		{
+			icon: '📋', label: '我的发布', count: '23',
+			action: () => toMyPublish()
+		},
+		{
+			icon: '⭐', label: '我的收藏', count: '47',
+			action: () => toMyFavorites()
+		},
+		{
+			icon: '⚡', label: '我的复制', count: '128',
+			action: () => toMyCopies()
+		},
+		{
+			icon: '💬', label: '我的反馈', count: '15',
+			action: () => toMyFeedbacks()
+		},
+		{
+			icon: '📂', label: '草稿箱', count: '2',
+			action: () => toDrafts()
+		},
+		{
+			icon: '⚙️', label: '设置', count: null,
+			action: () => toSettings()
+		}
 	]
 
-	const FAV_TABS = [
-		{ key: 'posts', label: '内容' },
-		{ key: 'skills', label: 'Skill' }
-	]
-
-	const activeTab = ref('posts')
-	const favTab = ref('posts')
-	const tabValues = TABS.map((tab) => tab.label)
-	const favTabValues = FAV_TABS.map((tab) => tab.label)
-	const activeTabIndex = computed(() => {
-		const currentIndex = TABS.findIndex((tab) => tab.key === activeTab.value)
-		return currentIndex === -1 ? 0 : currentIndex
-	})
-	const favTabIndex = computed(() => {
-		const currentIndex = FAV_TABS.findIndex((tab) => tab.key === favTab.value)
-		return currentIndex === -1 ? 0 : currentIndex
-	})
-
-	const myBurnRecords = ref([
+	const mySkills = ref([
 		{
-			id: 'b1', model: 'Claude', modelBg: 'rgba(124,58,237,0.1)', modelDot: '#7C3AED',
-			time: '今天', cost: '38.50', tokens: '120k tokens',
-			mood: '值了✓', moodColor: '#059669',
-			content: '用 Claude 做了一份完整竞品分析报告，换算下来比请助理便宜 10 倍。',
-			likes: 238, resonates: 156, comments: 47
+			id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
+			copyCount: '1.2k', favoriteCount: '312', successRate: '94%', feedbackCount: '43'
 		},
 		{
-			id: 'b2', model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.1)', modelDot: '#10B981',
-			time: '昨天', cost: '52.00', tokens: '200k tokens',
-			mood: '后悔了😭', moodColor: '#EF4444',
-			content: '改了 8 轮方案，200k tokens 没了。最后客户说"还是用第一版吧"。',
-			likes: 1287, resonates: 1043, comments: 267
+			id: 's2', title: '爆款自媒体选题生成', scene: '自媒体', time: '5天前',
+			copyCount: '890', favoriteCount: '234', successRate: '87%', feedbackCount: '31'
 		},
 		{
-			id: 'b3', model: 'Claude', modelBg: 'rgba(124,58,237,0.1)', modelDot: '#7C3AED',
-			time: '3天前', cost: '19.00', tokens: '65k tokens',
-			mood: '值了✓', moodColor: '#059669',
-			content: '帮朋友写了份商业计划书，一个下午搞定，省了好几千的咨询费。',
-			likes: 467, resonates: 312, comments: 54
-		},
-		{
-			id: 'b4', model: 'DeepSeek', modelBg: 'rgba(37,99,235,0.1)', modelDot: '#2563EB',
-			time: '上周', cost: '8.50', tokens: '280k tokens',
-			mood: '值了✓', moodColor: '#059669',
-			content: '试了试 DeepSeek，写代码真的挺快，价格比 Claude 便宜太多了。',
-			likes: 234, resonates: 189, comments: 31
+			id: 's3', title: '极简翻译润色器', scene: '写作', time: '2周前',
+			copyCount: '5.2k', favoriteCount: '1.8k', successRate: '96%', feedbackCount: '128'
 		}
 	])
-
-	const favPosts = ref([
-		{
-			id: 'fp1', author: '王建明', color: '#0891B2',
-			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.1)', modelDot: '#10B981',
-			time: '2天前', cost: '312', tokens: '多平台合计',
-			content: '月底账单：GPT-4o $42、Claude $28、Gemini $8，合计近 600 块人民币。'
-		},
-		{
-			id: 'fp2', author: '刘明远', color: '#DC2626',
-			model: 'GPT-4o', modelBg: 'rgba(16,185,129,0.1)', modelDot: '#10B981',
-			time: '昨天', cost: '89.00', tokens: '340k tokens',
-			content: '测了 GPT-4o、Claude Sonnet、DeepSeek-V3 三个模型，结论有点反直觉。'
-		}
-	])
-
-	const favSkills = ref([
-		{ id: 's1', icon: '💰', title: 'Token 省钱大法', desc: '用最少的 token 数拿到最好的输出' },
-		{ id: 's2', icon: '📊', title: 'AI 账单分析助手', desc: '帮你分析消费结构找出最贵的用法' },
-		{ id: 's3', icon: '🔥', title: '烧榜 Prompt 模板', desc: '一次搞定减少无效 token 消耗' }
-	])
-
-	const monthStats = ref([
-		{ model: 'Claude', amount: '168.50', pct: 59, color: '#7C3AED' },
-		{ model: 'GPT-4o', amount: '89.00', pct: 31, color: '#10B981' },
-		{ model: 'DeepSeek', amount: '21.50', pct: 8, color: '#2563EB' },
-		{ model: 'Gemini', amount: '7.50', pct: 3, color: '#F59E0B' }
-	])
-
-	const useSkill = (_skill: any) => {
-		uni.showToast({ title: '已复制 Skill 内容', icon: 'success' })
-	}
-
-	const toPost = (id: string) => {
-		uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
-	}
 
 	const toSkill = (id: string) => {
 		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 	}
 
-	const toEditProfile = () => {
-		uni.showToast({ title: '编辑资料功能开发中', icon: 'none' })
-	}
-
-	const toNotify = () => {
-		uni.showToast({ title: '暂无新通知', icon: 'none' })
-	}
-
-	const toSetting = () => {
-		uni.showToast({ title: '设置功能开发中', icon: 'none' })
-	}
-
-	const toFans = (_type: string) => {
-		uni.showToast({ title: '功能开发中', icon: 'none' })
-	}
-
-	const changeAvatar = () => {
-		uni.showToast({ title: '修改头像功能开发中', icon: 'none' })
-	}
-
-	const onContentTabChange = (e: { currentIndex: number }) => {
-		activeTab.value = TABS[e.currentIndex]?.key ?? TABS[0].key
-	}
-
-	const onFavTabChange = (e: { currentIndex: number }) => {
-		favTab.value = FAV_TABS[e.currentIndex]?.key ?? FAV_TABS[0].key
-	}
+	const toMyPublish = () => uni.showToast({ title: '我的发布开发中', icon: 'none' })
+	const toMyFavorites = () => uni.showToast({ title: '我的收藏开发中', icon: 'none' })
+	const toMyCopies = () => uni.showToast({ title: '我的复制开发中', icon: 'none' })
+	const toMyFeedbacks = () => uni.showToast({ title: '我的反馈开发中', icon: 'none' })
+	const toDrafts = () => uni.showToast({ title: '草稿箱开发中', icon: 'none' })
+	const toSettings = () => uni.showToast({ title: '设置开发中', icon: 'none' })
+	const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
 </script>
 
 <style lang="scss" scoped>
@@ -366,513 +177,236 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F7F8FA;
+		background: #0B0D12;
 	}
 
-	/* 顶部 Profile 头 */
+	/* Profile 头 */
 	.profile-header {
-		background: linear-gradient(160deg, #1E1B4B 0%, #4C1D95 100%);
-		padding-left: 28rpx;
-		padding-right: 28rpx;
-		padding-bottom: 28rpx;
+		background: linear-gradient(160deg, #141922 0%, #1A1025 60%, #141922 100%);
+		border-bottom: 1rpx solid rgba(255,255,255,0.08);
+		padding-bottom: 0;
+		flex-shrink: 0;
 
-		.header-actions {
-			height: 88rpx;
+		.ph-inner {
 			display: flex;
-			align-items: center;
-			justify-content: flex-end;
-			gap: 8rpx;
+			align-items: flex-start;
+			gap: 20rpx;
+			padding: 28rpx 24rpx 24rpx;
+		}
 
-			.header-btn {
-				width: 68rpx;
-				height: 68rpx;
+		.ph-avatar-wrap {
+			position: relative;
+			flex-shrink: 0;
+
+			.ph-avatar {
+				width: 120rpx;
+				height: 120rpx;
 				border-radius: 50%;
-				background: rgba(255, 255, 255, 0.12);
+				background: linear-gradient(135deg, #7C3AED, #4C1D95);
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				box-shadow: 0 8rpx 24rpx rgba(124,58,237,0.4);
+				border: 3rpx solid rgba(255,122,26,0.3);
 
-				.header-icon { font-size: 34rpx; }
+				.ph-avatar-t { font-size: 48rpx; color: #fff; font-weight: 800; }
+			}
+
+			.ph-avatar-badge {
+				position: absolute;
+				bottom: -4rpx;
+				right: -4rpx;
+				font-size: 18rpx;
+				font-weight: 700;
+				color: #FF7A1A;
+				background: #0B0D12;
+				border: 2rpx solid rgba(255,122,26,0.4);
+				padding: 3rpx 10rpx;
+				border-radius: 100rpx;
 			}
 		}
 
-		.user-info {
-			display: flex;
-			align-items: center;
-			gap: 20rpx;
-			margin-bottom: 24rpx;
+		.ph-info {
+			flex: 1;
+			padding-top: 4rpx;
 
-			.av-wrap {
-				position: relative;
-				flex-shrink: 0;
+			.ph-name { display: block; font-size: 36rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 8rpx; }
+			.ph-bio { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.5; margin-bottom: 14rpx; }
 
-				.av {
-					width: 110rpx;
-					height: 110rpx;
-					border-radius: 50%;
-					border: 3rpx solid rgba(255, 255, 255, 0.4);
-					display: flex;
-					align-items: center;
-					justify-content: center;
+			.ph-tags {
+				display: flex;
+				gap: 10rpx;
 
-					.av-text {
-						font-size: 44rpx;
-						color: #fff;
-						font-weight: 700;
-					}
-				}
-
-				.av-edit-dot {
-					position: absolute;
-					bottom: 0;
-					right: 0;
-					width: 34rpx;
-					height: 34rpx;
-					border-radius: 50%;
-					background: #FBBF24;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					.av-edit-icon {
-						font-size: 17rpx;
-						color: #1A1A2E;
-					}
-				}
-			}
-
-			.user-meta {
-				flex: 1;
-
-				.user-name {
-					display: block;
-					font-size: 36rpx;
-					font-weight: 700;
-					color: #fff;
-					margin-bottom: 8rpx;
-				}
-
-				.user-bio {
-					font-size: 23rpx;
-					color: rgba(255, 255, 255, 0.65);
-					line-height: 1.5;
+				.ph-tag {
+					font-size: 18rpx;
+					color: rgba(255,255,255,0.45);
+					background: rgba(255,255,255,0.07);
+					padding: 4rpx 14rpx;
+					border-radius: 8rpx;
 				}
 			}
 		}
 
-		/* 本月烧榜摘要 */
-		.burn-summary {
+		.ph-edit-btn {
+			width: 64rpx;
+			height: 64rpx;
+			background: rgba(255,255,255,0.07);
+			border-radius: 20rpx;
 			display: flex;
 			align-items: center;
-			background: rgba(239, 68, 68, 0.15);
-			border: 1rpx solid rgba(239, 68, 68, 0.25);
-			border-radius: 18rpx;
-			padding: 18rpx 0;
-			margin-bottom: 20rpx;
+			justify-content: center;
 
-			.bs-item {
+			.ph-edit-icon { font-size: 28rpx; }
+		}
+
+		.ph-stats {
+			display: flex;
+			align-items: center;
+			padding: 24rpx 0;
+			margin: 0 24rpx;
+			border-top: 1rpx solid rgba(255,255,255,0.07);
+
+			.ph-stat-item {
 				flex: 1;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				gap: 6rpx;
 
-				.bs-label {
-					font-size: 21rpx;
-					color: rgba(255, 255, 255, 0.55);
-				}
-
-				.bs-value {
-					font-size: 30rpx;
-					font-weight: 700;
-					color: #fff;
-
-					&.red { color: #FCA5A5; }
-				}
+				.ph-stat-val { font-size: 34rpx; font-weight: 900; color: #F5F7FA; }
+				.ph-stat-val.orange { color: #FF7A1A; }
+				.ph-stat-val.green { color: #4CD964; }
+				.ph-stat-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
 			}
 
-			.bs-divider {
+			.ph-stat-div {
 				width: 1rpx;
-				height: 44rpx;
-				background: rgba(255, 255, 255, 0.15);
-			}
-		}
-
-		/* 社交数据行 */
-		.social-row {
-			display: flex;
-			align-items: center;
-			gap: 0;
-
-			.social-item {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 4rpx;
-				padding: 0 20rpx 0 0;
-
-				.social-num {
-					font-size: 30rpx;
-					font-weight: 700;
-					color: #fff;
-				}
-
-				.social-label {
-					font-size: 20rpx;
-					color: rgba(255, 255, 255, 0.6);
-				}
-			}
-
-			.edit-btn {
-				margin-left: auto;
-				background: rgba(255, 255, 255, 0.15);
-				border: 1rpx solid rgba(255, 255, 255, 0.3);
-				border-radius: 30rpx;
-				padding: 14rpx 28rpx;
-
-				.edit-btn-text {
-					font-size: 24rpx;
-					color: #fff;
-				}
+				height: 40rpx;
+				background: rgba(255,255,255,0.08);
 			}
 		}
 	}
 
-	/* Tab */
-	.content-tabs {
-		background: #fff;
-		padding: 8rpx 16rpx 10rpx;
-		border-bottom: 1rpx solid #F3F4F6;
+	/* 功能网格 */
+	.func-section {
+		padding: 20rpx 24rpx;
 		flex-shrink: 0;
 
-		:deep(.segmented-control) {
-			height: auto;
-		}
-
-		:deep(.segmented-control__item) {
-			padding: 10rpx 0;
-		}
-
-		:deep(.segmented-control__text) {
-			font-size: 28rpx;
-		}
-
-		:deep(.segmented-control__item--text) {
-			padding: 8rpx 0 14rpx;
-		}
-	}
-
-	.content-scroll {
-		flex: 1;
-		overflow: hidden;
-
-		.content-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
-	}
-
-	/* 烧榜记录列表 */
-	.burn-records {
-		padding: 16rpx 20rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 12rpx;
-
-		.record-card {
-			background: #fff;
-			border-radius: 18rpx;
-			padding: 20rpx;
-			box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-			display: flex;
-			flex-direction: column;
-			gap: 12rpx;
-
-			.rc-head {
-				display: flex;
-				align-items: center;
-				gap: 10rpx;
-
-				.model-badge {
-					display: flex;
-					align-items: center;
-					gap: 6rpx;
-					padding: 5rpx 14rpx;
-					border-radius: 20rpx;
-
-					.model-dot {
-						width: 12rpx;
-						height: 12rpx;
-						border-radius: 50%;
-						flex-shrink: 0;
-					}
-
-					.model-badge-text {
-						font-size: 20rpx;
-						color: #374151;
-						font-weight: 500;
-					}
-				}
-
-				.rc-time {
-					font-size: 22rpx;
-					color: #9CA3AF;
-					flex: 1;
-				}
-
-				.rc-mood {
-					font-size: 21rpx;
-					font-weight: 500;
-				}
-
-				.rc-cost-mini {
-					font-size: 26rpx;
-					font-weight: 700;
-					color: #EF4444;
-				}
-
-				.fav-av {
-					width: 40rpx;
-					height: 40rpx;
-					border-radius: 50%;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					flex-shrink: 0;
-
-					.fav-av-t {
-						font-size: 18rpx;
-						color: #fff;
-						font-weight: 700;
-					}
-				}
-
-				.fav-author {
-					font-size: 24rpx;
-					color: #374151;
-					font-weight: 500;
-				}
-			}
-
-			.rc-data {
-				display: flex;
-				align-items: baseline;
-				gap: 14rpx;
-
-				.rc-cost {
-					font-size: 40rpx;
-					font-weight: 900;
-					color: #EF4444;
-					letter-spacing: -1rpx;
-				}
-
-				.rc-tokens {
-					font-size: 24rpx;
-					color: #F59E0B;
-					font-weight: 600;
-				}
-			}
-
-			.rc-content {
-				font-size: 26rpx;
-				color: #374151;
-				line-height: 1.6;
-				display: block;
-			}
-
-			.rc-foot {
-				display: flex;
-				align-items: center;
-				gap: 24rpx;
-				padding-top: 10rpx;
-				border-top: 1rpx solid #F3F4F6;
-
-				.rc-stat {
-					font-size: 22rpx;
-					color: #9CA3AF;
-				}
-			}
-		}
-	}
-
-	/* 收藏 tab */
-	.fav-tabs {
-		padding: 16rpx 20rpx 0;
-
-		:deep(.segmented-control) {
-			height: 64rpx;
-			border-radius: 18rpx;
-			overflow: hidden;
-		}
-
-		:deep(.segmented-control__item) {
-			border-radius: 18rpx;
-		}
-
-		:deep(.segmented-control__text) {
-			font-size: 26rpx;
-		}
-
-		:deep(.segmented-control__item--button) {
-			border-color: #EEF2FF !important;
-		}
-	}
-
-	.fav-skills {
-		padding: 16rpx 20rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 12rpx;
-
-		.fav-skill-card {
-			background: #fff;
-			border-radius: 16rpx;
-			padding: 20rpx;
-			display: flex;
-			align-items: center;
+		.func-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
 			gap: 16rpx;
-			box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 
-			.fsk-icon {
-				width: 72rpx;
-				height: 72rpx;
-				background: #F0F0FD;
-				border-radius: 16rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex-shrink: 0;
-
-				.fsk-emoji { font-size: 36rpx; }
-			}
-
-			.fsk-info {
-				flex: 1;
-
-				.fsk-title {
-					display: block;
-					font-size: 28rpx;
-					font-weight: 600;
-					color: #1A1A2E;
-					margin-bottom: 6rpx;
-				}
-
-				.fsk-desc { font-size: 22rpx; color: #9CA3AF; }
-			}
-
-			.fsk-use-btn {
-				background: #5B5BD6;
-				padding: 10rpx 24rpx;
-				border-radius: 30rpx;
-				flex-shrink: 0;
-
-				.fsk-use-text {
-					font-size: 22rpx;
-					color: #fff;
-					font-weight: 500;
-				}
-			}
-		}
-	}
-
-	/* 烧榜统计 */
-	.burn-stats {
-		padding: 16rpx 20rpx;
-
-		.bstat-month-card {
-			background: #fff;
-			border-radius: 20rpx;
-			padding: 24rpx;
-			margin-bottom: 20rpx;
-			box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-
-			.bstat-month-title {
-				display: block;
-				font-size: 26rpx;
-				font-weight: 700;
-				color: #1A1A2E;
-				margin-bottom: 16rpx;
-			}
-
-			.bstat-total-row {
-				display: flex;
-				align-items: baseline;
-				gap: 14rpx;
-				margin-bottom: 24rpx;
-
-				.bstat-total-label {
-					font-size: 24rpx;
-					color: #9CA3AF;
-				}
-
-				.bstat-total-val {
-					font-size: 48rpx;
-					font-weight: 900;
-					color: #EF4444;
-					letter-spacing: -1rpx;
-				}
-			}
-
-			.bstat-breakdown {
+			.func-item {
+				background: #141922;
+				border-radius: 20rpx;
+				border: 1rpx solid rgba(255,255,255,0.08);
+				padding: 24rpx 16rpx;
 				display: flex;
 				flex-direction: column;
-				gap: 14rpx;
+				align-items: center;
+				gap: 10rpx;
+				position: relative;
 
-				.bstat-item {
-					display: flex;
-					flex-direction: column;
-					gap: 6rpx;
+				&:active { background: #1A2030; }
 
-					.bstat-bar-wrap {
-						height: 8rpx;
-						background: #F3F4F6;
-						border-radius: 4rpx;
-						overflow: hidden;
+				.func-icon { font-size: 40rpx; }
+				.func-label { font-size: 22rpx; color: rgba(255,255,255,0.65); font-weight: 500; }
 
-						.bstat-bar {
-							height: 100%;
-							border-radius: 4rpx;
-						}
-					}
+				.func-count {
+					position: absolute;
+					top: 12rpx;
+					right: 14rpx;
+					background: rgba(255,122,26,0.2);
+					border-radius: 100rpx;
+					padding: 2rpx 10rpx;
 
-					.bstat-row {
-						display: flex;
-						justify-content: space-between;
-
-						.bstat-model {
-							font-size: 23rpx;
-							color: #6B7280;
-						}
-
-						.bstat-amount {
-							font-size: 23rpx;
-							color: #374151;
-							font-weight: 600;
-						}
-					}
+					.func-count-text { font-size: 18rpx; color: #FF7A1A; font-weight: 600; }
 				}
 			}
 		}
+	}
 
-		.bstat-history-title {
-			padding: 0 4rpx 12rpx;
+	/* 最近发布 */
+	.section-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8rpx 24rpx 16rpx;
+		flex-shrink: 0;
 
-			.bstat-ht-text {
-				font-size: 26rpx;
+		.sh-title { font-size: 28rpx; font-weight: 700; color: #F5F7FA; }
+		.sh-more { font-size: 24rpx; color: rgba(255,255,255,0.4); }
+	}
+
+	.my-scroll { flex: 1; overflow: hidden; }
+
+	.my-skills-list {
+		padding: 0 24rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 16rpx;
+
+		.my-skill-card {
+			background: #141922;
+			border-radius: 24rpx;
+			border: 1rpx solid rgba(255,255,255,0.08);
+			padding: 24rpx 28rpx;
+
+			&:active { background: #1A2030; }
+
+			.msc-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 14rpx;
+
+				.msc-scene-tag {
+					font-size: 18rpx;
+					color: rgba(255,255,255,0.4);
+					background: rgba(255,255,255,0.07);
+					padding: 4rpx 12rpx;
+					border-radius: 6rpx;
+				}
+
+				.msc-time { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+			}
+
+			.msc-title {
+				display: block;
+				font-size: 28rpx;
 				font-weight: 700;
-				color: #1A1A2E;
+				color: #F5F7FA;
+				margin-bottom: 18rpx;
+				line-height: 1.35;
+			}
+
+			.msc-stats {
+				display: flex;
+				align-items: center;
+				gap: 0;
+
+				.msc-stat {
+					flex: 1;
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					gap: 4rpx;
+					padding: 12rpx 0;
+					background: rgba(255,255,255,0.03);
+					border-radius: 12rpx;
+
+					& + .msc-stat { margin-left: 10rpx; }
+
+					.msc-stat-val { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+					.msc-stat-val.orange { color: #FF7A1A; }
+					.msc-stat-val.green { color: #4CD964; }
+					.msc-stat-val.blue { color: #5DA9FF; }
+					.msc-stat-label { font-size: 18rpx; color: rgba(255,255,255,0.35); }
+				}
 			}
 		}
 	}
 
-	/* 多行省略 */
-	.line-1 {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-
-	.line-2 {
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
-		overflow: hidden;
-	}
+	.list-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
 </style>

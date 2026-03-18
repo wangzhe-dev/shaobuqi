@@ -270,7 +270,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F7F8FA;
+		background: #0B0D12;
 	}
 
 	.main-scroll {
@@ -315,7 +315,7 @@
 				gap: 10rpx;
 				flex-wrap: wrap;
 
-				.author-name { font-size: 30rpx; font-weight: 700; color: #1A1A2E; }
+				.author-name { font-size: 30rpx; font-weight: 700; color: #F5F7FA; }
 
 				.model-badge {
 					display: inline-flex;
@@ -330,20 +330,20 @@
 				}
 			}
 
-			.post-time { font-size: 22rpx; color: #9CA3AF; }
+			.post-time { font-size: 22rpx; color: rgba(255,255,255,0.4); }
 		}
 
 		.follow-btn {
-			border: 2rpx solid #5B5BD6;
+			border: 2rpx solid rgba(255,122,26,0.5);
 			border-radius: 40rpx;
 			padding: 12rpx 28rpx;
 			flex-shrink: 0;
 
-			.follow-text { font-size: 24rpx; color: #5B5BD6; font-weight: 600; }
+			.follow-text { font-size: 24rpx; color: #FF7A1A; font-weight: 600; }
 
 			&.following {
-				border-color: #E5E7EB;
-				.follow-text { color: #9CA3AF; }
+				border-color: rgba(255,255,255,0.12);
+				.follow-text { color: rgba(255,255,255,0.4); }
 			}
 		}
 	}
@@ -458,7 +458,7 @@
 		gap: 20rpx;
 		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
-		.mood-label { font-size: 26rpx; color: #9CA3AF; flex-shrink: 0; }
+		.mood-label { font-size: 26rpx; color: rgba(255,255,255,0.4); flex-shrink: 0; }
 
 		.mood-tags {
 			display: flex;
@@ -468,10 +468,10 @@
 			.mood-tag {
 				padding: 10rpx 20rpx;
 				border-radius: 30rpx;
-				border: 1rpx solid #E5E7EB;
-				background: #F9FAFB;
+				border: 1rpx solid rgba(255,255,255,0.1);
+				background: rgba(255,255,255,0.05);
 
-				.mood-text { font-size: 22rpx; color: #9CA3AF; white-space: nowrap; }
+				.mood-text { font-size: 22rpx; color: rgba(255,255,255,0.4); white-space: nowrap; }
 
 				&.mood-active .mood-text { font-weight: 600; }
 			}
@@ -495,11 +495,11 @@
 			align-items: center;
 			gap: 4rpx;
 
-			.stat-n { font-size: 34rpx; font-weight: 700; color: #1A1A2E; }
-			.stat-l { font-size: 22rpx; color: #9CA3AF; }
+			.stat-n { font-size: 34rpx; font-weight: 700; color: #F5F7FA; }
+			.stat-l { font-size: 22rpx; color: rgba(255,255,255,0.4); }
 		}
 
-		.stat-divider { width: 1rpx; height: 48rpx; background: #F3F4F6; }
+		.stat-divider { width: 1rpx; height: 48rpx; background: rgba(255,255,255,0.07); }
 	}
 
 	/* 评论区 */
@@ -514,10 +514,10 @@
 			display: block;
 			font-size: 28rpx;
 			font-weight: 700;
-			color: #1A1A2E;
+			color: #F5F7FA;
 			margin-bottom: 24rpx;
 			padding-bottom: 16rpx;
-			border-bottom: 1rpx solid #F3F4F6;
+			border-bottom: 1rpx solid rgba(255,255,255,0.06);
 		}
 
 		.comment-item {
@@ -547,17 +547,17 @@
 					flex-wrap: wrap;
 					margin-bottom: 8rpx;
 
-					.cmt-user { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
+					.cmt-user { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
 
 					.cmt-model-badge {
-						background: #F0F0FD;
+						background: rgba(93,169,255,0.1);
 						padding: 3rpx 12rpx;
 						border-radius: 12rpx;
 
-						.cmt-model-text { font-size: 20rpx; color: #5B5BD6; }
+						.cmt-model-text { font-size: 20rpx; color: #5DA9FF; }
 					}
 
-					.cmt-time { font-size: 22rpx; color: #9CA3AF; margin-left: auto; }
+					.cmt-time { font-size: 22rpx; color: rgba(255,255,255,0.4); margin-left: auto; }
 				}
 
 				/* 评论者晒自己的消费 */
@@ -565,17 +565,17 @@
 					display: flex;
 					align-items: center;
 					gap: 8rpx;
-					background: #FFF7F0;
+					background: rgba(255,122,26,0.08);
 					border-radius: 10rpx;
 					padding: 8rpx 14rpx;
 					margin-bottom: 10rpx;
 
-					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #EF4444; }
-					.cmt-burn-sep { font-size: 20rpx; color: #D1D5DB; }
-					.cmt-burn-tokens { font-size: 22rpx; color: #F59E0B; }
+					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #FF5D5D; }
+					.cmt-burn-sep { font-size: 20rpx; color: rgba(255,255,255,0.2); }
+					.cmt-burn-tokens { font-size: 22rpx; color: #FF7A1A; }
 				}
 
-				.cmt-text { font-size: 26rpx; color: #374151; line-height: 1.65; margin-bottom: 12rpx; }
+				.cmt-text { font-size: 26rpx; color: rgba(255,255,255,0.65); line-height: 1.65; margin-bottom: 12rpx; }
 
 				.cmt-actions {
 					display: flex;
@@ -587,11 +587,11 @@
 						align-items: center;
 						gap: 6rpx;
 
-						.cmt-like-ico { font-size: 24rpx; color: #D1D5DB; &.liked { color: #EF4444; } }
-						.cmt-like-n { font-size: 22rpx; color: #9CA3AF; }
+						.cmt-like-ico { font-size: 24rpx; color: rgba(255,255,255,0.25); &.liked { color: #FF5D5D; } }
+						.cmt-like-n { font-size: 22rpx; color: rgba(255,255,255,0.4); }
 					}
 
-					.cmt-reply-btn { font-size: 22rpx; color: #9CA3AF; }
+					.cmt-reply-btn { font-size: 22rpx; color: rgba(255,255,255,0.4); }
 				}
 			}
 		}
@@ -600,7 +600,7 @@
 			text-align: center;
 			padding: 16rpx 0 8rpx;
 
-			.load-more-text { font-size: 24rpx; color: #5B5BD6; }
+			.load-more-text { font-size: 24rpx; color: #FF7A1A; }
 		}
 	}
 
@@ -610,8 +610,9 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		background: #fff;
-		border-top: 1rpx solid #F3F4F6;
+		background: rgba(20,25,34,0.96);
+		border-top: 1rpx solid rgba(255,255,255,0.06);
+		backdrop-filter: blur(12px);
 		padding: 16rpx 20rpx 0;
 		display: flex;
 		align-items: center;
@@ -619,11 +620,11 @@
 
 		.comment-input {
 			flex: 1;
-			background: #F3F4F6;
+			background: rgba(255,255,255,0.07);
 			border-radius: 40rpx;
 			padding: 16rpx 24rpx;
 
-			.input-ph { font-size: 24rpx; color: #9CA3AF; }
+			.input-ph { font-size: 24rpx; color: rgba(255,255,255,0.35); }
 		}
 
 		.bottom-acts {
@@ -637,23 +638,23 @@
 				gap: 6rpx;
 				padding: 10rpx 12rpx;
 
-				.bact-ico { font-size: 32rpx; color: #9CA3AF; &.liked { color: #EF4444; } }
-				.bact-n { font-size: 20rpx; color: #9CA3AF; }
+				.bact-ico { font-size: 32rpx; color: rgba(255,255,255,0.4); &.liked { color: #FF5D5D; } }
+				.bact-n { font-size: 20rpx; color: rgba(255,255,255,0.4); }
 			}
 
 			.resonate-bact {
-				background: #F9FAFB;
+				background: rgba(255,255,255,0.06);
 				border-radius: 30rpx;
-				border: 1rpx solid #E5E7EB;
+				border: 1rpx solid rgba(255,255,255,0.1);
 				padding: 10rpx 16rpx;
 
-				.bact-resonate-text { font-size: 22rpx; color: #6B7280; }
+				.bact-resonate-text { font-size: 22rpx; color: rgba(255,255,255,0.5); }
 
 				&.resonated {
 					background: rgba(239, 68, 68, 0.06);
 					border-color: rgba(239, 68, 68, 0.3);
 
-					.bact-ico, .bact-resonate-text { color: #EF4444; }
+					.bact-ico, .bact-resonate-text { color: #FF5D5D; }
 				}
 			}
 		}

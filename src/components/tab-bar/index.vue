@@ -84,7 +84,7 @@
 		},
 		{
 			path: '/pages/community/index',
-			label: '烧榜',
+			label: '趋势',
 			icon: 'fire',
 			activeIcon: 'fire-filled'
 		}
@@ -110,8 +110,8 @@
 		label: '发布'
 	}
 
-	const activeColor = '#FF6A3D'
-	const inactiveColor = '#8C96A8'
+	const activeColor = '#FF7A1A'
+	const inactiveColor = 'rgba(255,255,255,0.45)'
 
 	const isActive = (path: string) => props.current === path
 
@@ -145,14 +145,14 @@
 		min-height: 118rpx;
 		padding: 14rpx 16rpx;
 		border-radius: 36rpx;
-		background: rgba(255, 255, 255, 0.85);
+		background: rgba(20, 25, 34, 0.95);
 		backdrop-filter: blur(20px);
 		-webkit-backdrop-filter: blur(20px);
-		border: 1rpx solid rgba(255, 255, 255, 0.6);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
 		box-shadow:
-			0 12rpx 36rpx rgba(0, 0, 0, 0.08),
-			0 4rpx 12rpx rgba(91, 91, 214, 0.1),
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.88);
+			0 12rpx 36rpx rgba(0, 0, 0, 0.5),
+			0 4rpx 12rpx rgba(0, 0, 0, 0.3),
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.06);
 		overflow: visible;
 		-webkit-backface-visibility: hidden;
 		backface-visibility: hidden;
@@ -165,7 +165,7 @@
 			top: 1rpx;
 			height: 2rpx;
 			border-radius: 999rpx;
-			background: linear-gradient(90deg, rgba(255, 122, 69, 0) 0%, rgba(255, 122, 69, 0.5) 48%, rgba(255, 122, 69, 0) 100%);
+			background: linear-gradient(90deg, rgba(255, 122, 26, 0) 0%, rgba(255, 122, 26, 0.4) 48%, rgba(255, 122, 26, 0) 100%);
 		}
 
 		&::after {
@@ -176,7 +176,7 @@
 			bottom: 0;
 			height: 28rpx;
 			border-radius: 0 0 34rpx 34rpx;
-			background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 241, 233, 0.7) 100%);
+			background: linear-gradient(180deg, rgba(20, 25, 34, 0) 0%, rgba(20, 25, 34, 0.8) 100%);
 			pointer-events: none;
 		}
 	}
@@ -216,10 +216,10 @@
 	}
 
 	.tab-item.active .tab-hitbox {
-		background: linear-gradient(180deg, rgba(91, 91, 214, 0.12) 0%, rgba(91, 91, 214, 0.04) 100%);
+		background: linear-gradient(180deg, rgba(255, 122, 26, 0.14) 0%, rgba(255, 122, 26, 0.04) 100%);
 		box-shadow:
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.74),
-			0 8rpx 18rpx rgba(91, 91, 214, 0.08);
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.06),
+			0 8rpx 18rpx rgba(255, 122, 26, 0.1);
 	}
 
 	.tab-item.active .tab-hitbox::after {
@@ -231,12 +231,12 @@
 		width: 12rpx;
 		height: 12rpx;
 		border-radius: 999rpx;
-		background: var(--brand-color);
-		box-shadow: 0 0 0 8rpx rgba(91, 91, 214, 0.12);
+		background: var(--orange-color);
+		box-shadow: 0 0 0 8rpx rgba(255, 122, 26, 0.15);
 	}
 
 	.tab-item-hover .tab-hitbox {
-		background: rgba(255, 255, 255, 0.44);
+		background: rgba(255, 255, 255, 0.05);
 		transform: translateY(1rpx);
 	}
 
@@ -248,7 +248,7 @@
 		justify-content: center;
 		margin-bottom: 8rpx;
 		border-radius: 18rpx;
-		background: rgba(140, 150, 168, 0.08);
+		background: rgba(255, 255, 255, 0.05);
 		transition:
 			background 0.2s ease,
 			box-shadow 0.2s ease,
@@ -256,24 +256,24 @@
 	}
 
 	.tab-item.active .tab-icon-wrap {
-		background: linear-gradient(180deg, rgba(255, 247, 242, 1) 0%, rgba(255, 232, 219, 0.96) 100%);
+		background: linear-gradient(180deg, rgba(255, 122, 26, 0.2) 0%, rgba(255, 122, 26, 0.1) 100%);
 		box-shadow:
-			0 8rpx 20rpx rgba(255, 106, 61, 0.16),
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.92);
+			0 8rpx 20rpx rgba(255, 122, 26, 0.2),
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.1);
 		transform: translateY(-2rpx);
 	}
 
 	.tab-label {
 		font-size: 20rpx;
 		line-height: 1.1;
-		color: #8c96a8;
+		color: rgba(255, 255, 255, 0.45);
 		font-weight: 500;
 		letter-spacing: 0.6rpx;
 		white-space: nowrap;
 	}
 
 	.tab-item.active .tab-label {
-		color: #52352b;
+		color: #FF7A1A;
 		font-weight: 600;
 	}
 
@@ -297,11 +297,11 @@
 		align-items: center;
 		justify-content: center;
 		gap: 12rpx;
-		background: var(--burn-gradient);
+		background: var(--orange-gradient);
 		box-shadow:
-			0 14rpx 28rpx rgba(255, 90, 95, 0.3),
-			0 4rpx 12rpx rgba(224, 36, 36, 0.15),
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.36);
+			0 14rpx 28rpx rgba(255, 122, 26, 0.35),
+			0 4rpx 12rpx rgba(255, 122, 26, 0.2),
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
 		transform: translateY(-10rpx);
 		transition:
 			transform 0.2s ease,
@@ -317,15 +317,15 @@
 			right: 20rpx;
 			height: 18rpx;
 			border-radius: 999rpx;
-			background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 100%);
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 100%);
 		}
 	}
 
 	.publish-button.active {
 		box-shadow:
-			0 18rpx 34rpx rgba(239, 77, 47, 0.28),
-			0 6rpx 14rpx rgba(76, 42, 30, 0.14),
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.42);
+			0 18rpx 34rpx rgba(255, 122, 26, 0.4),
+			0 6rpx 14rpx rgba(255, 122, 26, 0.25),
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.36);
 	}
 
 	.publish-button-hover {
@@ -362,6 +362,7 @@
 		.tab-panel {
 			-webkit-backdrop-filter: saturate(180%) blur(16px);
 			backdrop-filter: saturate(180%) blur(16px);
+			background: rgba(16, 20, 28, 0.92);
 		}
 	}
 	/* #endif */

@@ -1,16 +1,14 @@
 <template>
 	<view class="page">
 
-		<!-- 封面 + 头像区 -->
+		<!-- 顶部 Hero -->
 		<view class="profile-hero" :style="{ paddingTop: statusBarHeight + 'px' }">
-
-			<!-- 返回按钮 -->
 			<view class="back-btn" @tap="goBack">
-				<text class="back-icon">‹</text>
+				<text class="back-icon">←</text>
 			</view>
 
-			<!-- 封面图 -->
-			<image src="https://picsum.photos/seed/authorcover/750/400" class="cover-bg" mode="aspectFill" />
+			<!-- 渐变封面 -->
+			<view class="cover-bg" />
 
 			<!-- 头像 + 关注按钮 -->
 			<view class="hero-bottom">
@@ -19,10 +17,8 @@
 						<text class="av-t">{{ author.name[0] }}</text>
 					</view>
 				</view>
-				<view class="follow-action" @tap="toggleFollow">
-					<view class="follow-btn" :class="{ following: isFollowing }">
-						<text class="follow-text">{{ isFollowing ? '✓ 已关注' : '+ 关注' }}</text>
-					</view>
+				<view class="follow-btn" :class="{ following: isFollowing }" @tap="toggleFollow">
+					<text class="follow-text">{{ isFollowing ? '✓ 已关注' : '+ 关注' }}</text>
 				</view>
 			</view>
 		</view>
@@ -32,107 +28,89 @@
 			<text class="user-name">{{ author.name }}</text>
 			<text class="user-bio">{{ author.bio }}</text>
 			<view class="user-tags">
-				<uni-tag
-					v-for="tag in author.tags"
-					:key="tag"
-					class="user-tag-ui"
-					:text="tag"
-					type="primary"
-					size="mini"
-					circle
-					inverted
-				/>
+				<view v-for="tag in author.tags" :key="tag" class="user-tag">
+					<text class="user-tag-text">{{ tag }}</text>
+				</view>
 			</view>
 		</view>
 
 		<!-- 数据统计 -->
 		<view class="stats-row">
 			<view class="stat-item">
-				<text class="stat-n">{{ author.posts }}</text>
-				<text class="stat-l">发布</text>
+				<text class="stat-n orange">{{ author.totalCopies }}</text>
+				<text class="stat-l">被复制</text>
+			</view>
+			<view class="stat-div" />
+			<view class="stat-item">
+				<text class="stat-n">{{ author.skillCount }}</text>
+				<text class="stat-l">Skill</text>
+			</view>
+			<view class="stat-div" />
+			<view class="stat-item">
+				<text class="stat-n green">{{ author.avgSuccessRate }}</text>
+				<text class="stat-l">平均复现率</text>
 			</view>
 			<view class="stat-div" />
 			<view class="stat-item">
 				<text class="stat-n">{{ author.followers }}</text>
 				<text class="stat-l">粉丝</text>
 			</view>
-			<view class="stat-div" />
-			<view class="stat-item">
-				<text class="stat-n">{{ author.skills }}</text>
-				<text class="stat-l">Skill</text>
-			</view>
-			<view class="stat-div" />
-			<view class="stat-item">
-				<text class="stat-n">{{ author.totalLikes }}</text>
-				<text class="stat-l">获赞</text>
-			</view>
 		</view>
 
 		<!-- 内容 Tab -->
 		<view class="content-tabs">
-			<uni-segmented-control
-				:current="activeTabIndex"
-				:values="tabValues"
-				style-type="text"
-				active-color="#5B5BD6"
-				@clickItem="onContentTabChange"
-			/>
+			<view
+				v-for="tab in TABS"
+				:key="tab.key"
+				class="ct-tab"
+				:class="{ active: activeTab === tab.key }"
+				@tap="activeTab = tab.key"
+			>
+				<text class="ct-tab-text">{{ tab.label }}</text>
+			</view>
 		</view>
 
 		<!-- 内容列表 -->
 		<scroll-view class="content-scroll" scroll-y :show-scrollbar="false">
 
-			<!-- 帖子 Grid -->
-			<view v-if="activeTab === 'posts'" class="posts-grid">
+			<!-- Skill 列表 -->
+			<view v-if="activeTab === 'skills'" class="skills-list">
 				<view
-					v-for="post in authorPosts"
-					:key="post.id"
-					class="grid-cell"
-					@tap="toPost(post.id)"
+					v-for="skill in authorSkills"
+					:key="skill.id"
+					class="skill-card"
+					@tap="toSkill(skill.id)"
 				>
-					<image v-if="post.cover" :src="post.cover" class="grid-img" mode="aspectFill" />
-					<view v-else class="grid-text-bg">
-						<text class="grid-text line-4">{{ post.content }}</text>
+					<view class="sc-head">
+						<view class="sc-scene">{{ skill.scene }}</view>
+						<text class="sc-time">{{ skill.time }}</text>
 					</view>
-					<view class="grid-overlay">
-						<text class="grid-likes">♥ {{ post.likes }}</text>
+					<text class="sc-title">{{ skill.title }}</text>
+					<view class="sc-meta">
+						<text class="sc-token orange">⚡ {{ skill.avgToken }}</text>
+						<text class="sc-rate green">{{ skill.successRate }} 复现</text>
+						<text class="sc-copies">{{ skill.copyCount }} 复制</text>
+					</view>
+					<view class="sc-copy-btn" @tap.stop="copySkill(skill)">
+						<text class="sc-copy-text">复制 Skill</text>
 					</view>
 				</view>
 			</view>
 
-			<!-- Skill 列表 -->
-			<view v-else-if="activeTab === 'skills'" class="skills-list">
-				<view
-					v-for="skill in authorSkills"
-					:key="skill.id"
-					class="skill-mini-card"
-					@tap="toSkill(skill.id)"
-				>
-					<view class="smc-icon">
-						<text class="smc-emoji">{{ skill.icon }}</text>
-					</view>
-					<view class="smc-info">
-						<text class="smc-title">{{ skill.title }}</text>
-						<text class="smc-desc line-1">{{ skill.desc }}</text>
-						<view class="smc-foot">
-							<text class="smc-usage">使用 {{ skill.usage }}</text>
-							<view class="smc-tags">
-								<uni-tag
-									v-for="tag in skill.tags"
-									:key="tag"
-									class="smc-tag-ui"
-									:text="tag"
-									type="primary"
-									size="mini"
-									circle
-									inverted
-								/>
-							</view>
+			<!-- 反馈列表 -->
+			<view v-else-if="activeTab === 'feedbacks'" class="feedbacks-list">
+				<view v-for="fb in authorFeedbacks" :key="fb.id" class="fb-card">
+					<view class="fb-head">
+						<text class="fb-skill">{{ fb.skillTitle }}</text>
+						<view class="fb-status" :class="'status-' + fb.status">
+							<text class="fb-status-text">{{ fb.status === 'success' ? '✅ 成功' : '🆗 一般' }}</text>
 						</view>
 					</view>
-					<view class="smc-use-btn" @tap.stop="useSkill(skill)">
-						<text class="smc-use-text">使用</text>
+					<view class="fb-tokens">
+						<text class="fb-model">{{ fb.model }}</text>
+						<text class="fb-token orange">⚡ {{ fb.totalToken }}</text>
 					</view>
+					<text class="fb-comment">{{ fb.comment }}</text>
 				</view>
 			</view>
 
@@ -149,70 +127,67 @@
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
 
 	const TABS = [
-		{ key: 'posts', label: '发布' },
-		{ key: 'skills', label: 'Skill' }
+		{ key: 'skills', label: 'Skill' },
+		{ key: 'feedbacks', label: '反馈' }
 	]
 
 	const isFollowing = ref(false)
-	const activeTab = ref('posts')
-	const tabValues = TABS.map((tab) => tab.label)
-	const activeTabIndex = computed(() => {
-		const currentIndex = TABS.findIndex((tab) => tab.key === activeTab.value)
-		return currentIndex === -1 ? 0 : currentIndex
-	})
+	const activeTab = ref('skills')
 
 	const author = reactive({
-		name: '文案大师Leon',
-		color: '#5B5BD6',
-		bio: '10年文案经验 · 服务500+品牌 · 专注帮小白写出有销售力的文案',
-		tags: ['文案', '营销', 'AI工具'],
-		posts: '36',
-		followers: '12.4k',
-		skills: '8',
-		totalLikes: '24.8k'
+		name: '林小雨',
+		color: '#7C3AED',
+		bio: '专注AI写作提效，分享经过验证的高复现率Skill',
+		tags: ['写作', '自媒体', 'AI效率'],
+		totalCopies: '8.4k',
+		skillCount: '23',
+		avgSuccessRate: '91%',
+		followers: '2.4k'
 	})
 
-	const authorPosts = ref([
-		{ id: 'ap1', cover: 'https://picsum.photos/seed/au1/400/400', content: '', likes: '238' },
-		{ id: 'ap2', cover: 'https://picsum.photos/seed/au2/400/400', content: '', likes: '156' },
-		{ id: 'ap3', cover: null, content: '关于文案的三个核心逻辑，学完之后你的文案会脱胎换骨...', likes: '892' },
-		{ id: 'ap4', cover: 'https://picsum.photos/seed/au4/400/400', content: '', likes: '467' },
-		{ id: 'ap5', cover: 'https://picsum.photos/seed/au5/400/400', content: '', likes: '543' },
-		{ id: 'ap6', cover: null, content: '甲方说"文案太普通"，其实是因为你没踩到这个点...', likes: '1.2k' },
-		{ id: 'ap7', cover: 'https://picsum.photos/seed/au7/400/400', content: '', likes: '334' },
-		{ id: 'ap8', cover: 'https://picsum.photos/seed/au8/400/400', content: '', likes: '289' },
-		{ id: 'ap9', cover: 'https://picsum.photos/seed/au9/400/400', content: '', likes: '712' }
-	])
-
 	const authorSkills = ref([
-		{ id: 's1', icon: '✍️', title: '万能文案生成器', desc: '30秒输出3套方案，格式全覆盖', tags: ['文案', '营销'], usage: '2.3k' },
-		{ id: 's2', icon: '📱', title: '小红书爆款标题生成', desc: '批量生成高点击标题，告别标题焦虑', tags: ['写作', '小红书'], usage: '1.8k' },
-		{ id: 's3', icon: '🎯', title: '用户痛点挖掘框架', desc: '系统化挖掘目标用户的核心痛点', tags: ['文案', '用户研究'], usage: '956' },
-		{ id: 's4', icon: '🔥', title: '朋友圈种草文模板', desc: '让朋友圈不像广告的卖货文案模板', tags: ['文案', '社交媒体'], usage: '3.4k' }
+		{
+			id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
+			avgToken: '3.2k', successRate: '94%', copyCount: '1.2k'
+		},
+		{
+			id: 's2', title: '爆款自媒体选题生成', scene: '自媒体', time: '5天前',
+			avgToken: '1.8k', successRate: '87%', copyCount: '890'
+		},
+		{
+			id: 's3', title: '极简翻译润色器', scene: '写作', time: '2周前',
+			avgToken: '800', successRate: '96%', copyCount: '5.2k'
+		}
 	])
 
-	const toggleFollow = () => {
-		isFollowing.value = !isFollowing.value
-	}
+	const authorFeedbacks = ref([
+		{
+			id: 'f1', skillTitle: '万能长文写作框架',
+			model: 'Claude Sonnet', totalToken: '3.4k',
+			status: 'success', comment: '完全按步骤来，一次成功！输出结构非常清晰。'
+		},
+		{
+			id: 'f2', skillTitle: '极简翻译润色器',
+			model: 'DeepSeek', totalToken: '0.9k',
+			status: 'success', comment: '极低消耗，效果很好，是目前最省的翻译方案之一。'
+		}
+	])
 
-	const useSkill = (_skill: any) => {
-		uni.showToast({ title: '已复制 Skill 内容', icon: 'success' })
-	}
-
-	const toPost = (id: string) => {
-		uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
+	const copySkill = (_skill: any) => {
+		uni.showToast({ title: '已复制 Skill', icon: 'success' })
 	}
 
 	const toSkill = (id: string) => {
 		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 	}
 
-	const goBack = () => {
-		uni.navigateBack()
+	const toggleFollow = () => {
+		isFollowing.value = !isFollowing.value
+		uni.showToast({ title: isFollowing.value ? '已关注' : '已取消关注', icon: 'none' })
 	}
 
-	const onContentTabChange = (e: { currentIndex: number }) => {
-		activeTab.value = TABS[e.currentIndex]?.key ?? TABS[0].key
+	const goBack = () => {
+		uni.navigateBack()
 	}
 </script>
 
@@ -221,7 +196,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #F7F8FA;
+		background: #0B0D12;
 	}
 
 	/* 顶部 Hero */
@@ -238,22 +213,18 @@
 			width: 72rpx;
 			height: 72rpx;
 			border-radius: 50%;
-			background: rgba(0, 0, 0, 0.3);
+			background: rgba(0,0,0,0.4);
 			display: flex;
 			align-items: center;
 			justify-content: center;
 
-			.back-icon {
-				font-size: 44rpx;
-				color: #fff;
-				font-weight: 300;
-			}
+			.back-icon { font-size: 34rpx; color: #fff; }
 		}
 
 		.cover-bg {
 			width: 100%;
-			height: 300rpx;
-			display: block;
+			height: 280rpx;
+			background: linear-gradient(160deg, #1A1025 0%, #2D1B69 50%, #141922 100%);
 		}
 
 		.hero-bottom {
@@ -268,38 +239,30 @@
 					width: 120rpx;
 					height: 120rpx;
 					border-radius: 50%;
-					border: 4rpx solid #fff;
+					border: 4rpx solid #0B0D12;
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
+					box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.4);
 
-					.av-t {
-						font-size: 48rpx;
-						color: #fff;
-						font-weight: 700;
-					}
+					.av-t { font-size: 48rpx; color: #fff; font-weight: 700; }
 				}
 			}
 
 			.follow-btn {
-				background: #5B5BD6;
-				border-radius: 40rpx;
+				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				border-radius: 100rpx;
 				padding: 18rpx 40rpx;
+				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.3);
 
-				.follow-text {
-					font-size: 26rpx;
-					color: #fff;
-					font-weight: 600;
-				}
+				.follow-text { font-size: 26rpx; color: #fff; font-weight: 600; }
 
 				&.following {
-					background: #F3F4F6;
-					border: 1rpx solid #E5E7EB;
+					background: rgba(255,255,255,0.08);
+					box-shadow: none;
+					border: 1rpx solid rgba(255,255,255,0.15);
 
-					.follow-text {
-						color: #9CA3AF;
-					}
+					.follow-text { color: rgba(255,255,255,0.5); }
 				}
 			}
 		}
@@ -308,28 +271,26 @@
 	/* 用户信息 */
 	.user-info {
 		padding: 4rpx 28rpx 20rpx;
-		background: #fff;
+		background: #141922;
+		border-bottom: 1rpx solid rgba(255,255,255,0.07);
 
-		.user-name {
-			display: block;
-			font-size: 36rpx;
-			font-weight: 800;
-			color: #1A1A2E;
-			margin-bottom: 10rpx;
-		}
-
-		.user-bio {
-			display: block;
-			font-size: 24rpx;
-			color: #6B7280;
-			line-height: 1.6;
-			margin-bottom: 14rpx;
-		}
+		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 10rpx; }
+		.user-bio { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 14rpx; }
 
 		.user-tags {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 10rpx;
+
+			.user-tag {
+				font-size: 18rpx;
+				color: rgba(255,255,255,0.45);
+				background: rgba(255,255,255,0.07);
+				padding: 5rpx 16rpx;
+				border-radius: 8rpx;
+
+				.user-tag-text {}
+			}
 		}
 	}
 
@@ -337,10 +298,10 @@
 	.stats-row {
 		display: flex;
 		align-items: center;
-		background: #fff;
-		border-top: 1rpx solid #F3F4F6;
+		background: #141922;
+		border-bottom: 1rpx solid rgba(255,255,255,0.07);
 		padding: 20rpx 0;
-		margin-bottom: 16rpx;
+		margin-bottom: 0;
 
 		.stat-item {
 			flex: 1;
@@ -349,46 +310,50 @@
 			align-items: center;
 			gap: 4rpx;
 
-			.stat-n {
-				font-size: 32rpx;
-				font-weight: 700;
-				color: #1A1A2E;
-			}
-
-			.stat-l {
-				font-size: 22rpx;
-				color: #9CA3AF;
-			}
+			.stat-n { font-size: 30rpx; font-weight: 800; color: #F5F7FA; }
+			.stat-n.orange { color: #FF7A1A; }
+			.stat-n.green { color: #4CD964; }
+			.stat-l { font-size: 20rpx; color: rgba(255,255,255,0.4); }
 		}
 
 		.stat-div {
 			width: 1rpx;
-			height: 48rpx;
-			background: #E5E7EB;
+			height: 40rpx;
+			background: rgba(255,255,255,0.08);
 		}
 	}
 
 	/* 内容 Tab */
 	.content-tabs {
-		background: #fff;
-		padding: 8rpx 20rpx 10rpx;
-		border-bottom: 1rpx solid #F3F4F6;
+		display: flex;
+		background: #141922;
+		border-bottom: 1rpx solid rgba(255,255,255,0.06);
 		flex-shrink: 0;
 
-		:deep(.segmented-control) {
-			height: auto;
-		}
+		.ct-tab {
+			flex: 1;
+			padding: 20rpx 0 18rpx;
+			display: flex;
+			justify-content: center;
+			position: relative;
 
-		:deep(.segmented-control__item) {
-			padding: 10rpx 0;
-		}
+			.ct-tab-text { font-size: 26rpx; color: rgba(255,255,255,0.4); font-weight: 500; }
 
-		:deep(.segmented-control__text) {
-			font-size: 28rpx;
-		}
+			&.active {
+				.ct-tab-text { color: #FF7A1A; font-weight: 700; }
 
-		:deep(.segmented-control__item--text) {
-			padding: 8rpx 0 14rpx;
+				&::after {
+					content: '';
+					position: absolute;
+					bottom: 0;
+					left: 50%;
+					transform: translateX(-50%);
+					width: 40rpx;
+					height: 4rpx;
+					background: #FF7A1A;
+					border-radius: 999rpx;
+				}
+			}
 		}
 	}
 
@@ -396,149 +361,123 @@
 	.content-scroll {
 		flex: 1;
 		overflow: hidden;
+		background: #0B0D12;
 
-		.scroll-bottom {
-			height: 40rpx;
-		}
-	}
-
-	/* 帖子 Grid */
-	.posts-grid {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4rpx;
-		padding: 4rpx;
-
-		.grid-cell {
-			width: calc(33.33% - 3rpx);
-			height: 240rpx;
-			position: relative;
-			overflow: hidden;
-			border-radius: 4rpx;
-
-			.grid-img {
-				width: 100%;
-				height: 100%;
-			}
-
-			.grid-text-bg {
-				width: 100%;
-				height: 100%;
-				background: linear-gradient(135deg, #5B5BD6 0%, #8B5CF6 100%);
-				padding: 16rpx;
-				display: flex;
-				align-items: center;
-
-				.grid-text {
-					font-size: 22rpx;
-					color: rgba(255, 255, 255, 0.9);
-					line-height: 1.6;
-				}
-			}
-
-			.grid-overlay {
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				right: 0;
-				background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
-				padding: 12rpx 10rpx 10rpx;
-
-				.grid-likes {
-					font-size: 20rpx;
-					color: rgba(255, 255, 255, 0.9);
-				}
-			}
-		}
+		.scroll-bottom { height: 40rpx; }
 	}
 
 	/* Skill 列表 */
 	.skills-list {
-		padding: 16rpx 20rpx;
+		padding: 20rpx 24rpx;
 		display: flex;
 		flex-direction: column;
-		gap: 12rpx;
+		gap: 16rpx;
 
-		.skill-mini-card {
-			background: #fff;
-			border-radius: 16rpx;
-			padding: 20rpx;
-			display: flex;
-			align-items: center;
-			gap: 16rpx;
-			box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		.skill-card {
+			background: #141922;
+			border-radius: 24rpx;
+			border: 1rpx solid rgba(255,255,255,0.08);
+			padding: 24rpx;
 
-			.smc-icon {
-				width: 80rpx;
-				height: 80rpx;
-				background: #F0F0FD;
-				border-radius: 18rpx;
+			&:active { background: #1A2030; }
+
+			.sc-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 12rpx;
+
+				.sc-scene {
+					font-size: 18rpx;
+					color: rgba(255,255,255,0.4);
+					background: rgba(255,255,255,0.07);
+					padding: 4rpx 12rpx;
+					border-radius: 6rpx;
+				}
+
+				.sc-time { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+			}
+
+			.sc-title {
+				display: block;
+				font-size: 28rpx;
+				font-weight: 700;
+				color: #F5F7FA;
+				margin-bottom: 14rpx;
+			}
+
+			.sc-meta {
+				display: flex;
+				gap: 20rpx;
+				margin-bottom: 16rpx;
+
+				.sc-token { font-size: 22rpx; font-weight: 600; }
+				.orange { color: #FF7A1A; }
+				.sc-rate { font-size: 22rpx; font-weight: 600; }
+				.green { color: #4CD964; }
+				.sc-copies { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+			}
+
+			.sc-copy-btn {
+				width: 100%;
+				height: 72rpx;
+				background: linear-gradient(135deg, #FF7A1A 0%, #E05A00 100%);
+				border-radius: 16rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				flex-shrink: 0;
+				box-shadow: 0 4rpx 16rpx rgba(255,122,26,0.25);
 
-				.smc-emoji {
-					font-size: 40rpx;
-				}
-			}
-
-			.smc-info {
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-				gap: 6rpx;
-
-				.smc-title {
-					font-size: 28rpx;
-					font-weight: 700;
-					color: #1A1A2E;
-				}
-
-				.smc-desc {
-					font-size: 22rpx;
-					color: #9CA3AF;
-				}
-
-				.smc-foot {
-					display: flex;
-					align-items: center;
-					gap: 12rpx;
-
-					.smc-usage {
-						font-size: 22rpx;
-						color: #9CA3AF;
-					}
-
-					.smc-tags {
-						display: flex;
-						gap: 6rpx;
-					}
-				}
-			}
-
-			.smc-use-btn {
-				background: #5B5BD6;
-				padding: 12rpx 24rpx;
-				border-radius: 30rpx;
-				flex-shrink: 0;
-
-				.smc-use-text {
-					font-size: 22rpx;
-					color: #fff;
-					font-weight: 500;
-				}
+				.sc-copy-text { font-size: 26rpx; font-weight: 700; color: #fff; }
 			}
 		}
 	}
 
-	.user-tag-ui,
-	.smc-tag-ui {
-		:deep(.uni-tag) {
-			border-radius: 999rpx !important;
-			color: #5B5BD6 !important;
-			border-color: rgba(91, 91, 214, 0.15) !important;
-			background: rgba(91, 91, 214, 0.08) !important;
+	/* 反馈列表 */
+	.feedbacks-list {
+		padding: 20rpx 24rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 16rpx;
+
+		.fb-card {
+			background: #141922;
+			border-radius: 24rpx;
+			border: 1rpx solid rgba(255,255,255,0.08);
+			padding: 24rpx;
+
+			.fb-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 12rpx;
+
+				.fb-skill { font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.7); flex: 1; }
+
+				.fb-status {
+					font-size: 20rpx;
+					padding: 4rpx 14rpx;
+					border-radius: 100rpx;
+
+					&.status-success { color: #4CD964; background: rgba(76,217,100,0.12); }
+					&.status-normal { color: #5DA9FF; background: rgba(93,169,255,0.12); }
+
+					.fb-status-text { font-weight: 600; }
+				}
+			}
+
+			.fb-tokens {
+				display: flex;
+				align-items: center;
+				gap: 16rpx;
+				margin-bottom: 12rpx;
+
+				.fb-model { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.fb-token { font-size: 22rpx; font-weight: 600; }
+				.orange { color: #FF7A1A; }
+			}
+
+			.fb-comment { font-size: 24rpx; color: rgba(255,255,255,0.65); line-height: 1.6; }
 		}
 	}
 </style>

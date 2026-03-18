@@ -10,26 +10,26 @@
 		{
 			"path": "pages/community/index",
 			"style": {
-				"navigationBarTitleText": "烧榜",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black",
+				"navigationBarTitleText": "趋势",
+				"navigationBarBackgroundColor": "#0B0D12",
+				"navigationBarTextStyle": "white",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
 			"path": "pages/publish/index",
 			"style": {
-				"navigationBarTitleText": "发布内容",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black"
+				"navigationBarTitleText": "发布",
+				"navigationBarBackgroundColor": "#0B0D12",
+				"navigationBarTextStyle": "white"
 			}
 		},
 		{
 			"path": "pages/skill/index",
 			"style": {
-				"navigationBarTitleText": "Skill 广场",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black",
+				"navigationBarTitleText": "Skill",
+				"navigationBarBackgroundColor": "#0B0D12",
+				"navigationBarTextStyle": "white",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -44,16 +44,14 @@
 			"path": "pages/detail/post",
 			"style": {
 				"navigationBarTitleText": "",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black"
+				"navigationBarBackgroundColor": "#0B0D12",
+				"navigationBarTextStyle": "white"
 			}
 		},
 		{
 			"path": "pages/detail/skill",
 			"style": {
-				"navigationBarTitleText": "Skill 详情",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black"
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -66,8 +64,8 @@
 			"path": "pages/search/index",
 			"style": {
 				"navigationBarTitleText": "搜索",
-				"navigationBarBackgroundColor": "#FFFFFF",
-				"navigationBarTextStyle": "black"
+				"navigationBarBackgroundColor": "#0B0D12",
+				"navigationBarTextStyle": "white"
 			}
 		}
 	],
@@ -80,22 +78,22 @@
 		}
 	},
 	"globalStyle": {
-		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "少不起",
-		"navigationBarBackgroundColor": "#FFFFFF",
-		"backgroundColor": "#F7F8FA",
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "烧不起",
+		"navigationBarBackgroundColor": "#0B0D12",
+		"backgroundColor": "#0B0D12",
 		"app-plus": {
-			"background": "#F7F8FA",
+			"background": "#0B0D12",
 			"scrollIndicator": "none",
 			"bounce": "none"
 		}
 	},
 	"tabBar": {
 		"custom": true,
-		"color": "#9CA3AF",
-		"selectedColor": "#5B5BD6",
-		"borderStyle": "white",
-		"backgroundColor": "#FFFFFF",
+		"color": "rgba(255,255,255,0.45)",
+		"selectedColor": "#FF7A1A",
+		"borderStyle": "black",
+		"backgroundColor": "#141922",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
