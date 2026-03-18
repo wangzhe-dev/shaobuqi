@@ -16,6 +16,7 @@
 		"lib": ["esnext", "dom"],
 		"types": [
 			"vite/client",
+			"vite-plugin-pwa/client",
 			"@dcloudio/types",
 			"@uni-helper/uni-types",
 			"@uni-helper/uni-app-types",

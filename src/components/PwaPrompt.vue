@@ -120,6 +120,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+// #ifdef H5
+import { useRegisterSW } from 'virtual:pwa-register/vue'
+// #endif
 
 interface BeforeInstallPromptEvent extends Event {
 	prompt: () => Promise<void>
@@ -136,7 +139,6 @@ interface InstallGuide {
 const showIOSHint = ref(false)
 const showInstallBtn = ref(false)
 const showManualHint = ref(false)
-const needRefresh = ref(false)
 const installPromptDismissed = ref(false)
 const hasNativeInstallPrompt = ref(false)
 
@@ -144,7 +146,24 @@ const INSTALL_DISMISS_KEY = 'pwa-install-dismissed-at'
 const INSTALL_DISMISS_TTL = 1000 * 60 * 60 * 24
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null
-let swRegistration: ServiceWorkerRegistration | null = null
+
+// ── SW 更新检测（使用 workbox-window 避免时序竞争）──
+// #ifdef H5
+const { needRefresh, updateServiceWorker } = useRegisterSW({
+	onRegisteredSW(_swUrl, registration) {
+		if (!registration) return
+		// 主动触发一次检查（移动端浏览器不一定每次打开都检查）
+		registration.update()
+		// 每30分钟检查一次（针对长时间后台挂起后唤醒的情况）
+		setInterval(() => {
+			if (!registration.installing && navigator.onLine) registration.update()
+		}, 30 * 60 * 1000)
+	},
+})
+// #endif
+// #ifndef H5
+const needRefresh = ref(false)
+// #endif
 
 const getUserAgent = (): string => navigator.userAgent.toLowerCase()
 
@@ -429,13 +448,8 @@ function handleBeforeInstallPrompt(event: Event) {
 
 onMounted(() => {
 	if (isInStandaloneMode()) return
-
 	installPromptDismissed.value = wasDismissed()
-
 	setupInstallPrompt()
-	if ('serviceWorker' in navigator) {
-		setupSWUpdateDetection()
-	}
 })
 
 function setupInstallPrompt() {
@@ -510,36 +524,10 @@ function openInstallEntry() {
 	showManualHint.value = true
 }
 
-function setupSWUpdateDetection() {
-	navigator.serviceWorker.ready.then((registration) => {
-		swRegistration = registration
-
-		if (registration.waiting) {
-			needRefresh.value = true
-		}
-
-		registration.addEventListener('updatefound', () => {
-			const newWorker = registration.installing
-			newWorker?.addEventListener('statechange', () => {
-				if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-					needRefresh.value = true
-				}
-			})
-		})
-	})
-
-	let refreshing = false
-	navigator.serviceWorker.addEventListener('controllerchange', () => {
-		if (!refreshing) {
-			refreshing = true
-			window.location.reload()
-		}
-	})
-}
-
 function updateSW() {
-	swRegistration?.waiting?.postMessage({ type: 'SKIP_WAITING' })
-	needRefresh.value = false
+	// #ifdef H5
+	updateServiceWorker(true) // true = 更新后自动 reload
+	// #endif
 }
 
 function dismissUpdate() {
