@@ -1,14 +1,7 @@
-<template>
-	<!-- #ifdef H5 -->
-	<pwa-prompt />
-	<!-- #endif -->
-</template>
-
 <script>
 	import { useSysInfoStore } from '@/stores'
 
 	// #ifdef H5
-	import PwaPrompt from '@/components/PwaPrompt.vue'
 	// #endif
 
 	// #ifdef MP-WEIXIN
@@ -22,7 +15,6 @@
 
 	export default {
 		// #ifdef H5
-		components: { PwaPrompt },
 		// #endif
 
 		onLaunch() {

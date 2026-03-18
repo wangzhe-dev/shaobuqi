@@ -11,6 +11,9 @@ import mpShareMixin from './mixin/mp-share-mixin'
 // #endif
 
 // #ifdef H5
+import { createVNode, render } from 'vue'
+import PwaPrompt from './components/PwaPrompt.vue'
+
 if (import.meta.env.DEV && import.meta.env.MODE !== 'production' && typeof document !== 'undefined') {
 	const script = document.createElement('script')
 	script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js'
@@ -41,6 +44,17 @@ export const createApp = () => {
 	// #ifdef MP-WEIXIN
 	// 小程序分享的mixin封装
 	app.mixin(mpShareMixin)
+	// #endif
+
+	// #ifdef H5
+	if (typeof document !== 'undefined') {
+		const pwaContainer = document.createElement('div')
+		pwaContainer.id = 'pwa-prompt-container'
+		document.body.appendChild(pwaContainer)
+		const vnode = createVNode(PwaPrompt)
+		vnode.appContext = app._context
+		render(vnode, pwaContainer)
+	}
 	// #endif
 
 	return {
