@@ -75,7 +75,8 @@
 		left: 0;
 		right: 0;
 		background: #FFFFFF;
-		border-top: 1rpx solid rgba(26, 26, 26,0.08);
+		border-top: none;
+		box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06);
 		z-index: 999;
 	}
 

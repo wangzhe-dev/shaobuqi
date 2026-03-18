@@ -84,7 +84,8 @@ export default {
 <style lang="scss">
 	.tab-bar {
 		background: #FFFFFF;
-		border-top: 1rpx solid rgba(0,0,0,0.06);
+		border-top: none;
+		box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06);
 	}
 
 	.tab-bar-inner {

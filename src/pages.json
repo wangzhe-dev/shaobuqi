@@ -104,7 +104,7 @@
 		"spacing": "4px",
 		"color": "#94979F",
 		"selectedColor": "#E45C1A",
-		"borderStyle": "black",
+		"borderStyle": "white",
 		"backgroundColor": "#FFFFFF",
 		"iconfontSrc": "/static/fonts/uniicons.ttf",
 		"list": [

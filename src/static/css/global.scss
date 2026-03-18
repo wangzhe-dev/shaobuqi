@@ -65,6 +65,28 @@ html {
 	flex-shrink: 0;
 }
 
+// 去掉原生 tabBar 顶部分割线（uni-tabbar-border）
+.uni-tabbar,
+.uni-tabbar__content {
+	border-top: none !important;
+}
+
+.uni-tabbar {
+	box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06) !important;
+}
+
+.uni-tabbar__content {
+	box-shadow: none !important;
+}
+
+.uni-tabbar-border,
+.uni-tabbar__border {
+	display: none !important;
+	height: 0 !important;
+	border: 0 !important;
+	opacity: 0 !important;
+}
+
 /* #endif */
 
 .container {
