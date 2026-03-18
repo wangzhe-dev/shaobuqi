@@ -402,12 +402,14 @@ function handleBeforeInstallPrompt(event: Event) {
 }
 
 onMounted(() => {
-	if (!('serviceWorker' in navigator) || isInStandaloneMode()) return
+	if (isInStandaloneMode()) return
 
 	installPromptDismissed.value = wasDismissed()
 
 	setupInstallPrompt()
-	setupSWUpdateDetection()
+	if ('serviceWorker' in navigator) {
+		setupSWUpdateDetection()
+	}
 })
 
 function setupInstallPrompt() {
