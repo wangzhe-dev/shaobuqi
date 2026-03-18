@@ -107,12 +107,17 @@
 			<view class="list-bottom" />
 		</scroll-view>
 
-		<tab-bar current="/pages/my/my" />
 	</view>
 </template>
 
 <script setup lang="ts">
+	import { getCurrentInstance } from 'vue'
 	import { useSysInfoStore } from '@/stores'
+
+	const instance = getCurrentInstance()
+	onShow(() => {
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 4 })
+	})
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
@@ -177,13 +182,13 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* Profile 头 */
 	.profile-header {
 		background: linear-gradient(160deg, #141922 0%, #1A1025 60%, #141922 100%);
-		border-bottom: 1rpx solid rgba(255,255,255,0.08);
+		border-bottom: 1rpx solid rgba(0,0,0,0.07);
 		padding-bottom: 0;
 		flex-shrink: 0;
 
@@ -219,7 +224,7 @@
 				font-size: 18rpx;
 				font-weight: 700;
 				color: #FF7A1A;
-				background: #0B0D12;
+				background: #F5F3EF;
 				border: 2rpx solid rgba(255,122,26,0.4);
 				padding: 3rpx 10rpx;
 				border-radius: 100rpx;
@@ -230,8 +235,8 @@
 			flex: 1;
 			padding-top: 4rpx;
 
-			.ph-name { display: block; font-size: 36rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 8rpx; }
-			.ph-bio { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.5; margin-bottom: 14rpx; }
+			.ph-name { display: block; font-size: 36rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 8rpx; }
+			.ph-bio { display: block; font-size: 24rpx; color: rgba(0,0,0,0.50); line-height: 1.5; margin-bottom: 14rpx; }
 
 			.ph-tags {
 				display: flex;
@@ -239,8 +244,8 @@
 
 				.ph-tag {
 					font-size: 18rpx;
-					color: rgba(255,255,255,0.45);
-					background: rgba(255,255,255,0.07);
+					color: rgba(0,0,0,0.40);
+					background: rgba(0,0,0,0.06);
 					padding: 4rpx 14rpx;
 					border-radius: 8rpx;
 				}
@@ -250,7 +255,7 @@
 		.ph-edit-btn {
 			width: 64rpx;
 			height: 64rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 20rpx;
 			display: flex;
 			align-items: center;
@@ -264,7 +269,7 @@
 			align-items: center;
 			padding: 24rpx 0;
 			margin: 0 24rpx;
-			border-top: 1rpx solid rgba(255,255,255,0.07);
+			border-top: 1rpx solid rgba(0,0,0,0.06);
 
 			.ph-stat-item {
 				flex: 1;
@@ -273,16 +278,16 @@
 				align-items: center;
 				gap: 6rpx;
 
-				.ph-stat-val { font-size: 34rpx; font-weight: 900; color: #F5F7FA; }
+				.ph-stat-val { font-size: 34rpx; font-weight: 900; color: #1A1A1A; }
 				.ph-stat-val.orange { color: #FF7A1A; }
 				.ph-stat-val.green { color: #4CD964; }
-				.ph-stat-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.ph-stat-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.ph-stat-div {
 				width: 1rpx;
 				height: 40rpx;
-				background: rgba(255,255,255,0.08);
+				background: rgba(0,0,0,0.07);
 			}
 		}
 	}
@@ -298,9 +303,9 @@
 			gap: 16rpx;
 
 			.func-item {
-				background: #141922;
+				background: #FFFFFF;
 				border-radius: 20rpx;
-				border: 1rpx solid rgba(255,255,255,0.08);
+				border: 1rpx solid rgba(0,0,0,0.07);
 				padding: 24rpx 16rpx;
 				display: flex;
 				flex-direction: column;
@@ -308,10 +313,10 @@
 				gap: 10rpx;
 				position: relative;
 
-				&:active { background: #1A2030; }
+				&:active { background: #F0EDE8; }
 
 				.func-icon { font-size: 40rpx; }
-				.func-label { font-size: 22rpx; color: rgba(255,255,255,0.65); font-weight: 500; }
+				.func-label { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500; }
 
 				.func-count {
 					position: absolute;
@@ -335,8 +340,8 @@
 		padding: 8rpx 24rpx 16rpx;
 		flex-shrink: 0;
 
-		.sh-title { font-size: 28rpx; font-weight: 700; color: #F5F7FA; }
-		.sh-more { font-size: 24rpx; color: rgba(255,255,255,0.4); }
+		.sh-title { font-size: 28rpx; font-weight: 700; color: #1A1A1A; }
+		.sh-more { font-size: 24rpx; color: rgba(0,0,0,0.40); }
 	}
 
 	.my-scroll { flex: 1; overflow: hidden; }
@@ -348,12 +353,12 @@
 		gap: 16rpx;
 
 		.my-skill-card {
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.08);
+			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx 28rpx;
 
-			&:active { background: #1A2030; }
+			&:active { background: #F0EDE8; }
 
 			.msc-head {
 				display: flex;
@@ -363,20 +368,20 @@
 
 				.msc-scene-tag {
 					font-size: 18rpx;
-					color: rgba(255,255,255,0.4);
-					background: rgba(255,255,255,0.07);
+					color: rgba(0,0,0,0.40);
+					background: rgba(0,0,0,0.06);
 					padding: 4rpx 12rpx;
 					border-radius: 6rpx;
 				}
 
-				.msc-time { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+				.msc-time { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 			}
 
 			.msc-title {
 				display: block;
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #F5F7FA;
+				color: #1A1A1A;
 				margin-bottom: 18rpx;
 				line-height: 1.35;
 			}
@@ -393,16 +398,16 @@
 					align-items: center;
 					gap: 4rpx;
 					padding: 12rpx 0;
-					background: rgba(255,255,255,0.03);
+					background: rgba(0,0,0,0.02);
 					border-radius: 12rpx;
 
 					& + .msc-stat { margin-left: 10rpx; }
 
-					.msc-stat-val { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+					.msc-stat-val { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 					.msc-stat-val.orange { color: #FF7A1A; }
 					.msc-stat-val.green { color: #4CD964; }
 					.msc-stat-val.blue { color: #5DA9FF; }
-					.msc-stat-label { font-size: 18rpx; color: rgba(255,255,255,0.35); }
+					.msc-stat-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 				}
 			}
 		}

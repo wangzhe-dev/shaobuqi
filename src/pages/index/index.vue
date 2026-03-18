@@ -1,24 +1,6 @@
 <template>
 	<view class="page">
 
-		<!-- 自定义导航栏 -->
-		<view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="navbar-inner">
-				<view class="brand-wrap">
-					<text class="brand-icon">🔥</text>
-					<text class="brand">烧不起</text>
-				</view>
-				<view class="search-bar" @tap="toSearch">
-					<text class="search-icon">🔍</text>
-					<text class="search-placeholder">搜索 Skill / 场景 / 模型 / 作者</text>
-				</view>
-				<view class="nav-btn" @tap="toNotify">
-					<text class="nav-icon">🔔</text>
-					<view class="red-dot" />
-				</view>
-			</view>
-		</view>
-
 		<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
 
 			<!-- ① 首屏价值区 -->
@@ -26,7 +8,7 @@
 				<view class="hero-glow" />
 				<view class="hero-content">
 					<text class="hero-title">好用的 AI Skill，不一定最贵</text>
-					<text class="hero-subtitle">复制别人验证过的 Skill，少走弯路，少烧 token</text>
+					<text class="hero-subtitle">复制别人验证过的 Skill，烧走弯路，烧烧 token</text>
 					<view class="hero-actions">
 						<view class="hero-btn-primary" @tap="toSkillTab">
 							<text class="hero-btn-text">找 Skill</text>
@@ -220,15 +202,16 @@
 			<view class="feed-bottom" />
 		</scroll-view>
 
-		<tab-bar current="/pages/index/index" />
 	</view>
 </template>
 
 <script setup lang="ts">
-	import { useSysInfoStore } from '@/stores'
+	import { getCurrentInstance } from 'vue'
 
-	const sysInfo = useSysInfoStore()
-	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const instance = getCurrentInstance()
+	onShow(() => {
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 0 })
+	})
 
 	const topSkills = ref([
 		{
@@ -318,10 +301,6 @@
 		uni.navigateTo({ url: `/pages/author/index?id=${id}` })
 	}
 
-	const toSearch = () => {
-		uni.navigateTo({ url: '/pages/search/index' })
-	}
-
 	const toPublish = () => {
 		uni.switchTab({ url: '/pages/publish/index' })
 	}
@@ -334,10 +313,6 @@
 		uni.switchTab({ url: '/pages/community/index' })
 	}
 
-	const toNotify = () => {
-		uni.showToast({ title: '暂无新通知', icon: 'none' })
-	}
-
 	const toSkillByScene = (scene: string) => {
 		uni.navigateTo({ url: `/pages/skill/index?scene=${scene}` })
 	}
@@ -348,14 +323,14 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 导航栏 */
 	.navbar {
-		background: #0B0D12;
+		background: #F5F3EF;
 		flex-shrink: 0;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 		.navbar-inner {
 			height: 88rpx;
@@ -372,22 +347,22 @@
 			flex-shrink: 0;
 
 			.brand-icon { font-size: 36rpx; }
-			.brand { font-size: 34rpx; font-weight: 900; color: #F5F7FA; letter-spacing: -0.5rpx; }
+			.brand { font-size: 34rpx; font-weight: 900; color: #1A1A1A; letter-spacing: -0.5rpx; }
 		}
 
 		.search-bar {
 			flex: 1;
 			height: 64rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 32rpx;
-			border: 1rpx solid rgba(255,255,255,0.1);
+			border: 1rpx solid rgba(0,0,0,0.08);
 			display: flex;
 			align-items: center;
 			gap: 10rpx;
 			padding: 0 20rpx;
 
 			.search-icon { font-size: 26rpx; }
-			.search-placeholder { font-size: 22rpx; color: rgba(255,255,255,0.35); flex: 1; }
+			.search-placeholder { font-size: 22rpx; color: rgba(0,0,0,0.35); flex: 1; }
 		}
 
 		.nav-btn {
@@ -420,9 +395,9 @@
 	.hero-section {
 		position: relative;
 		margin: 32rpx 24rpx 8rpx;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		overflow: hidden;
 		padding: 40rpx 32rpx 36rpx;
 
@@ -445,7 +420,7 @@
 			display: block;
 			font-size: 38rpx;
 			font-weight: 900;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			line-height: 1.3;
 			margin-bottom: 16rpx;
 			letter-spacing: -0.5rpx;
@@ -480,9 +455,9 @@
 			.hero-btn-secondary {
 				flex: 1;
 				height: 80rpx;
-				background: rgba(255,255,255,0.08);
+				background: rgba(0,0,0,0.07);
 				border-radius: 20rpx;
-				border: 1rpx solid rgba(255,255,255,0.15);
+				border: 1rpx solid rgba(0,0,0,0.10);
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -501,7 +476,7 @@
 				gap: 6rpx;
 
 				.hero-tag-dot { font-size: 20rpx; color: #4CD964; font-weight: 700; }
-				.hero-tag-text { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+				.hero-tag-text { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 			}
 		}
 	}
@@ -519,10 +494,10 @@
 			gap: 10rpx;
 
 			.sh-badge { font-size: 28rpx; }
-			.sh-title { font-size: 30rpx; font-weight: 700; color: #F5F7FA; }
+			.sh-title { font-size: 30rpx; font-weight: 700; color: #1A1A1A; }
 		}
 
-		.sh-more { font-size: 24rpx; color: rgba(255,255,255,0.4); }
+		.sh-more { font-size: 24rpx; color: rgba(0,0,0,0.40); }
 	}
 
 	/* ② 横滑容器 */
@@ -540,9 +515,9 @@
 	/* 大Skill卡 */
 	.skill-large-card {
 		width: 340rpx;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
 		flex-shrink: 0;
 		display: flex;
@@ -556,8 +531,8 @@
 
 			.slc-scene-tag {
 				font-size: 20rpx;
-				color: rgba(255,255,255,0.5);
-				background: rgba(255,255,255,0.08);
+				color: rgba(0,0,0,0.50);
+				background: rgba(0,0,0,0.07);
 				padding: 6rpx 16rpx;
 				border-radius: 100rpx;
 			}
@@ -576,7 +551,7 @@
 			display: block;
 			font-size: 28rpx;
 			font-weight: 800;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 12rpx;
 			line-height: 1.35;
 		}
@@ -587,7 +562,7 @@
 			-webkit-line-clamp: 2;
 			overflow: hidden;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.5);
+			color: rgba(0,0,0,0.50);
 			line-height: 1.6;
 			margin-bottom: 24rpx;
 			flex: 1;
@@ -596,7 +571,7 @@
 		.slc-meta {
 			display: flex;
 			align-items: center;
-			background: rgba(255,255,255,0.05);
+			background: rgba(0,0,0,0.04);
 			border-radius: 16rpx;
 			padding: 16rpx 0;
 			margin-bottom: 24rpx;
@@ -608,8 +583,8 @@
 				align-items: center;
 				gap: 4rpx;
 
-				.slc-meta-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
-				.slc-meta-val { font-size: 24rpx; font-weight: 700; color: #F5F7FA; }
+				.slc-meta-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
+				.slc-meta-val { font-size: 24rpx; font-weight: 700; color: #1A1A1A; }
 				.slc-meta-val.orange { color: #FF7A1A; }
 				.slc-meta-val.green { color: #4CD964; }
 			}
@@ -617,7 +592,7 @@
 			.slc-meta-div {
 				width: 1rpx;
 				height: 32rpx;
-				background: rgba(255,255,255,0.1);
+				background: rgba(0,0,0,0.08);
 			}
 		}
 
@@ -664,9 +639,9 @@
 		gap: 16rpx;
 
 		.eff-card {
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.08);
+			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx 28rpx;
 			display: flex;
 			align-items: center;
@@ -691,14 +666,14 @@
 					&.label-purple { color: #A78BFA; background: rgba(167,139,250,0.1); }
 				}
 
-				.eff-scene { font-size: 20rpx; color: rgba(255,255,255,0.4); text-align: center; }
+				.eff-scene { font-size: 20rpx; color: rgba(0,0,0,0.40); text-align: center; }
 			}
 
 			.eff-title {
 				flex: 1;
 				font-size: 26rpx;
 				font-weight: 700;
-				color: #F5F7FA;
+				color: #1A1A1A;
 				line-height: 1.4;
 			}
 
@@ -714,16 +689,16 @@
 					gap: 2rpx;
 
 					.eff-token-val { font-size: 22rpx; font-weight: 700; color: #FF7A1A; }
-					.eff-token-label { font-size: 18rpx; color: rgba(255,255,255,0.4); }
+					.eff-token-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 				}
 
 				.eff-divider {
 					width: 1rpx;
 					height: 24rpx;
-					background: rgba(255,255,255,0.1);
+					background: rgba(0,0,0,0.08);
 				}
 
-				.eff-copies { font-size: 20rpx; color: rgba(255,255,255,0.45); }
+				.eff-copies { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.eff-rate { font-size: 20rpx; }
 				.green-text { color: #4CD964; }
 			}
@@ -748,9 +723,9 @@
 		padding: 0 24rpx;
 
 		.scene-item {
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 20rpx;
-			border: 1rpx solid rgba(255,255,255,0.07);
+			border: 1rpx solid rgba(0,0,0,0.06);
 			padding: 28rpx 12rpx;
 			display: flex;
 			flex-direction: column;
@@ -758,16 +733,16 @@
 			gap: 12rpx;
 
 			.scene-icon { font-size: 44rpx; }
-			.scene-name { font-size: 22rpx; color: rgba(255,255,255,0.65); font-weight: 500; }
+			.scene-name { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500; }
 		}
 	}
 
 	/* ⑤ 热门创作者 */
 	.creator-card {
 		width: 220rpx;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx 20rpx 24rpx;
 		flex-shrink: 0;
 		display: flex;
@@ -787,7 +762,7 @@
 			.creator-av-t { font-size: 32rpx; color: #fff; font-weight: 800; }
 		}
 
-		.creator-name { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+		.creator-name { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 
 		.creator-badge {
 			font-size: 18rpx;
@@ -809,32 +784,32 @@
 				align-items: center;
 				gap: 4rpx;
 
-				.cst-val { font-size: 26rpx; font-weight: 800; color: #F5F7FA; }
+				.cst-val { font-size: 26rpx; font-weight: 800; color: #1A1A1A; }
 				.cst-val.orange { color: #FF7A1A; }
-				.cst-label { font-size: 18rpx; color: rgba(255,255,255,0.4); }
+				.cst-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 			}
 		}
 
 		.creator-follow-btn {
 			width: 100%;
 			height: 56rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 16rpx;
-			border: 1rpx solid rgba(255,255,255,0.12);
+			border: 1rpx solid rgba(0,0,0,0.09);
 			display: flex;
 			align-items: center;
 			justify-content: center;
 
-			.creator-follow-text { font-size: 22rpx; color: rgba(255,255,255,0.65); font-weight: 600; }
+			.creator-follow-text { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 600; }
 		}
 	}
 
 	/* ⑥ 今日趋势摘要 */
 	.trend-card {
 		margin: 0 24rpx;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		overflow: hidden;
 
 		.trend-grid {
@@ -844,14 +819,14 @@
 
 			.trend-item {
 				padding: 24rpx 28rpx;
-				border-bottom: 1rpx solid rgba(255,255,255,0.06);
-				border-right: 1rpx solid rgba(255,255,255,0.06);
+				border-bottom: 1rpx solid rgba(0,0,0,0.05);
+				border-right: 1rpx solid rgba(0,0,0,0.05);
 
 				&:nth-child(even) { border-right: none; }
 				&:nth-child(3), &:nth-child(4) { border-bottom: none; }
 
-				.trend-label { display: block; font-size: 20rpx; color: rgba(255,255,255,0.4); margin-bottom: 8rpx; }
-				.trend-val { display: block; font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+				.trend-label { display: block; font-size: 20rpx; color: rgba(0,0,0,0.40); margin-bottom: 8rpx; }
+				.trend-val { display: block; font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 				.trend-val.orange { color: #FF7A1A; }
 				.trend-val.green { color: #4CD964; }
 			}

@@ -428,7 +428,7 @@
 			{
 				id: 'f3', userName: '王小红', userColor: '#059669', time: '2周前',
 				model: 'Claude Sonnet', inputToken: '0.9k', outputToken: '2.1k', totalToken: '3.0k',
-				status: 'success', comment: '写了篇关于职场晋升的文章，质量超出预期。按建议先生成大纲节省了不少token。'
+				status: 'success', comment: '写了篇关于职场晋升的文章，质量超出预期。按建议先生成大纲节省了不烧token。'
 			}
 		],
 
@@ -518,14 +518,14 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 自定义导航栏 */
 	.navbar {
-		background: #0B0D12;
+		background: #F5F3EF;
 		flex-shrink: 0;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 		.navbar-inner {
 			height: 88rpx;
@@ -541,18 +541,18 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 20rpx;
 			flex-shrink: 0;
 
-			.nav-back-icon { font-size: 32rpx; color: #F5F7FA; }
+			.nav-back-icon { font-size: 32rpx; color: #1A1A1A; }
 		}
 
 		.nav-title {
 			flex: 1;
 			font-size: 30rpx;
 			font-weight: 700;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			text-align: center;
 		}
 
@@ -577,9 +577,9 @@
 	/* 通用 section 卡 */
 	.section-card {
 		margin: 20rpx 24rpx 0;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
 	}
 
@@ -590,23 +590,23 @@
 		margin-bottom: 24rpx;
 
 		.section-badge { font-size: 28rpx; }
-		.section-title { font-size: 28rpx; font-weight: 700; color: #F5F7FA; flex: 1; }
-		.section-subtitle { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+		.section-title { font-size: 28rpx; font-weight: 700; color: #1A1A1A; flex: 1; }
+		.section-subtitle { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 	}
 
 	/* 1. 顶部概览区 */
 	.overview-section {
 		margin: 20rpx 24rpx 0;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
 
 		.scene-tag {
 			display: inline-flex;
 			font-size: 20rpx;
-			color: rgba(255,255,255,0.5);
-			background: rgba(255,255,255,0.08);
+			color: rgba(0,0,0,0.50);
+			background: rgba(0,0,0,0.07);
 			padding: 6rpx 18rpx;
 			border-radius: 100rpx;
 			margin-bottom: 18rpx;
@@ -616,7 +616,7 @@
 			display: block;
 			font-size: 38rpx;
 			font-weight: 900;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			line-height: 1.3;
 			margin-bottom: 24rpx;
 			letter-spacing: -0.5rpx;
@@ -641,7 +641,7 @@
 			}
 
 			.author-name { font-size: 26rpx; color: rgba(255,255,255,0.8); font-weight: 600; }
-			.publish-time { font-size: 22rpx; color: rgba(255,255,255,0.4); flex: 1; }
+			.publish-time { font-size: 22rpx; color: rgba(0,0,0,0.40); flex: 1; }
 
 			.follow-btn {
 				background: rgba(255,122,26,0.15);
@@ -677,13 +677,13 @@
 				width: 88rpx;
 				height: 88rpx;
 				border-radius: 24rpx;
-				background: rgba(255,255,255,0.07);
-				border: 1rpx solid rgba(255,255,255,0.12);
+				background: rgba(0,0,0,0.06);
+				border: 1rpx solid rgba(0,0,0,0.09);
 				display: flex;
 				align-items: center;
 				justify-content: center;
 
-				.fav-icon { font-size: 36rpx; color: rgba(255,255,255,0.5); }
+				.fav-icon { font-size: 36rpx; color: rgba(0,0,0,0.50); }
 
 				&.favorited {
 					background: rgba(255,194,74,0.15);
@@ -697,7 +697,7 @@
 		.overview-stats {
 			display: flex;
 			align-items: center;
-			background: rgba(255,255,255,0.04);
+			background: rgba(0,0,0,0.03);
 			border-radius: 20rpx;
 			padding: 20rpx 0;
 
@@ -708,22 +708,22 @@
 				align-items: center;
 				gap: 6rpx;
 
-				.ov-stat-val { font-size: 28rpx; font-weight: 800; color: #F5F7FA; }
+				.ov-stat-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
 				.ov-stat-val.green { color: #4CD964; }
-				.ov-stat-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.ov-stat-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.ov-divider {
 				width: 1rpx;
 				height: 36rpx;
-				background: rgba(255,255,255,0.1);
+				background: rgba(0,0,0,0.08);
 			}
 		}
 	}
 
 	/* 2. 结果证明区 */
 	.result-proof-card {
-		background: rgba(255,255,255,0.04);
+		background: rgba(0,0,0,0.03);
 		border-radius: 20rpx;
 		overflow: hidden;
 		margin-bottom: 20rpx;
@@ -735,7 +735,7 @@
 
 			.rp-label {
 				font-size: 22rpx;
-				color: rgba(255,255,255,0.45);
+				color: rgba(0,0,0,0.40);
 				flex-shrink: 0;
 				width: 100rpx;
 				padding-top: 2rpx;
@@ -750,12 +750,12 @@
 				line-height: 1.6;
 			}
 
-			.rp-val-dim { color: rgba(255,255,255,0.45); }
+			.rp-val-dim { color: rgba(0,0,0,0.40); }
 		}
 
 		.rp-divider {
 			height: 1rpx;
-			background: rgba(255,255,255,0.06);
+			background: rgba(0,0,0,0.05);
 			margin: 0 20rpx;
 		}
 	}
@@ -776,7 +776,7 @@
 		.sr-content {
 			display: block;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.65);
+			color: rgba(0,0,0,0.60);
 			line-height: 1.7;
 			padding: 16rpx 20rpx;
 		}
@@ -794,7 +794,7 @@
 
 		.token-item {
 			flex: 1;
-			background: rgba(255,255,255,0.04);
+			background: rgba(0,0,0,0.03);
 			border-radius: 16rpx;
 			padding: 20rpx 12rpx;
 			display: flex;
@@ -802,9 +802,9 @@
 			align-items: center;
 			gap: 8rpx;
 
-			.ti-val { font-size: 30rpx; font-weight: 800; color: rgba(255,255,255,0.7); }
+			.ti-val { font-size: 30rpx; font-weight: 800; color: rgba(0,0,0,0.70); }
 			.ti-val.orange { font-size: 40rpx; color: #FF7A1A; }
-			.ti-label { font-size: 20rpx; color: rgba(255,255,255,0.4); text-align: center; }
+			.ti-label { font-size: 20rpx; color: rgba(0,0,0,0.40); text-align: center; }
 
 			&.token-item-main { background: rgba(255,122,26,0.08); border: 1rpx solid rgba(255,122,26,0.2); }
 		}
@@ -813,7 +813,7 @@
 	.cost-row {
 		display: flex;
 		align-items: center;
-		background: rgba(255,255,255,0.04);
+		background: rgba(0,0,0,0.03);
 		border-radius: 16rpx;
 		padding: 18rpx 0;
 		margin-bottom: 20rpx;
@@ -825,15 +825,15 @@
 			align-items: center;
 			gap: 6rpx;
 
-			.cost-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
-			.cost-val { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+			.cost-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
+			.cost-val { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 			.cost-val.orange { color: #FF7A1A; }
 		}
 
 		.cost-divider {
 			width: 1rpx;
 			height: 36rpx;
-			background: rgba(255,255,255,0.1);
+			background: rgba(0,0,0,0.08);
 		}
 	}
 
@@ -849,15 +849,15 @@
 			align-items: center;
 			gap: 6rpx;
 			padding: 16rpx 0;
-			background: rgba(255,255,255,0.04);
+			background: rgba(0,0,0,0.03);
 			border-radius: 16rpx;
 
 			& + .us-item { margin-left: 12rpx; }
 
-			.us-val { font-size: 30rpx; font-weight: 800; color: #F5F7FA; }
+			.us-val { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
 			.us-val.green { color: #4CD964; }
 			.us-val.blue { color: #5DA9FF; }
-			.us-label { font-size: 18rpx; color: rgba(255,255,255,0.4); }
+			.us-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 		}
 	}
 
@@ -884,9 +884,9 @@
 		}
 
 		.pb-content {
-			background: #0B0D12;
+			background: #F5F3EF;
 			border-radius: 16rpx;
-			border: 1rpx solid rgba(255,255,255,0.07);
+			border: 1rpx solid rgba(0,0,0,0.06);
 			padding: 20rpx;
 
 			.pb-text {
@@ -923,7 +923,7 @@
 					.var-name { font-size: 20rpx; color: #5DA9FF; font-weight: 600; font-family: monospace; }
 				}
 
-				.var-desc { font-size: 22rpx; color: rgba(255,255,255,0.5); line-height: 1.5; padding-top: 4rpx; }
+				.var-desc { font-size: 22rpx; color: rgba(0,0,0,0.50); line-height: 1.5; padding-top: 4rpx; }
 			}
 		}
 	}
@@ -983,7 +983,7 @@
 		gap: 20rpx;
 
 		.feedback-card {
-			background: rgba(255,255,255,0.04);
+			background: rgba(0,0,0,0.03);
 			border-radius: 20rpx;
 			padding: 20rpx;
 
@@ -1009,7 +1009,7 @@
 					flex: 1;
 
 					.fb-name { display: block; font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.8); }
-					.fb-time { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+					.fb-time { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				}
 
 				.fb-status-badge {
@@ -1028,7 +1028,7 @@
 			.fb-token-row {
 				display: flex;
 				gap: 0;
-				background: rgba(255,255,255,0.04);
+				background: rgba(0,0,0,0.03);
 				border-radius: 12rpx;
 				padding: 12rpx 0;
 				margin-bottom: 16rpx;
@@ -1040,8 +1040,8 @@
 					align-items: center;
 					gap: 4rpx;
 
-					.fbt-label { font-size: 18rpx; color: rgba(255,255,255,0.35); }
-					.fbt-val { font-size: 22rpx; font-weight: 700; color: rgba(255,255,255,0.7); }
+					.fbt-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
+					.fbt-val { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.70); }
 					.fbt-val.orange { color: #FF7A1A; }
 					.fbt-val.model { font-size: 20rpx; color: #A78BFA; }
 				}
@@ -1049,7 +1049,7 @@
 
 			.fb-comment {
 				font-size: 24rpx;
-				color: rgba(255,255,255,0.7);
+				color: rgba(0,0,0,0.70);
 				line-height: 1.65;
 			}
 		}
@@ -1066,7 +1066,7 @@
 			align-items: center;
 			gap: 20rpx;
 			padding: 18rpx 0;
-			border-bottom: 1rpx solid rgba(255,255,255,0.06);
+			border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 			&:last-child { border-bottom: none; }
 
@@ -1076,14 +1076,14 @@
 				.si-tag {
 					display: inline-flex;
 					font-size: 18rpx;
-					color: rgba(255,255,255,0.4);
-					background: rgba(255,255,255,0.07);
+					color: rgba(0,0,0,0.40);
+					background: rgba(0,0,0,0.06);
 					padding: 3rpx 12rpx;
 					border-radius: 6rpx;
 					margin-bottom: 8rpx;
 				}
 
-				.si-title { display: block; font-size: 26rpx; font-weight: 700; color: #F5F7FA; margin-bottom: 8rpx; }
+				.si-title { display: block; font-size: 26rpx; font-weight: 700; color: #1A1A1A; margin-bottom: 8rpx; }
 
 				.si-meta {
 					display: flex;
@@ -1119,7 +1119,7 @@
 		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
 		background: rgba(11,13,18,0.95);
 		backdrop-filter: blur(20px);
-		border-top: 1rpx solid rgba(255,255,255,0.08);
+		border-top: 1rpx solid rgba(0,0,0,0.07);
 		display: flex;
 		gap: 16rpx;
 		align-items: center;
@@ -1127,17 +1127,17 @@
 		.bb-fav {
 			width: 96rpx;
 			height: 88rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.12);
+			border: 1rpx solid rgba(0,0,0,0.09);
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
 			gap: 4rpx;
 
-			.bb-fav-icon { font-size: 30rpx; color: rgba(255,255,255,0.5); }
-			.bb-fav-text { font-size: 18rpx; color: rgba(255,255,255,0.5); }
+			.bb-fav-icon { font-size: 30rpx; color: rgba(0,0,0,0.50); }
+			.bb-fav-text { font-size: 18rpx; color: rgba(0,0,0,0.50); }
 		}
 
 		.bb-copy-btn {
@@ -1171,16 +1171,16 @@
 
 	.copy-guide-sheet {
 		width: 100%;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 40rpx 40rpx 0 0;
-		border-top: 1rpx solid rgba(255,255,255,0.1);
+		border-top: 1rpx solid rgba(0,0,0,0.08);
 		padding: 40rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
 
 		.cg-title {
 			display: block;
 			font-size: 34rpx;
 			font-weight: 800;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 10rpx;
 			text-align: center;
 		}
@@ -1188,7 +1188,7 @@
 		.cg-subtitle {
 			display: block;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.45);
+			color: rgba(0,0,0,0.40);
 			margin-bottom: 36rpx;
 			text-align: center;
 		}
@@ -1200,9 +1200,9 @@
 
 			.cg-btn {
 				height: 96rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 24rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
+				border: 1rpx solid rgba(0,0,0,0.08);
 				display: flex;
 				align-items: center;
 				gap: 20rpx;

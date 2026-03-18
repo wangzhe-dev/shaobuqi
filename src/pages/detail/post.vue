@@ -270,7 +270,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	.main-scroll {
@@ -315,7 +315,7 @@
 				gap: 10rpx;
 				flex-wrap: wrap;
 
-				.author-name { font-size: 30rpx; font-weight: 700; color: #F5F7FA; }
+				.author-name { font-size: 30rpx; font-weight: 700; color: #1A1A1A; }
 
 				.model-badge {
 					display: inline-flex;
@@ -330,7 +330,7 @@
 				}
 			}
 
-			.post-time { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+			.post-time { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 		}
 
 		.follow-btn {
@@ -342,8 +342,8 @@
 			.follow-text { font-size: 24rpx; color: #FF7A1A; font-weight: 600; }
 
 			&.following {
-				border-color: rgba(255,255,255,0.12);
-				.follow-text { color: rgba(255,255,255,0.4); }
+				border-color: rgba(0,0,0,0.09);
+				.follow-text { color: rgba(0,0,0,0.40); }
 			}
 		}
 	}
@@ -364,7 +364,7 @@
 			right: -40rpx;
 			width: 250rpx;
 			height: 250rpx;
-			background: rgba(255, 255, 255, 0.1);
+			background: rgba(0,0,0,0.08);
 			border-radius: 50%;
 			filter: blur(40rpx);
 			pointer-events: none;
@@ -377,7 +377,7 @@
 			margin-bottom: 24rpx;
 
 			.burn-label { font-size: 26rpx; font-weight: 700; color: rgba(255,255,255,0.9); }
-			.burn-date { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+			.burn-date { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 		}
 
 		.burn-numbers {
@@ -401,13 +401,13 @@
 					&.token { color: #FCD34D; }
 				}
 
-				.burn-num-desc { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+				.burn-num-desc { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 			}
 
 			.burn-num-divider {
 				width: 1rpx;
 				height: 80rpx;
-				background: rgba(255,255,255,0.15);
+				background: rgba(0,0,0,0.10);
 			}
 		}
 
@@ -421,13 +421,13 @@
 				align-items: center;
 				justify-content: center;
 				gap: 6rpx;
-				background: rgba(255,255,255,0.08);
+				background: rgba(0,0,0,0.07);
 				border-radius: 12rpx;
 				padding: 10rpx 0;
 				margin: 0 4rpx;
 
 				.meta-icon { font-size: 22rpx; }
-				.meta-text { font-size: 20rpx; color: rgba(255,255,255,0.7); white-space: nowrap; }
+				.meta-text { font-size: 20rpx; color: rgba(0,0,0,0.70); white-space: nowrap; }
 			}
 		}
 	}
@@ -458,7 +458,7 @@
 		gap: 20rpx;
 		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
-		.mood-label { font-size: 26rpx; color: rgba(255,255,255,0.4); flex-shrink: 0; }
+		.mood-label { font-size: 26rpx; color: rgba(0,0,0,0.40); flex-shrink: 0; }
 
 		.mood-tags {
 			display: flex;
@@ -468,10 +468,10 @@
 			.mood-tag {
 				padding: 10rpx 20rpx;
 				border-radius: 30rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
-				background: rgba(255,255,255,0.05);
+				border: 1rpx solid rgba(0,0,0,0.08);
+				background: rgba(0,0,0,0.04);
 
-				.mood-text { font-size: 22rpx; color: rgba(255,255,255,0.4); white-space: nowrap; }
+				.mood-text { font-size: 22rpx; color: rgba(0,0,0,0.40); white-space: nowrap; }
 
 				&.mood-active .mood-text { font-weight: 600; }
 			}
@@ -495,11 +495,11 @@
 			align-items: center;
 			gap: 4rpx;
 
-			.stat-n { font-size: 34rpx; font-weight: 700; color: #F5F7FA; }
-			.stat-l { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+			.stat-n { font-size: 34rpx; font-weight: 700; color: #1A1A1A; }
+			.stat-l { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 		}
 
-		.stat-divider { width: 1rpx; height: 48rpx; background: rgba(255,255,255,0.07); }
+		.stat-divider { width: 1rpx; height: 48rpx; background: rgba(0,0,0,0.06); }
 	}
 
 	/* 评论区 */
@@ -514,10 +514,10 @@
 			display: block;
 			font-size: 28rpx;
 			font-weight: 700;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 24rpx;
 			padding-bottom: 16rpx;
-			border-bottom: 1rpx solid rgba(255,255,255,0.06);
+			border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		}
 
 		.comment-item {
@@ -547,7 +547,7 @@
 					flex-wrap: wrap;
 					margin-bottom: 8rpx;
 
-					.cmt-user { font-size: 26rpx; font-weight: 700; color: #F5F7FA; }
+					.cmt-user { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
 
 					.cmt-model-badge {
 						background: rgba(93,169,255,0.1);
@@ -557,7 +557,7 @@
 						.cmt-model-text { font-size: 20rpx; color: #5DA9FF; }
 					}
 
-					.cmt-time { font-size: 22rpx; color: rgba(255,255,255,0.4); margin-left: auto; }
+					.cmt-time { font-size: 22rpx; color: rgba(0,0,0,0.40); margin-left: auto; }
 				}
 
 				/* 评论者晒自己的消费 */
@@ -571,11 +571,11 @@
 					margin-bottom: 10rpx;
 
 					.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #FF5D5D; }
-					.cmt-burn-sep { font-size: 20rpx; color: rgba(255,255,255,0.2); }
+					.cmt-burn-sep { font-size: 20rpx; color: rgba(0,0,0,0.20); }
 					.cmt-burn-tokens { font-size: 22rpx; color: #FF7A1A; }
 				}
 
-				.cmt-text { font-size: 26rpx; color: rgba(255,255,255,0.65); line-height: 1.65; margin-bottom: 12rpx; }
+				.cmt-text { font-size: 26rpx; color: rgba(0,0,0,0.60); line-height: 1.65; margin-bottom: 12rpx; }
 
 				.cmt-actions {
 					display: flex;
@@ -587,11 +587,11 @@
 						align-items: center;
 						gap: 6rpx;
 
-						.cmt-like-ico { font-size: 24rpx; color: rgba(255,255,255,0.25); &.liked { color: #FF5D5D; } }
-						.cmt-like-n { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+						.cmt-like-ico { font-size: 24rpx; color: rgba(0,0,0,0.25); &.liked { color: #FF5D5D; } }
+						.cmt-like-n { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 					}
 
-					.cmt-reply-btn { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+					.cmt-reply-btn { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 				}
 			}
 		}
@@ -610,8 +610,8 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		background: rgba(20,25,34,0.96);
-		border-top: 1rpx solid rgba(255,255,255,0.06);
+		background: rgba(255,255,255,0.96);
+		border-top: 1rpx solid rgba(0,0,0,0.05);
 		backdrop-filter: blur(12px);
 		padding: 16rpx 20rpx 0;
 		display: flex;
@@ -620,11 +620,11 @@
 
 		.comment-input {
 			flex: 1;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 40rpx;
 			padding: 16rpx 24rpx;
 
-			.input-ph { font-size: 24rpx; color: rgba(255,255,255,0.35); }
+			.input-ph { font-size: 24rpx; color: rgba(0,0,0,0.35); }
 		}
 
 		.bottom-acts {
@@ -638,17 +638,17 @@
 				gap: 6rpx;
 				padding: 10rpx 12rpx;
 
-				.bact-ico { font-size: 32rpx; color: rgba(255,255,255,0.4); &.liked { color: #FF5D5D; } }
-				.bact-n { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.bact-ico { font-size: 32rpx; color: rgba(0,0,0,0.40); &.liked { color: #FF5D5D; } }
+				.bact-n { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.resonate-bact {
-				background: rgba(255,255,255,0.06);
+				background: rgba(0,0,0,0.05);
 				border-radius: 30rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
+				border: 1rpx solid rgba(0,0,0,0.08);
 				padding: 10rpx 16rpx;
 
-				.bact-resonate-text { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+				.bact-resonate-text { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 
 				&.resonated {
 					background: rgba(239, 68, 68, 0.06);

@@ -3,7 +3,10 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationStyle": "custom",
+				"navigationBarTitleText": "烧不起",
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F5F3EF",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -11,8 +14,8 @@
 			"path": "pages/community/index",
 			"style": {
 				"navigationBarTitleText": "趋势",
-				"navigationBarBackgroundColor": "#0B0D12",
-				"navigationBarTextStyle": "white",
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -20,16 +23,16 @@
 			"path": "pages/publish/index",
 			"style": {
 				"navigationBarTitleText": "发布",
-				"navigationBarBackgroundColor": "#0B0D12",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/skill/index",
 			"style": {
 				"navigationBarTitleText": "Skill",
-				"navigationBarBackgroundColor": "#0B0D12",
-				"navigationBarTextStyle": "white",
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -44,8 +47,8 @@
 			"path": "pages/detail/post",
 			"style": {
 				"navigationBarTitleText": "",
-				"navigationBarBackgroundColor": "#0B0D12",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black"
 			}
 		},
 		{
@@ -64,8 +67,8 @@
 			"path": "pages/search/index",
 			"style": {
 				"navigationBarTitleText": "搜索",
-				"navigationBarBackgroundColor": "#0B0D12",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#F5F3EF",
+				"navigationBarTextStyle": "black"
 			}
 		}
 	],
@@ -78,22 +81,22 @@
 		}
 	},
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
+		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "烧不起",
-		"navigationBarBackgroundColor": "#0B0D12",
-		"backgroundColor": "#0B0D12",
+		"navigationBarBackgroundColor": "#F5F3EF",
+		"backgroundColor": "#F5F3EF",
 		"app-plus": {
-			"background": "#0B0D12",
+			"background": "#F5F3EF",
 			"scrollIndicator": "none",
 			"bounce": "none"
 		}
 	},
 	"tabBar": {
 		"custom": true,
-		"color": "rgba(255,255,255,0.45)",
+		"color": "rgba(0,0,0,0.4)",
 		"selectedColor": "#FF7A1A",
-		"borderStyle": "black",
-		"backgroundColor": "#141922",
+		"borderStyle": "white",
+		"backgroundColor": "#FFFFFF",
 		"list": [
 			{
 				"pagePath": "pages/index/index",

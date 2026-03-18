@@ -16,7 +16,7 @@
 			<view class="pwa-prompt__content">
 				<view class="pwa-prompt__close" @tap="dismissInstall">✕</view>
 				<view class="pwa-prompt__icon-wrap">
-					<text class="pwa-prompt__app-icon">少不起</text>
+					<text class="pwa-prompt__app-icon">烧不起</text>
 				</view>
 				<text class="pwa-prompt__title">添加到主屏幕</text>
 				<text class="pwa-prompt__desc">安装后可离线使用，体验更流畅</text>
@@ -42,7 +42,7 @@
 			<view class="pwa-prompt__content pwa-prompt__content--row">
 				<text class="pwa-prompt__icon">安装</text>
 				<view class="pwa-prompt__text">
-					<text class="pwa-prompt__title">安装少不起</text>
+					<text class="pwa-prompt__title">安装烧不起</text>
 					<text class="pwa-prompt__desc">添加到主屏幕，后续可像 App 一样直接打开</text>
 				</view>
 				<view class="pwa-prompt__actions pwa-prompt__actions--row">
@@ -329,7 +329,7 @@ const manualGuide = computed<InstallGuide>(() => {
 			steps: [
 				'点击地址栏右侧的安装图标',
 				'如果没有图标，打开浏览器菜单',
-				'选择“安装少不起”或“Install app”'
+				'选择“安装烧不起”或“Install app”'
 			]
 		}
 	}

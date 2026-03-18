@@ -196,7 +196,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 顶部 Hero */
@@ -258,11 +258,11 @@
 				.follow-text { font-size: 26rpx; color: #fff; font-weight: 600; }
 
 				&.following {
-					background: rgba(255,255,255,0.08);
+					background: rgba(0,0,0,0.07);
 					box-shadow: none;
-					border: 1rpx solid rgba(255,255,255,0.15);
+					border: 1rpx solid rgba(0,0,0,0.10);
 
-					.follow-text { color: rgba(255,255,255,0.5); }
+					.follow-text { color: rgba(0,0,0,0.50); }
 				}
 			}
 		}
@@ -271,11 +271,11 @@
 	/* 用户信息 */
 	.user-info {
 		padding: 4rpx 28rpx 20rpx;
-		background: #141922;
-		border-bottom: 1rpx solid rgba(255,255,255,0.07);
+		background: #FFFFFF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.06);
 
-		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 10rpx; }
-		.user-bio { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 14rpx; }
+		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 10rpx; }
+		.user-bio { display: block; font-size: 24rpx; color: rgba(0,0,0,0.50); line-height: 1.6; margin-bottom: 14rpx; }
 
 		.user-tags {
 			display: flex;
@@ -284,8 +284,8 @@
 
 			.user-tag {
 				font-size: 18rpx;
-				color: rgba(255,255,255,0.45);
-				background: rgba(255,255,255,0.07);
+				color: rgba(0,0,0,0.40);
+				background: rgba(0,0,0,0.06);
 				padding: 5rpx 16rpx;
 				border-radius: 8rpx;
 
@@ -298,8 +298,8 @@
 	.stats-row {
 		display: flex;
 		align-items: center;
-		background: #141922;
-		border-bottom: 1rpx solid rgba(255,255,255,0.07);
+		background: #FFFFFF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.06);
 		padding: 20rpx 0;
 		margin-bottom: 0;
 
@@ -310,24 +310,24 @@
 			align-items: center;
 			gap: 4rpx;
 
-			.stat-n { font-size: 30rpx; font-weight: 800; color: #F5F7FA; }
+			.stat-n { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
 			.stat-n.orange { color: #FF7A1A; }
 			.stat-n.green { color: #4CD964; }
-			.stat-l { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+			.stat-l { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 		}
 
 		.stat-div {
 			width: 1rpx;
 			height: 40rpx;
-			background: rgba(255,255,255,0.08);
+			background: rgba(0,0,0,0.07);
 		}
 	}
 
 	/* 内容 Tab */
 	.content-tabs {
 		display: flex;
-		background: #141922;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		background: #FFFFFF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
 		.ct-tab {
@@ -337,7 +337,7 @@
 			justify-content: center;
 			position: relative;
 
-			.ct-tab-text { font-size: 26rpx; color: rgba(255,255,255,0.4); font-weight: 500; }
+			.ct-tab-text { font-size: 26rpx; color: rgba(0,0,0,0.40); font-weight: 500; }
 
 			&.active {
 				.ct-tab-text { color: #FF7A1A; font-weight: 700; }
@@ -361,7 +361,7 @@
 	.content-scroll {
 		flex: 1;
 		overflow: hidden;
-		background: #0B0D12;
+		background: #F5F3EF;
 
 		.scroll-bottom { height: 40rpx; }
 	}
@@ -374,12 +374,12 @@
 		gap: 16rpx;
 
 		.skill-card {
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.08);
+			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
 
-			&:active { background: #1A2030; }
+			&:active { background: #F0EDE8; }
 
 			.sc-head {
 				display: flex;
@@ -389,20 +389,20 @@
 
 				.sc-scene {
 					font-size: 18rpx;
-					color: rgba(255,255,255,0.4);
-					background: rgba(255,255,255,0.07);
+					color: rgba(0,0,0,0.40);
+					background: rgba(0,0,0,0.06);
 					padding: 4rpx 12rpx;
 					border-radius: 6rpx;
 				}
 
-				.sc-time { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+				.sc-time { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 			}
 
 			.sc-title {
 				display: block;
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #F5F7FA;
+				color: #1A1A1A;
 				margin-bottom: 14rpx;
 			}
 
@@ -415,7 +415,7 @@
 				.orange { color: #FF7A1A; }
 				.sc-rate { font-size: 22rpx; font-weight: 600; }
 				.green { color: #4CD964; }
-				.sc-copies { font-size: 22rpx; color: rgba(255,255,255,0.4); }
+				.sc-copies { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.sc-copy-btn {
@@ -441,9 +441,9 @@
 		gap: 16rpx;
 
 		.fb-card {
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.08);
+			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
 
 			.fb-head {
@@ -452,7 +452,7 @@
 				justify-content: space-between;
 				margin-bottom: 12rpx;
 
-				.fb-skill { font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.7); flex: 1; }
+				.fb-skill { font-size: 24rpx; font-weight: 600; color: rgba(0,0,0,0.70); flex: 1; }
 
 				.fb-status {
 					font-size: 20rpx;
@@ -472,12 +472,12 @@
 				gap: 16rpx;
 				margin-bottom: 12rpx;
 
-				.fb-model { font-size: 20rpx; color: rgba(255,255,255,0.4); }
+				.fb-model { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.fb-token { font-size: 22rpx; font-weight: 600; }
 				.orange { color: #FF7A1A; }
 			}
 
-			.fb-comment { font-size: 24rpx; color: rgba(255,255,255,0.65); line-height: 1.6; }
+			.fb-comment { font-size: 24rpx; color: rgba(0,0,0,0.60); line-height: 1.6; }
 		}
 	}
 </style>

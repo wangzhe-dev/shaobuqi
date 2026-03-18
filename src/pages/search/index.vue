@@ -251,7 +251,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 搜索栏 */
@@ -260,17 +260,17 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 24rpx;
-		background: #0B0D12;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		background: #F5F3EF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
 		.search-input-wrap {
 			flex: 1;
 			display: flex;
 			align-items: center;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 20rpx;
-			border: 1rpx solid rgba(255,255,255,0.1);
+			border: 1rpx solid rgba(0,0,0,0.08);
 			padding: 16rpx 20rpx;
 			gap: 12rpx;
 
@@ -282,7 +282,7 @@
 			.search-input {
 				flex: 1;
 				font-size: 28rpx;
-				color: #F5F7FA;
+				color: #1A1A1A;
 				height: 40rpx;
 				line-height: 40rpx;
 			}
@@ -290,7 +290,7 @@
 			.clear-btn {
 				.clear-icon {
 					font-size: 24rpx;
-					color: rgba(255,255,255,0.4);
+					color: rgba(0,0,0,0.40);
 				}
 			}
 		}
@@ -318,7 +318,7 @@
 				.section-title {
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #F5F7FA;
+					color: #1A1A1A;
 				}
 
 				.section-icon {
@@ -330,7 +330,7 @@
 
 					.clear-history-text {
 						font-size: 24rpx;
-						color: rgba(255,255,255,0.4);
+						color: rgba(0,0,0,0.40);
 					}
 				}
 			}
@@ -346,7 +346,7 @@
 				align-items: center;
 				gap: 16rpx;
 				padding: 18rpx 0;
-				border-bottom: 1rpx solid rgba(255,255,255,0.06);
+				border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 				.hot-rank {
 					width: 40rpx;
@@ -358,7 +358,7 @@
 
 				.hot-text {
 					font-size: 28rpx;
-					color: #F5F7FA;
+					color: #1A1A1A;
 				}
 
 				&:not(.hot-top) .hot-rank {
@@ -380,10 +380,10 @@
 				display: flex;
 				align-items: center;
 				gap: 8rpx;
-				background: #141922;
+				background: #FFFFFF;
 				border-radius: 40rpx;
 				padding: 12rpx 20rpx;
-				border: 1rpx solid rgba(255,255,255,0.08);
+				border: 1rpx solid rgba(0,0,0,0.07);
 
 				.recent-icon {
 					font-size: 22rpx;
@@ -391,7 +391,7 @@
 
 				.recent-text {
 					font-size: 24rpx;
-					color: rgba(255,255,255,0.5);
+					color: rgba(0,0,0,0.50);
 				}
 			}
 		}
@@ -424,9 +424,9 @@
 
 		.result-tabs {
 			display: flex;
-			background: #141922;
+			background: #FFFFFF;
 			padding: 0 20rpx;
-			border-bottom: 1rpx solid rgba(255,255,255,0.06);
+			border-bottom: 1rpx solid rgba(0,0,0,0.05);
 			flex-shrink: 0;
 
 			.rtab {
@@ -435,11 +435,11 @@
 
 				.rtab-text {
 					font-size: 28rpx;
-					color: rgba(255,255,255,0.4);
+					color: rgba(0,0,0,0.40);
 				}
 
 				&.active .rtab-text {
-					color: #F5F7FA;
+					color: #1A1A1A;
 					font-weight: 700;
 				}
 
@@ -473,15 +473,15 @@
 	.result-section-title {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: rgba(255,255,255,0.4);
+		color: rgba(0,0,0,0.40);
 		padding: 8rpx 0 12rpx;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		margin-bottom: 12rpx;
 	}
 
 	/* 帖子结果卡片 */
 	.result-post-card {
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 16rpx;
 		padding: 20rpx;
 		margin-bottom: 12rpx;
@@ -500,12 +500,12 @@
 				.rp-title {
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #F5F7FA;
+					color: #1A1A1A;
 				}
 
 				.rp-content {
 					font-size: 24rpx;
-					color: rgba(255,255,255,0.5);
+					color: rgba(0,0,0,0.50);
 					line-height: 1.6;
 				}
 
@@ -532,17 +532,17 @@
 
 					.rp-author {
 						font-size: 22rpx;
-						color: rgba(255,255,255,0.4);
+						color: rgba(0,0,0,0.40);
 					}
 
 					.rp-sep {
 						font-size: 22rpx;
-						color: rgba(255,255,255,0.2);
+						color: rgba(0,0,0,0.20);
 					}
 
 					.rp-likes {
 						font-size: 22rpx;
-						color: rgba(255,255,255,0.4);
+						color: rgba(0,0,0,0.40);
 					}
 				}
 			}
@@ -558,7 +558,7 @@
 
 	/* Skill 结果卡片 */
 	.result-skill-card {
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 16rpx;
 		padding: 20rpx;
 		margin-bottom: 12rpx;
@@ -591,12 +591,12 @@
 			.rsk-title {
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #F5F7FA;
+				color: #1A1A1A;
 			}
 
 			.rsk-desc {
 				font-size: 22rpx;
-				color: rgba(255,255,255,0.4);
+				color: rgba(0,0,0,0.40);
 			}
 
 			.rsk-tags {

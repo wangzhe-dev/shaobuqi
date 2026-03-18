@@ -39,8 +39,8 @@ export default defineConfig({
 				injectRegister: 'auto',
 				manifestFilename: `manifest-${pwaAssetVersion}.webmanifest`,
 				manifest: {
-					name: '少不起',
-					short_name: '少不起',
+					name: '烧不起',
+					short_name: '烧不起',
 					description: '工具 · 社区 · Skill 技能展示平台',
 					theme_color: '#5B5BD6',
 					background_color: '#F7F8FA',

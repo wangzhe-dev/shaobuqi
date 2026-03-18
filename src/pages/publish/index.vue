@@ -364,11 +364,16 @@
 			</view>
 		</view>
 
-		<tab-bar v-if="!activeMode" current="/pages/publish/index" />
 	</view>
 </template>
 
 <script setup lang="ts">
+	import { getCurrentInstance } from 'vue'
+
+	const instance = getCurrentInstance()
+	onShow(() => {
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
+	})
 	const activeMode = ref<'skill' | 'record' | null>(null)
 	const skillStep = ref(1)
 	const tagInput = ref('')
@@ -489,7 +494,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 入口视图 */
@@ -501,8 +506,8 @@
 		.entry-header {
 			padding: 48rpx 0 32rpx;
 
-			.entry-title { display: block; font-size: 44rpx; font-weight: 900; color: #F5F7FA; margin-bottom: 10rpx; }
-			.entry-subtitle { display: block; font-size: 26rpx; color: rgba(255,255,255,0.45); }
+			.entry-title { display: block; font-size: 44rpx; font-weight: 900; color: #1A1A1A; margin-bottom: 10rpx; }
+			.entry-subtitle { display: block; font-size: 26rpx; color: rgba(0,0,0,0.40); }
 		}
 
 		.entry-cards {
@@ -514,15 +519,15 @@
 	}
 
 	.entry-card {
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
 		display: flex;
 		align-items: flex-start;
 		gap: 20rpx;
 
-		&:active { background: #1A2030; }
+		&:active { background: #F0EDE8; }
 
 		&.entry-card-skill { border-color: rgba(255,122,26,0.2); }
 		&.entry-card-record { border-color: rgba(93,169,255,0.2); }
@@ -549,8 +554,8 @@
 		.ec-body {
 			flex: 1;
 
-			.ec-title { display: block; font-size: 30rpx; font-weight: 800; color: #F5F7FA; margin-bottom: 10rpx; }
-			.ec-desc { display: block; font-size: 24rpx; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 16rpx; }
+			.ec-title { display: block; font-size: 30rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 10rpx; }
+			.ec-desc { display: block; font-size: 24rpx; color: rgba(0,0,0,0.50); line-height: 1.6; margin-bottom: 16rpx; }
 
 			.ec-tags {
 				display: flex;
@@ -559,29 +564,29 @@
 
 				.ec-tag {
 					font-size: 18rpx;
-					color: rgba(255,255,255,0.4);
-					background: rgba(255,255,255,0.06);
+					color: rgba(0,0,0,0.40);
+					background: rgba(0,0,0,0.05);
 					padding: 4rpx 14rpx;
 					border-radius: 8rpx;
 				}
 			}
 		}
 
-		.ec-arrow { font-size: 32rpx; color: rgba(255,255,255,0.3); flex-shrink: 0; margin-top: 24rpx; }
+		.ec-arrow { font-size: 32rpx; color: rgba(0,0,0,0.30); flex-shrink: 0; margin-top: 24rpx; }
 	}
 
 	.draft-row {
 		display: flex;
 		align-items: center;
 		gap: 14rpx;
-		background: rgba(255,255,255,0.05);
+		background: rgba(0,0,0,0.04);
 		border-radius: 20rpx;
 		padding: 24rpx 28rpx;
 		margin-bottom: calc(160rpx + env(safe-area-inset-bottom));
 
 		.draft-icon { font-size: 32rpx; }
 		.draft-text { flex: 1; font-size: 26rpx; color: rgba(255,255,255,0.6); font-weight: 500; }
-		.draft-arrow { font-size: 28rpx; color: rgba(255,255,255,0.3); }
+		.draft-arrow { font-size: 28rpx; color: rgba(0,0,0,0.30); }
 	}
 
 	/* 表单视图 */
@@ -595,8 +600,8 @@
 	/* 步骤进度条 */
 	.step-progress {
 		padding: 20rpx 24rpx 16rpx;
-		background: #0B0D12;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		background: #F5F3EF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
 		.sp-header {
@@ -608,19 +613,19 @@
 			.sp-back {
 				width: 60rpx;
 				height: 60rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 18rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 
-				.sp-back-icon { font-size: 28rpx; color: #F5F7FA; }
+				.sp-back-icon { font-size: 28rpx; color: #1A1A1A; }
 			}
 
-			.sp-title { flex: 1; font-size: 30rpx; font-weight: 700; color: #F5F7FA; }
+			.sp-title { flex: 1; font-size: 30rpx; font-weight: 700; color: #1A1A1A; }
 
 			.sp-draft-btn {
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 100rpx;
 				padding: 10rpx 22rpx;
 
@@ -636,7 +641,7 @@
 			.sp-segment {
 				flex: 1;
 				height: 6rpx;
-				background: rgba(255,255,255,0.12);
+				background: rgba(0,0,0,0.09);
 				border-radius: 3rpx;
 				transition: background 0.3s;
 
@@ -645,7 +650,7 @@
 			}
 		}
 
-		.sp-hint { font-size: 22rpx; color: rgba(255,255,255,0.45); }
+		.sp-hint { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 	}
 
 	.form-scroll { flex: 1; overflow: hidden; }
@@ -657,14 +662,14 @@
 			display: block;
 			font-size: 30rpx;
 			font-weight: 700;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 8rpx;
 		}
 
 		.step-desc {
 			display: block;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.4);
+			color: rgba(0,0,0,0.40);
 			line-height: 1.5;
 			margin-bottom: 28rpx;
 		}
@@ -677,7 +682,7 @@
 			display: block;
 			font-size: 24rpx;
 			font-weight: 600;
-			color: rgba(255,255,255,0.65);
+			color: rgba(0,0,0,0.60);
 			margin-bottom: 14rpx;
 		}
 
@@ -688,18 +693,18 @@
 			margin-bottom: 14rpx;
 
 			.field-label { margin-bottom: 0; }
-			.field-count { font-size: 20rpx; color: rgba(255,255,255,0.35); }
+			.field-count { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 		}
 
 		.field-input {
 			width: 100%;
 			height: 80rpx;
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 16rpx;
-			border: 1rpx solid rgba(255,255,255,0.1);
+			border: 1rpx solid rgba(0,0,0,0.08);
 			padding: 0 20rpx;
 			font-size: 26rpx;
-			color: #F5F7FA;
+			color: #1A1A1A;
 
 			&:focus { border-color: rgba(255,122,26,0.4); }
 		}
@@ -707,12 +712,12 @@
 		.field-textarea {
 			width: 100%;
 			min-height: 160rpx;
-			background: #141922;
+			background: #FFFFFF;
 			border-radius: 16rpx;
-			border: 1rpx solid rgba(255,255,255,0.1);
+			border: 1rpx solid rgba(0,0,0,0.08);
 			padding: 20rpx;
 			font-size: 26rpx;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			line-height: 1.65;
 		}
 
@@ -731,9 +736,9 @@
 			.field-chip {
 				height: 64rpx;
 				padding: 0 24rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 16rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
+				border: 1rpx solid rgba(0,0,0,0.08);
 				display: flex;
 				align-items: center;
 				transition: all 0.2s;
@@ -787,15 +792,15 @@
 		align-items: center;
 		justify-content: space-between;
 
-		.tp-label { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+		.tp-label { font-size: 22rpx; color: rgba(0,0,0,0.50); }
 		.tp-val { font-size: 30rpx; font-weight: 800; color: #FF7A1A; }
 	}
 
 	/* 预览卡 */
 	.preview-card {
-		background: rgba(255,255,255,0.04);
+		background: rgba(0,0,0,0.03);
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 24rpx;
 		margin-bottom: 28rpx;
 
@@ -804,8 +809,8 @@
 		.prev-scene-tag {
 			display: inline-flex;
 			font-size: 20rpx;
-			color: rgba(255,255,255,0.5);
-			background: rgba(255,255,255,0.08);
+			color: rgba(0,0,0,0.50);
+			background: rgba(0,0,0,0.07);
 			padding: 5rpx 16rpx;
 			border-radius: 8rpx;
 		}
@@ -814,14 +819,14 @@
 			display: block;
 			font-size: 30rpx;
 			font-weight: 800;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 10rpx;
 		}
 
 		.prev-summary {
 			display: block;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.5);
+			color: rgba(0,0,0,0.50);
 			line-height: 1.6;
 			margin-bottom: 18rpx;
 		}
@@ -836,8 +841,8 @@
 				gap: 8rpx;
 
 				.pm-icon { font-size: 22rpx; }
-				.pm-label { font-size: 20rpx; color: rgba(255,255,255,0.4); }
-				.pm-val { font-size: 24rpx; font-weight: 600; color: rgba(255,255,255,0.7); }
+				.pm-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
+				.pm-val { font-size: 24rpx; font-weight: 600; color: rgba(0,0,0,0.70); }
 				.pm-val.orange { color: #FF7A1A; }
 			}
 		}
@@ -845,7 +850,7 @@
 
 	/* 发布校验清单 */
 	.publish-checklist {
-		background: rgba(255,255,255,0.04);
+		background: rgba(0,0,0,0.03);
 		border-radius: 20rpx;
 		padding: 24rpx;
 
@@ -862,7 +867,7 @@
 			align-items: center;
 			gap: 14rpx;
 			padding: 12rpx 0;
-			border-bottom: 1rpx solid rgba(255,255,255,0.05);
+			border-bottom: 1rpx solid rgba(0,0,0,0.04);
 
 			&:last-child { border-bottom: none; }
 
@@ -873,11 +878,11 @@
 				text-align: center;
 
 				&.pass { color: #4CD964; }
-				&.fail { color: rgba(255,255,255,0.2); }
+				&.fail { color: rgba(0,0,0,0.20); }
 			}
 
-			.pcl-label { font-size: 24rpx; color: rgba(255,255,255,0.7); }
-			.pcl-fail { color: rgba(255,255,255,0.35); }
+			.pcl-label { font-size: 24rpx; color: rgba(0,0,0,0.70); }
+			.pcl-fail { color: rgba(0,0,0,0.35); }
 		}
 	}
 
@@ -890,15 +895,15 @@
 		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
 		background: rgba(11,13,18,0.95);
 		backdrop-filter: blur(20px);
-		border-top: 1rpx solid rgba(255,255,255,0.06);
+		border-top: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
 		.step-prev-btn {
 			flex: 1;
 			height: 88rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 24rpx;
-			border: 1rpx solid rgba(255,255,255,0.12);
+			border: 1rpx solid rgba(0,0,0,0.09);
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -919,10 +924,10 @@
 			.step-next-text, .step-publish-text { font-size: 28rpx; color: #fff; font-weight: 700; }
 
 			&.disabled {
-				background: rgba(255,255,255,0.1);
+				background: rgba(0,0,0,0.08);
 				box-shadow: none;
 
-				.step-next-text, .step-publish-text { color: rgba(255,255,255,0.35); }
+				.step-next-text, .step-publish-text { color: rgba(0,0,0,0.35); }
 			}
 		}
 	}

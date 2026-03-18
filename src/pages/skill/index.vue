@@ -159,11 +159,16 @@
 			</view>
 		</view>
 
-		<tab-bar current="/pages/skill/index" />
 	</view>
 </template>
 
 <script setup lang="ts">
+	import { getCurrentInstance } from 'vue'
+
+	const instance = getCurrentInstance()
+	onShow(() => {
+		uni.getTabBar(instance?.proxy)?.setData({ selected: 3 })
+	})
 	const showFilter = ref(false)
 	const activeSort = ref('recommend')
 	const filterScene = ref('全部')
@@ -276,7 +281,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #0B0D12;
+		background: #F5F3EF;
 	}
 
 	/* 顶部 */
@@ -285,37 +290,37 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 24rpx 12rpx;
-		background: #0B0D12;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		background: #F5F3EF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 		.search-wrap {
 			flex: 1;
 			height: 72rpx;
-			background: rgba(255,255,255,0.07);
+			background: rgba(0,0,0,0.06);
 			border-radius: 36rpx;
-			border: 1rpx solid rgba(255,255,255,0.1);
+			border: 1rpx solid rgba(0,0,0,0.08);
 			display: flex;
 			align-items: center;
 			gap: 10rpx;
 			padding: 0 24rpx;
 
 			.search-icon { font-size: 28rpx; }
-			.search-ph { font-size: 24rpx; color: rgba(255,255,255,0.3); }
+			.search-ph { font-size: 24rpx; color: rgba(0,0,0,0.30); }
 		}
 
 		.top-actions {
 			.action-btn {
 				height: 72rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 20rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
+				border: 1rpx solid rgba(0,0,0,0.08);
 				display: flex;
 				align-items: center;
 				gap: 6rpx;
 				padding: 0 22rpx;
 
-				.action-icon { font-size: 26rpx; color: rgba(255,255,255,0.5); }
-				.action-text { font-size: 24rpx; color: rgba(255,255,255,0.7); font-weight: 500; }
+				.action-icon { font-size: 26rpx; color: rgba(0,0,0,0.50); }
+				.action-text { font-size: 24rpx; color: rgba(0,0,0,0.70); font-weight: 500; }
 			}
 		}
 	}
@@ -323,8 +328,8 @@
 	/* 排序 Tab */
 	.sort-tabs {
 		flex-shrink: 0;
-		background: #0B0D12;
-		border-bottom: 1rpx solid rgba(255,255,255,0.06);
+		background: #F5F3EF;
+		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 
 		.sort-tab-row {
 			display: flex;
@@ -338,7 +343,7 @@
 			position: relative;
 			flex-shrink: 0;
 
-			.sort-tab-text { font-size: 24rpx; color: rgba(255,255,255,0.4); font-weight: 500; }
+			.sort-tab-text { font-size: 24rpx; color: rgba(0,0,0,0.40); font-weight: 500; }
 
 			&.active {
 				.sort-tab-text { color: #FF7A1A; font-weight: 700; }
@@ -368,12 +373,12 @@
 	}
 
 	.skill-card {
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255,255,255,0.08);
+		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
 
-		&:active { background: #1A2030; }
+		&:active { background: #F0EDE8; }
 
 		.sc-badge-row {
 			display: flex;
@@ -398,8 +403,8 @@
 			.sc-scene-tag {
 				margin-left: auto;
 				font-size: 20rpx;
-				color: rgba(255,255,255,0.4);
-				background: rgba(255,255,255,0.07);
+				color: rgba(0,0,0,0.40);
+				background: rgba(0,0,0,0.06);
 				padding: 4rpx 14rpx;
 				border-radius: 8rpx;
 			}
@@ -409,7 +414,7 @@
 			display: block;
 			font-size: 30rpx;
 			font-weight: 800;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 12rpx;
 			line-height: 1.35;
 		}
@@ -420,7 +425,7 @@
 			-webkit-line-clamp: 2;
 			overflow: hidden;
 			font-size: 24rpx;
-			color: rgba(255,255,255,0.5);
+			color: rgba(0,0,0,0.50);
 			line-height: 1.65;
 			margin-bottom: 18rpx;
 		}
@@ -431,11 +436,11 @@
 			margin-bottom: 20rpx;
 
 			.sc-tag {
-				background: rgba(255,255,255,0.06);
+				background: rgba(0,0,0,0.05);
 				padding: 6rpx 16rpx;
 				border-radius: 8rpx;
 
-				.sc-tag-text { font-size: 20rpx; color: rgba(255,255,255,0.5); }
+				.sc-tag-text { font-size: 20rpx; color: rgba(0,0,0,0.50); }
 			}
 		}
 
@@ -443,7 +448,7 @@
 			display: flex;
 			align-items: center;
 			gap: 24rpx;
-			background: rgba(255,255,255,0.04);
+			background: rgba(0,0,0,0.03);
 			border-radius: 16rpx;
 			padding: 16rpx 20rpx;
 			margin-bottom: 20rpx;
@@ -455,7 +460,7 @@
 
 				.sc-token-icon { font-size: 22rpx; color: #FF7A1A; }
 				.sc-token-val { font-size: 26rpx; font-weight: 800; color: #FF7A1A; }
-				.sc-token-unit { font-size: 18rpx; color: rgba(255,255,255,0.4); }
+				.sc-token-unit { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.sc-model-badge {
@@ -474,7 +479,7 @@
 				gap: 4rpx;
 
 				.sc-rate-val { font-size: 26rpx; font-weight: 700; color: #4CD964; }
-				.sc-rate-label { font-size: 18rpx; color: rgba(255,255,255,0.4); }
+				.sc-rate-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 			}
 		}
 
@@ -513,8 +518,8 @@
 					align-items: center;
 					gap: 8rpx;
 
-					.sc-count-item { font-size: 20rpx; color: rgba(255,255,255,0.4); }
-					.sc-count-sep { font-size: 20rpx; color: rgba(255,255,255,0.2); }
+					.sc-count-item { font-size: 20rpx; color: rgba(0,0,0,0.40); }
+					.sc-count-sep { font-size: 20rpx; color: rgba(0,0,0,0.20); }
 				}
 			}
 
@@ -548,9 +553,9 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: #141922;
+		background: #FFFFFF;
 		border-radius: 40rpx 40rpx 0 0;
-		border-top: 1rpx solid rgba(255,255,255,0.1);
+		border-top: 1rpx solid rgba(0,0,0,0.08);
 		z-index: 101;
 		padding: 24rpx 28rpx calc(32rpx + env(safe-area-inset-bottom));
 
@@ -566,14 +571,14 @@
 			display: block;
 			font-size: 30rpx;
 			font-weight: 700;
-			color: #F5F7FA;
+			color: #1A1A1A;
 			margin-bottom: 20rpx;
 		}
 
 		.bs-section {
 			display: block;
 			font-size: 22rpx;
-			color: rgba(255,255,255,0.45);
+			color: rgba(0,0,0,0.40);
 			margin-bottom: 14rpx;
 			margin-top: 24rpx;
 		}
@@ -586,9 +591,9 @@
 			.bs-chip {
 				height: 60rpx;
 				padding: 0 24rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 16rpx;
-				border: 1rpx solid rgba(255,255,255,0.1);
+				border: 1rpx solid rgba(0,0,0,0.08);
 				display: flex;
 				align-items: center;
 
@@ -611,9 +616,9 @@
 			.bs-reset {
 				flex: 1;
 				height: 88rpx;
-				background: rgba(255,255,255,0.07);
+				background: rgba(0,0,0,0.06);
 				border-radius: 24rpx;
-				border: 1rpx solid rgba(255,255,255,0.12);
+				border: 1rpx solid rgba(0,0,0,0.09);
 				display: flex;
 				align-items: center;
 				justify-content: center;
