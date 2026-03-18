@@ -284,9 +284,12 @@
 	.author-section {
 		display: flex;
 		align-items: center;
-		gap: 14rpx;
+		gap: 16rpx;
 		padding: 24rpx 28rpx;
-		background: #fff;
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		margin: 16rpx 24rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
 		.av {
 			width: 80rpx;
@@ -347,10 +350,25 @@
 
 	/* 核心数据 Hero */
 	.burn-hero {
-		margin: 16rpx 24rpx;
-		background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
-		border-radius: 24rpx;
+		margin: 0 24rpx 16rpx;
+		background: var(--brand-gradient);
+		border-radius: 28rpx;
 		padding: 28rpx 28rpx 24rpx;
+		position: relative;
+		overflow: hidden;
+
+		&::before {
+			content: '';
+			position: absolute;
+			top: -40rpx;
+			right: -40rpx;
+			width: 250rpx;
+			height: 250rpx;
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 50%;
+			filter: blur(40rpx);
+			pointer-events: none;
+		}
 
 		.burn-label-row {
 			display: flex;
@@ -416,25 +434,29 @@
 
 	/* 正文 */
 	.content-section {
-		background: #fff;
-		padding: 24rpx 28rpx;
-		margin-bottom: 16rpx;
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		padding: 32rpx 28rpx;
+		margin: 0 24rpx 16rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
 		.content-text {
-			font-size: 28rpx;
-			color: #374151;
+			font-size: 30rpx;
+			color: var(--text-color);
 			line-height: 1.8;
 		}
 	}
 
 	/* 心情评价 */
 	.mood-section {
-		background: #fff;
-		padding: 20rpx 28rpx;
-		margin-bottom: 16rpx;
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		padding: 24rpx 28rpx;
+		margin: 0 24rpx 16rpx;
 		display: flex;
 		align-items: center;
-		gap: 16rpx;
+		gap: 20rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
 		.mood-label { font-size: 26rpx; color: #9CA3AF; flex-shrink: 0; }
 
@@ -460,9 +482,11 @@
 	.stat-row {
 		display: flex;
 		align-items: center;
-		background: #fff;
-		padding: 20rpx 0;
-		margin-bottom: 16rpx;
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		padding: 24rpx 0;
+		margin: 0 24rpx 16rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
 		.stat-item {
 			flex: 1;
@@ -480,8 +504,11 @@
 
 	/* 评论区 */
 	.comments-section {
-		background: #fff;
-		padding: 24rpx 28rpx;
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		padding: 32rpx 28rpx;
+		margin: 0 24rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
 
 		.comments-title {
 			display: block;

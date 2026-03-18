@@ -298,7 +298,7 @@
 				transition: all 0.2s;
 
 				&.cat-icon-active {
-					background: linear-gradient(135deg, #5B5BD6 0%, #8B5CF6 100%);
+					background: var(--brand-gradient);
 				}
 
 				.cat-icon {
@@ -308,11 +308,11 @@
 
 			.cat-label {
 				font-size: 22rpx;
-				color: #9CA3AF;
+				color: var(--text-secondary);
 
 				&.cat-label-active {
-					color: #5B5BD6;
-					font-weight: 600;
+					color: var(--brand-color);
+					font-weight: 700;
 				}
 			}
 		}
@@ -398,11 +398,11 @@
 
 	/* Skill 卡片 */
 	.skill-card {
-		background: #fff;
-		border-radius: 24rpx;
+		background: var(--card-bg);
+		border-radius: 28rpx;
 		padding: 24rpx;
-		box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.06);
-		border: 1rpx solid transparent;
+		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.03);
+		border: 1rpx solid var(--border-color);
 
 		&:active {
 			border-color: #DDD6FE;
@@ -445,13 +445,13 @@
 
 				.skill-title {
 					font-size: 30rpx;
-					font-weight: 700;
-					color: #1A1A2E;
+					font-weight: 800;
+					color: var(--text-color);
 				}
 
 				.skill-desc {
 					font-size: 24rpx;
-					color: #6B7280;
+					color: var(--text-secondary);
 					line-height: 1.6;
 				}
 
@@ -527,16 +527,17 @@
 				.use-btn {
 					flex: 1;
 					height: 68rpx;
-					background: #5B5BD6;
+					background: var(--brand-gradient);
 					border-radius: 34rpx;
 					display: flex;
 					align-items: center;
 					justify-content: center;
+					box-shadow: 0 4rpx 12rpx rgba(91, 91, 214, 0.2);
 
 					.use-text {
 						font-size: 26rpx;
 						color: #fff;
-						font-weight: 600;
+						font-weight: 700;
 					}
 				}
 			}

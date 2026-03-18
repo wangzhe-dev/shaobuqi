@@ -145,11 +145,13 @@
 		min-height: 118rpx;
 		padding: 14rpx 16rpx;
 		border-radius: 36rpx;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(250, 244, 239, 0.94) 100%);
-		border: 1rpx solid rgba(255, 255, 255, 0.72);
+		background: rgba(255, 255, 255, 0.85);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1rpx solid rgba(255, 255, 255, 0.6);
 		box-shadow:
-			0 12rpx 36rpx rgba(44, 34, 24, 0.12),
-			0 4rpx 12rpx rgba(255, 106, 61, 0.08),
+			0 12rpx 36rpx rgba(0, 0, 0, 0.08),
+			0 4rpx 12rpx rgba(91, 91, 214, 0.1),
 			inset 0 1rpx 0 rgba(255, 255, 255, 0.88);
 		overflow: visible;
 		-webkit-backface-visibility: hidden;
@@ -214,10 +216,10 @@
 	}
 
 	.tab-item.active .tab-hitbox {
-		background: linear-gradient(180deg, rgba(255, 122, 69, 0.16) 0%, rgba(255, 122, 69, 0.04) 100%);
+		background: linear-gradient(180deg, rgba(91, 91, 214, 0.12) 0%, rgba(91, 91, 214, 0.04) 100%);
 		box-shadow:
 			inset 0 1rpx 0 rgba(255, 255, 255, 0.74),
-			0 8rpx 18rpx rgba(255, 122, 69, 0.08);
+			0 8rpx 18rpx rgba(91, 91, 214, 0.08);
 	}
 
 	.tab-item.active .tab-hitbox::after {
@@ -229,8 +231,8 @@
 		width: 12rpx;
 		height: 12rpx;
 		border-radius: 999rpx;
-		background: #ff6a3d;
-		box-shadow: 0 0 0 8rpx rgba(255, 106, 61, 0.12);
+		background: var(--brand-color);
+		box-shadow: 0 0 0 8rpx rgba(91, 91, 214, 0.12);
 	}
 
 	.tab-item-hover .tab-hitbox {
@@ -295,10 +297,10 @@
 		align-items: center;
 		justify-content: center;
 		gap: 12rpx;
-		background: linear-gradient(135deg, #ff8551 0%, #ff6a3d 48%, #ef4d2f 100%);
+		background: var(--burn-gradient);
 		box-shadow:
-			0 14rpx 28rpx rgba(239, 77, 47, 0.24),
-			0 4rpx 12rpx rgba(76, 42, 30, 0.12),
+			0 14rpx 28rpx rgba(255, 90, 95, 0.3),
+			0 4rpx 12rpx rgba(224, 36, 36, 0.15),
 			inset 0 1rpx 0 rgba(255, 255, 255, 0.36);
 		transform: translateY(-10rpx);
 		transition:

@@ -398,8 +398,8 @@
 			flex-direction: column;
 			align-items: flex-end;
 
-			.total-label { font-size: 20rpx; color: #9CA3AF; }
-			.total-val { font-size: 28rpx; font-weight: 800; color: #EF4444; }
+			.total-label { font-size: 20rpx; color: var(--text-secondary); }
+			.total-val { font-size: 32rpx; font-weight: 900; color: var(--burn-color); }
 		}
 	}
 
@@ -438,16 +438,17 @@
 
 	/* 奖台区域 */
 	.podium-section {
-		background: linear-gradient(180deg, #1E1B4B 0%, #F7F8FA 100%);
-		padding: 24rpx 24rpx 0;
+		background: linear-gradient(180deg, #1A1A2E 0%, #3B1F6B 50%, var(--bg-color) 100%);
+		padding: 32rpx 24rpx 0;
 
 		.podium-title {
 			display: block;
-			font-size: 26rpx;
-			font-weight: 700;
-			color: rgba(255,255,255,0.9);
-			margin-bottom: 24rpx;
+			font-size: 28rpx;
+			font-weight: 800;
+			color: rgba(255,255,255,0.95);
+			margin-bottom: 32rpx;
 			text-align: center;
+			letter-spacing: 2rpx;
 		}
 	}
 
@@ -488,12 +489,13 @@
 			.podium-name { font-size: 22rpx; color: rgba(255,255,255,0.85); font-weight: 600; }
 
 			.podium-cost {
-				font-weight: 800;
+				font-weight: 900;
 				letter-spacing: -1rpx;
+				text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.5);
 
-				&.p1-cost { font-size: 34rpx; color: #FBBF24; }
-				&.p2-cost { font-size: 28rpx; color: #E5E7EB; }
-				&.p3-cost { font-size: 26rpx; color: #CD7C54; }
+				&.p1-cost { font-size: 38rpx; color: #FBBF24; }
+				&.p2-cost { font-size: 30rpx; color: #E5E7EB; }
+				&.p3-cost { font-size: 28rpx; color: #CD7C54; }
 			}
 
 			.podium-block {
@@ -517,9 +519,12 @@
 
 	/* 排行榜列表 */
 	.rank-list {
-		background: #fff;
-		margin: 0 0 16rpx;
+		background: var(--card-bg);
+		margin: 0 24rpx 16rpx;
 		padding: 0 20rpx;
+		border-radius: 24rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
+		border: 1rpx solid var(--border-color);
 
 		.rank-row {
 			display: flex;
@@ -637,10 +642,11 @@
 
 	/* Burn 卡片 */
 	.burn-card {
-		background: #fff;
-		border-radius: 20rpx;
-		padding: 20rpx;
-		box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+		background: var(--card-bg);
+		border-radius: 28rpx;
+		padding: 28rpx;
+		box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.03);
+		border: 1rpx solid var(--border-color);
 
 		.bc-head {
 			display: flex;
@@ -707,20 +713,20 @@
 				align-items: center;
 				gap: 4rpx;
 
-				.bc-data-label { font-size: 21rpx; color: #9CA3AF; }
+				.bc-data-label { font-size: 22rpx; color: #9CA3AF; font-weight: 500; }
 			}
 
-			.bc-cost { font-size: 38rpx; font-weight: 800; color: #EF4444; letter-spacing: -1rpx; }
-			.bc-tokens { font-size: 26rpx; font-weight: 700; color: #F59E0B; }
+			.bc-cost { font-size: 40rpx; font-weight: 900; color: var(--burn-color); letter-spacing: -1rpx; }
+			.bc-tokens { font-size: 28rpx; font-weight: 800; color: #F59E0B; }
 
-			.bc-data-div { width: 1rpx; height: 56rpx; background: #FFD6C8; }
+			.bc-data-div { width: 1rpx; height: 64rpx; background: #FFD6C8; }
 		}
 
 		.bc-content {
-			font-size: 26rpx;
-			color: #374151;
-			line-height: 1.65;
-			margin-bottom: 14rpx;
+			font-size: 28rpx;
+			color: var(--text-color);
+			line-height: 1.6;
+			margin-bottom: 20rpx;
 			display: block;
 		}
 

@@ -281,11 +281,12 @@
 	}
 
 	.content-pad {
-		background: #fff;
-		border-radius: 28rpx 28rpx 0 0;
-		margin-top: -24rpx;
+		background: var(--bg-color);
+		border-radius: 40rpx 40rpx 0 0;
+		margin-top: -40rpx;
 		padding: 32rpx 28rpx;
 		position: relative;
+		box-shadow: 0 -8rpx 32rpx rgba(0,0,0,0.06);
 	}
 
 	/* 标题 */
@@ -357,9 +358,11 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 20rpx;
-		background: #F9FAFB;
-		border-radius: 16rpx;
+		background: var(--card-bg);
+		border-radius: 24rpx;
 		margin-bottom: 28rpx;
+		box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.03);
+		border: 1rpx solid var(--border-color);
 
 		.av {
 			width: 80rpx;
@@ -461,20 +464,22 @@
 
 	/* 适用场景 */
 	.scenes-section {
-		margin-bottom: 28rpx;
+		margin-bottom: 32rpx;
 
 		.scenes-grid {
 			display: flex;
 			flex-wrap: wrap;
-			gap: 12rpx;
+			gap: 16rpx;
 
 			.scene-card {
 				display: flex;
 				align-items: center;
 				gap: 8rpx;
-				background: rgba(16, 185, 129, 0.08);
-				border-radius: 12rpx;
+				background: var(--card-bg);
+				border-radius: 16rpx;
 				padding: 12rpx 20rpx;
+				box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.08);
+				border: 1rpx solid rgba(16, 185, 129, 0.15);
 
 				.scene-check {
 					font-size: 22rpx;
@@ -520,13 +525,18 @@
 			.step-item {
 				display: flex;
 				align-items: center;
-				gap: 16rpx;
+				gap: 20rpx;
+				background: var(--card-bg);
+				padding: 16rpx 24rpx;
+				border-radius: 20rpx;
+				box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.02);
+				border: 1rpx solid var(--border-color);
 
 				.step-num {
 					width: 44rpx;
 					height: 44rpx;
 					border-radius: 50%;
-					background: #5B5BD6;
+					background: var(--brand-gradient);
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -639,12 +649,18 @@
 
 		.cta-use-btn {
 			flex: 1;
-			height: 80rpx;
-			background: linear-gradient(135deg, #5B5BD6 0%, #8B5CF6 100%);
-			border-radius: 40rpx;
+			height: 84rpx;
+			background: var(--burn-gradient);
+			border-radius: 42rpx;
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			box-shadow: 0 8rpx 24rpx rgba(255, 90, 95, 0.3);
+			transition: transform 0.2s;
+
+			&:active {
+				transform: scale(0.96);
+			}
 
 			.cta-use-text {
 				font-size: 28rpx;
