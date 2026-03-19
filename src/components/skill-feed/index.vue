@@ -47,72 +47,87 @@
       :refresher-triggered="refreshing"
       lower-threshold="100"
       @touchstart="onListGestureStart"
+      @touchmove="onListGestureMove"
       @touchend="onListGestureEnd"
       @touchcancel="onGestureCancel"
       @refresherrefresh="onRefresh"
       @scrolltolower="onLoadMore"
     >
-      <view class="skill-list">
+      <view class="carousel-stage">
         <view
-          v-for="skill in displaySkills" :key="skill.id"
-          class="skill-card"
-          @touchstart="onListGestureStart"
-          @touchend="onListGestureEnd"
-          @touchcancel="onGestureCancel"
-          @tap="toSkill(skill.id)"
+          v-for="panel in carouselPanels"
+          :key="panel.key"
+          class="carousel-pane"
+          :class="`pane-${panel.role}`"
+          :style="getPaneStyle(panel.role)"
         >
-          <!-- 标签行 -->
-          <view class="sc-badge-row">
-            <view v-if="skill.featured"     class="sc-badge badge-gold">精选</view>
-            <view v-if="skill.isNew"        class="sc-badge badge-blue">新发布</view>
-            <view v-if="skill.lowCost"      class="sc-badge badge-green">低成本</view>
-            <view v-if="skill.highConsume"  class="sc-badge badge-red">高消耗</view>
-            <view v-if="skill.stable"       class="sc-badge badge-purple">输出稳定</view>
-            <view class="sc-scene-tag">{{ skill.scene }}</view>
+          <view class="skill-list">
+            <view
+              v-for="skill in panel.skills" :key="`${panel.key}-${skill.id}`"
+              class="skill-card"
+              @touchstart="onListGestureStart"
+              @touchmove="onListGestureMove"
+              @touchend="onListGestureEnd"
+              @touchcancel="onGestureCancel"
+              @tap="toSkill(skill.id)"
+            >
+              <!-- 标签行 -->
+              <view class="sc-badge-row">
+                <view v-if="skill.featured"     class="sc-badge badge-gold">精选</view>
+                <view v-if="skill.isNew"        class="sc-badge badge-blue">新发布</view>
+                <view v-if="skill.lowCost"      class="sc-badge badge-green">低成本</view>
+                <view v-if="skill.highConsume"  class="sc-badge badge-red">高消耗</view>
+                <view v-if="skill.stable"       class="sc-badge badge-purple">输出稳定</view>
+                <view class="sc-scene-tag">{{ skill.scene }}</view>
+              </view>
+
+              <text class="sc-title">{{ skill.title }}</text>
+              <text class="sc-summary">{{ skill.summary }}</text>
+
+              <!-- 图片九宫格 -->
+              <view
+                v-if="skill.images && skill.images.length"
+                class="sc-imgs"
+                :class="`gi-${skill.images.length >= 3 ? (skill.images.length > 3 ? 'many' : 3) : skill.images.length}`"
+              >
+                <image
+                  v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
+                  :src="src" class="sc-img" mode="aspectFill"
+                  @tap.stop="previewImg(skill.images, i)"
+                />
+              </view>
+
+              <view class="sc-tags">
+                <view v-for="tag in skill.tags.slice(0, 3)" :key="tag" class="sc-tag">
+                  <text class="sc-tag-t">{{ tag }}</text>
+                </view>
+              </view>
+
+              <!-- 作者 + 复制 -->
+              <view class="sc-foot">
+                <view class="sc-author-wrap">
+                  <view class="sc-av" :style="{ background: skill.authorColor }">
+                    <text class="sc-av-t">{{ skill.author[0] }}</text>
+                  </view>
+                  <view class="sc-author-info">
+                    <text class="sc-author-n">{{ skill.author }}</text>
+                    <text class="sc-counts">{{ skill.copyCount }} 复制 · {{ skill.favoriteCount }} 收藏</text>
+                  </view>
+                </view>
+                <view class="sc-copy-btn" @tap.stop="copySkill(skill)">
+                  <text class="sc-copy-t">复制 Skill</text>
+                </view>
+              </view>
+            </view>
           </view>
 
-          <text class="sc-title">{{ skill.title }}</text>
-          <text class="sc-summary">{{ skill.summary }}</text>
-
-          <!-- 图片九宫格 -->
           <view
-            v-if="skill.images && skill.images.length"
-            class="sc-imgs"
-            :class="`gi-${skill.images.length >= 3 ? (skill.images.length > 3 ? 'many' : 3) : skill.images.length}`"
+            v-if="panel.skills.length === 0 && (panel.role === 'preview' || (!loading && !refreshing))"
+            class="empty-state"
           >
-            <image
-              v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
-              :src="src" class="sc-img" mode="aspectFill"
-              @tap.stop="previewImg(skill.images, i)"
-            />
-          </view>
-
-          <view class="sc-tags">
-            <view v-for="tag in skill.tags.slice(0, 3)" :key="tag" class="sc-tag">
-              <text class="sc-tag-t">{{ tag }}</text>
-            </view>
-          </view>
-
-          <!-- 作者 + 复制 -->
-          <view class="sc-foot">
-            <view class="sc-author-wrap">
-              <view class="sc-av" :style="{ background: skill.authorColor }">
-                <text class="sc-av-t">{{ skill.author[0] }}</text>
-              </view>
-              <view class="sc-author-info">
-                <text class="sc-author-n">{{ skill.author }}</text>
-                <text class="sc-counts">{{ skill.copyCount }} 复制 · {{ skill.favoriteCount }} 收藏</text>
-              </view>
-            </view>
-            <view class="sc-copy-btn" @tap.stop="copySkill(skill)">
-              <text class="sc-copy-t">复制 Skill</text>
-            </view>
+            <text class="empty-state-t">没有符合当前筛选条件的 Skill</text>
           </view>
         </view>
-      </view>
-
-      <view v-if="displaySkills.length === 0 && !loading && !refreshing" class="empty-state">
-        <text class="empty-state-t">没有符合当前筛选条件的 Skill</text>
       </view>
 
       <!-- 底部加载状态 -->
@@ -197,23 +212,89 @@ const activeSortTabId = computed(() => `sort-tab-${activeSort.value}`)
 
 const SWIPE_X_THRESHOLD = 56
 const SWIPE_Y_LIMIT = 80
+const SWIPE_LOCK_DISTANCE = 10
 const SWIPE_MAX_DURATION = 1200
+const EDGE_DAMPING = 0.28
+const CAROUSEL_SWITCH_DURATION = 280
+const CAROUSEL_REBOUND_DURATION = 220
+const CAROUSEL_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 let touchStartX = 0
 let touchStartY = 0
 let touchStartAt = 0
 let touching = false
 let gestureSource: 'sort' | 'list' | '' = ''
+let gestureLock: 'horizontal' | 'vertical' | '' = ''
+let carouselTimer: ReturnType<typeof setTimeout> | null = null
 
-const stepSort = (delta: number) => {
-  const current = sortTabs.findIndex(tab => tab.key === activeSort.value)
-  if (current < 0) return false
-  const next = Math.min(sortTabs.length - 1, Math.max(0, current + delta))
-  if (next !== current) {
-    activeSort.value = sortTabs[next].key
-    return true
-  }
-  return false
+const screenWidth = ref(Math.max(uni.getSystemInfoSync().windowWidth || 375, 1))
+const dragOffsetX = ref(0)
+const swipeDirection = ref<'left' | 'right' | ''>('')
+const previewSortKey = ref('')
+const isCarouselAnimating = ref(false)
+
+const getSortIndex = (key: string) => sortTabs.findIndex(tab => tab.key === key)
+
+const getAdjacentSortKey = (key: string, delta: number) => {
+  const current = getSortIndex(key)
+  if (current < 0) return ''
+  const next = current + delta
+  if (next < 0 || next >= sortTabs.length) return ''
+  return sortTabs[next].key
+}
+
+const clearCarouselTimer = () => {
+  if (carouselTimer) clearTimeout(carouselTimer)
+  carouselTimer = null
+}
+
+const resetGesture = () => {
+  gestureSource = ''
+  gestureLock = ''
+  touchStartX = 0
+  touchStartY = 0
+  touchStartAt = 0
+}
+
+const resetCarouselState = () => {
+  dragOffsetX.value = 0
+  swipeDirection.value = ''
+  previewSortKey.value = ''
+  isCarouselAnimating.value = false
+  clearCarouselTimer()
+}
+
+const startReboundAnimation = () => {
+  if (dragOffsetX.value === 0 && !previewSortKey.value) return
+  clearCarouselTimer()
+  isCarouselAnimating.value = true
+  dragOffsetX.value = 0
+  carouselTimer = setTimeout(() => {
+    resetCarouselState()
+  }, CAROUSEL_REBOUND_DURATION)
+}
+
+const startSwitchAnimation = (nextSortKey: string, dir: 'left' | 'right') => {
+  if (!nextSortKey) return
+  clearCarouselTimer()
+  swipeDirection.value = dir
+  previewSortKey.value = nextSortKey
+  isCarouselAnimating.value = true
+  dragOffsetX.value = dir === 'left' ? -screenWidth.value : screenWidth.value
+  carouselTimer = setTimeout(() => {
+    activeSort.value = nextSortKey
+    resetCarouselState()
+  }, CAROUSEL_SWITCH_DURATION)
+}
+
+const updateDragState = (dx: number) => {
+  const clampedDx = Math.max(-screenWidth.value, Math.min(screenWidth.value, dx))
+  const dir: 'left' | 'right' = dx < 0 ? 'left' : 'right'
+  const nextSortKey = getAdjacentSortKey(activeSort.value, dir === 'left' ? 1 : -1)
+  swipeDirection.value = dir
+  previewSortKey.value = nextSortKey
+  isCarouselAnimating.value = false
+  dragOffsetX.value = nextSortKey ? clampedDx : clampedDx * EDGE_DAMPING
 }
 
 const onGestureStart = (e: any, source: 'sort' | 'list') => {
@@ -222,9 +303,33 @@ const onGestureStart = (e: any, source: 'sort' | 'list') => {
   if (!touch) return
   touching = true
   gestureSource = source
+  gestureLock = ''
   touchStartX = touch.clientX
   touchStartY = touch.clientY
   touchStartAt = Date.now()
+  clearCarouselTimer()
+  isCarouselAnimating.value = false
+}
+
+const onGestureMove = (e: any) => {
+  if (!touching || showFilter.value) return
+  const touch = e.touches?.[0]
+  if (!touch) return
+
+  const dx = touch.clientX - touchStartX
+  const dy = touch.clientY - touchStartY
+  const absX = Math.abs(dx)
+  const absY = Math.abs(dy)
+
+  if (!gestureLock) {
+    if (absX < SWIPE_LOCK_DISTANCE && absY < SWIPE_LOCK_DISTANCE) return
+    gestureLock = absX > absY ? 'horizontal' : 'vertical'
+  }
+
+  if (gestureLock !== 'horizontal' || absY > SWIPE_Y_LIMIT) return
+
+  if (typeof e.preventDefault === 'function') e.preventDefault()
+  updateDragState(dx)
 }
 
 const onGestureEnd = (e: any, source: 'sort' | 'list') => {
@@ -232,33 +337,45 @@ const onGestureEnd = (e: any, source: 'sort' | 'list') => {
   touching = false
 
   const touch = e.changedTouches?.[0]
-  if (!touch || showFilter.value) return
+  if (!touch || showFilter.value) {
+    startReboundAnimation()
+    resetGesture()
+    return
+  }
 
   const dx = touch.clientX - touchStartX
   const dy = touch.clientY - touchStartY
   const dt = Date.now() - touchStartAt
-  const isHorizontal = Math.abs(dx) > Math.abs(dy)
+  const isHorizontal = gestureLock === 'horizontal' || Math.abs(dx) > Math.abs(dy)
   const passedThreshold = Math.abs(dx) > SWIPE_X_THRESHOLD && Math.abs(dy) < SWIPE_Y_LIMIT
   const inDuration = dt <= SWIPE_MAX_DURATION
 
-  if (!isHorizontal || !passedThreshold || !inDuration) return
+  if (isHorizontal && passedThreshold && inDuration) {
+    const dir: 'left' | 'right' = dx < 0 ? 'left' : 'right'
+    const nextSortKey = getAdjacentSortKey(activeSort.value, dir === 'left' ? 1 : -1)
+    if (nextSortKey) {
+      startSwitchAnimation(nextSortKey, dir)
+    } else {
+      startReboundAnimation()
+      if (source || gestureSource) emit('edgeSwipe', dir)
+    }
+  } else {
+    startReboundAnimation()
+  }
 
-  const dir: 'left' | 'right' = dx < 0 ? 'left' : 'right'
-  const changed = stepSort(dir === 'left' ? 1 : -1)
-  if (!changed && (source || gestureSource)) emit('edgeSwipe', dir)
+  resetGesture()
 }
 
 const onGestureCancel = () => {
   touching = false
-  gestureSource = ''
-  touchStartX = 0
-  touchStartY = 0
-  touchStartAt = 0
+  startReboundAnimation()
+  resetGesture()
 }
 
 const onSortGestureStart = (e: any) => { onGestureStart(e, 'sort') }
 const onSortGestureEnd = (e: any) => { onGestureEnd(e, 'sort') }
 const onListGestureStart = (e: any) => { onGestureStart(e, 'list') }
+const onListGestureMove = (e: any) => { onGestureMove(e) }
 const onListGestureEnd = (e: any) => { onGestureEnd(e, 'list') }
 
 const filterScene = ref('全部')
@@ -269,7 +386,11 @@ const scenes      = ['全部', '写作', '编程', '自媒体', '办公', '运�
 const tokenRanges = ['全部', '< 1k', '1k~3k', '3k~8k', '> 8k']
 const rateRanges  = ['全部', '> 90%', '> 80%', '> 70%']
 
-const setSort    = (key: string) => { activeSort.value = key }
+const setSort = (key: string) => {
+  if (key === activeSort.value) return
+  resetCarouselState()
+  activeSort.value = key
+}
 const resetFilter = () => { filterScene.value = '全部'; filterToken.value = '全部'; filterRate.value = '全部' }
 
 const initialSkills = [
@@ -390,6 +511,7 @@ const injectPublishedSkill = () => {
 }
 
 const onRefresh = async () => {
+  resetCarouselState()
   refreshing.value = true
   await new Promise(r => setTimeout(r, 1200))
   skills.value = [...initialSkills]
@@ -494,22 +616,88 @@ const byHighRate = (a: any, b: any) => {
   return parseCount(b.copyCount) - parseCount(a.copyCount)
 }
 
-const sortSkillList = (list: any[]) => {
+const sortSkillList = (list: any[], sortKey: string = activeSort.value) => {
   const sorted = [...list]
-  if (activeSort.value === 'newest') return sorted.sort(byNewest)
-  if (activeSort.value === 'mostCopy') return sorted.sort(byMostCopy)
-  if (activeSort.value === 'lowestToken') return sorted.sort(byLowestToken)
-  if (activeSort.value === 'bestValue') return sorted.sort(byBestValue)
-  if (activeSort.value === 'highRate') return sorted.sort(byHighRate)
+  if (sortKey === 'newest') return sorted.sort(byNewest)
+  if (sortKey === 'mostCopy') return sorted.sort(byMostCopy)
+  if (sortKey === 'lowestToken') return sorted.sort(byLowestToken)
+  if (sortKey === 'bestValue') return sorted.sort(byBestValue)
+  if (sortKey === 'highRate') return sorted.sort(byHighRate)
   return sorted.sort(byRecommend)
 }
 
-const displaySkills = computed(() => {
-  const filtered = skills.value.filter((skill) => {
+const filteredSkills = computed(() => {
+  return skills.value.filter((skill) => {
     const sceneOk = filterScene.value === '全部' || skill.scene === filterScene.value
     return sceneOk && inTokenRange(skill) && inRateRange(skill)
   })
-  return sortSkillList(filtered)
+})
+
+const getDisplaySkillsBySort = (sortKey: string) => sortSkillList(filteredSkills.value, sortKey)
+const displaySkills = computed(() => getDisplaySkillsBySort(activeSort.value))
+const previewSkills = computed(() => previewSortKey.value ? getDisplaySkillsBySort(previewSortKey.value) : [])
+
+const carouselPanels = computed(() => {
+  const panels: Array<{ key: string; role: 'current' | 'preview'; skills: any[] }> = [
+    { key: `current-${activeSort.value}`, role: 'current', skills: displaySkills.value },
+  ]
+
+  if (previewSortKey.value) {
+    panels.push({
+      key: `preview-${previewSortKey.value}`,
+      role: 'preview',
+      skills: previewSkills.value,
+    })
+  }
+
+  return panels
+})
+
+const swipeProgress = computed(() => {
+  return Math.min(Math.abs(dragOffsetX.value) / Math.max(screenWidth.value, 1), 1)
+})
+
+const carouselTransition = computed(() => {
+  const duration = dragOffsetX.value === 0 ? CAROUSEL_REBOUND_DURATION : CAROUSEL_SWITCH_DURATION
+  return `transform ${duration}ms ${CAROUSEL_EASE}, opacity ${duration}ms ease`
+})
+
+const currentPaneStyle = computed(() => {
+  const scale = 1 - (swipeProgress.value * 0.06)
+  const opacity = 1 - (swipeProgress.value * 0.28)
+  return {
+    transform: `translate3d(${dragOffsetX.value}px, 0, 0) scale(${scale.toFixed(3)})`,
+    opacity: opacity.toFixed(3),
+    transition: isCarouselAnimating.value ? carouselTransition.value : 'none',
+  }
+})
+
+const previewPaneStyle = computed(() => {
+  if (!previewSortKey.value || !swipeDirection.value) {
+    return {
+      transform: `translate3d(${screenWidth.value}px, 0, 0) scale(0.96)`,
+      opacity: '0',
+      transition: 'none',
+    }
+  }
+
+  const baseX = swipeDirection.value === 'left' ? screenWidth.value : -screenWidth.value
+  const x = baseX + dragOffsetX.value
+  const scale = 0.94 + (swipeProgress.value * 0.06)
+  const opacity = Math.min(1, swipeProgress.value * 1.15)
+  return {
+    transform: `translate3d(${x}px, 0, 0) scale(${scale.toFixed(3)})`,
+    opacity: opacity.toFixed(3),
+    transition: isCarouselAnimating.value ? carouselTransition.value : 'none',
+  }
+})
+
+const getPaneStyle = (role: 'current' | 'preview') => {
+  return role === 'current' ? currentPaneStyle.value : previewPaneStyle.value
+}
+
+onUnmounted(() => {
+  clearCarouselTimer()
 })
 </script>
 
@@ -573,6 +761,27 @@ const displaySkills = computed(() => {
 /* ── 列表 ── */
 .list-outer { flex: 1; height: 0; display: flex; flex-direction: column; }
 .list-scroll { flex: 1; height: 0; overflow: hidden; }
+
+.carousel-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-pane {
+  will-change: transform, opacity;
+}
+
+.pane-current {
+  position: relative;
+  z-index: 1;
+}
+
+.pane-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
 
 .skill-list {
   padding: 20rpx 24rpx 0;
