@@ -59,8 +59,7 @@ html, body, #app {
 // PWA standalone 模式：返回实际状态栏高度，防止内容被遮挡
 .navbar,
 .profile-header,
-.profile-hero,
-.profile-card {
+.profile-hero {
 	// !important 覆盖 Vue :style 绑定的 paddingTop: 0px 内联样式
 	padding-top: constant(safe-area-inset-top) !important;
 	padding-top: env(safe-area-inset-top) !important;

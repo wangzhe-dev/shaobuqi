@@ -2,7 +2,7 @@
 	<scroll-view class="page" scroll-y :show-scrollbar="false">
 
 		<!-- ── Profile ── -->
-		<view class="profile-card" :style="{ paddingTop: statusBarHeight + 16 + 'px' }">
+		<view class="profile-card" :style="profileCardStyle">
 			<view class="pc-row">
 				<view class="avatar-wrap">
 					<view class="avatar"><text class="avatar-t">林</text></view>
@@ -118,6 +118,14 @@
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const profileCardStyle = computed(() => {
+		// #ifdef H5
+		return { '--profile-safe-top-base': '16px' }
+		// #endif
+		// #ifndef H5
+		return { paddingTop: `${statusBarHeight.value + 16}px` }
+		// #endif
+	})
 
 	const mySkills = ref([
 		{ id: 's1', title: '万能长文写作框架',   scene: '写作',   time: '2天前',
@@ -244,6 +252,13 @@
 		&:active { background: rgba(0, 0, 0, 0.08); }
 	}
 }
+
+/* #ifdef H5 */
+.profile-card {
+	padding-top: calc(var(--profile-safe-top-base, 16px) + constant(safe-area-inset-top));
+	padding-top: calc(var(--profile-safe-top-base, 16px) + env(safe-area-inset-top));
+}
+/* #endif */
 
 .stats-bar {
 	display: flex; align-items: center;
