@@ -5,11 +5,34 @@ import { execWrite, queryRows } from '../db'
 import { signAccessToken } from '../utils/jwt'
 import { sendError, sendSuccess } from '../utils/response'
 import { mapUser, type UserRow } from './shared'
+import { sendVerifyCode } from '../utils/mailer'
 
 const loginSchema = z.object({
   identifier: z.string().trim().min(1),
   password: z.string().min(6)
 })
+
+const sendCodeSchema = z.object({
+  email: z.string().trim().email({ error: '邮箱格式不正确' })
+})
+
+const registerSchema = z.object({
+  email: z.string().trim().email({ error: '邮箱格式不正确' }),
+  code: z.string().length(6, '验证码为6位'),
+  password: z.string().min(6, '密码至少6位'),
+  nickname: z.string().trim().min(1).max(20).optional()
+})
+
+// 内存验证码存储：email -> { code, expiresAt }
+const codeStore = new Map<string, { code: string; expiresAt: number }>()
+
+// 定期清理过期验证码
+setInterval(() => {
+  const now = Date.now()
+  for (const [email, entry] of codeStore) {
+    if (entry.expiresAt < now) codeStore.delete(email)
+  }
+}, 60_000)
 
 export const authRouter = Router()
 
@@ -70,4 +93,85 @@ authRouter.post('/login/password', async (req, res) => {
     token,
     user: mapUser(user)
   })
+})
+
+authRouter.post('/send-code', async (req, res) => {
+  const parsed = sendCodeSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, parsed.error.issues[0]?.message || '邮箱格式不正确', 400)
+    return
+  }
+
+  const { email } = parsed.data
+
+  // 60 秒内不重复发送
+  const existing = codeStore.get(email)
+  if (existing && existing.expiresAt - 4 * 60_000 > Date.now()) {
+    sendError(res, '发送过于频繁，请稍候再试', 429)
+    return
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  codeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000 })
+
+  try {
+    await sendVerifyCode(email, code)
+    sendSuccess(res, { message: '验证码已发送' })
+  } catch (err) {
+    codeStore.delete(email)
+    console.error('[send-code] 邮件发送失败:', err)
+    sendError(res, '邮件发送失败，请检查邮箱地址', 500)
+  }
+})
+
+authRouter.post('/register', async (req, res) => {
+  const parsed = registerSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, parsed.error.issues[0]?.message || '注册参数不合法', 400)
+    return
+  }
+
+  const { email, code, password, nickname } = parsed.data
+
+  // 校验验证码
+  const stored = codeStore.get(email)
+  if (!stored || stored.expiresAt < Date.now()) {
+    sendError(res, '验证码已过期，请重新获取', 400)
+    return
+  }
+  if (stored.code !== code) {
+    sendError(res, '验证码错误', 400)
+    return
+  }
+  codeStore.delete(email)
+
+  const existing = await queryRows<UserRow[]>(
+    'SELECT id FROM users WHERE email = ? LIMIT 1',
+    [email]
+  )
+  if (existing.length > 0) {
+    sendError(res, '该邮箱已注册', 400)
+    return
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10)
+  const defaultNickname = nickname || email.split('@')[0]
+
+  const result = await execWrite(
+    `INSERT INTO users (email, password_hash, nickname, status, published_skill_count, total_copy_count, created_at, updated_at)
+     VALUES (?, ?, ?, 1, 0, 0, NOW(), NOW())`,
+    [email, passwordHash, defaultNickname]
+  )
+
+  const users = await queryRows<UserRow[]>(
+    `SELECT id, mobile, email, password_hash, nickname, avatar_url, bio, display_color, status,
+            published_skill_count, total_copy_count, avg_success_rate, last_login_at, created_at, updated_at
+     FROM users WHERE id = ? LIMIT 1`,
+    [result.insertId]
+  )
+
+  const newUser = users[0]
+  const newToken = signAccessToken({ userId: newUser.id })
+
+  sendSuccess(res, { token: newToken, user: mapUser(newUser) })
 })

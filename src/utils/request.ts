@@ -9,7 +9,8 @@ const service = new Request()
 // 白名单（不附加 Authorization 头）
 const whiteList = [
 	'/auth/wxlogin',
-	'/auth/login/password'
+	'/auth/login/password',
+	'/auth/register'
 ]
 
 // 是否正在刷新的标记
