@@ -100,12 +100,18 @@
         </view>
       </view>
 
+      <!-- 空状态 -->
+      <view v-if="!loading && !refreshing && posts.length === 0" class="empty-state">
+        <text class="empty-txt">还没有人分享消耗记录</text>
+        <text class="empty-sub">快来第一个分享吧</text>
+      </view>
+
       <!-- 底部加载状态 -->
       <view class="load-footer">
         <view v-if="loading" class="load-ing">
           <text class="load-txt">加载中…</text>
         </view>
-        <view v-else-if="noMore" class="no-more">
+        <view v-else-if="noMore && posts.length > 0" class="no-more">
           <view class="no-more-line" />
           <text class="no-more-txt">没有更多了</text>
           <view class="no-more-line" />
@@ -138,6 +144,9 @@
 </template>
 
 <script setup lang="ts">
+import { getFeed } from '@/api/feed'
+import type { FeedItem } from '@/api/feed'
+
 const reactions = [
   { key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)',  borderColor: 'rgba(47,138,87,0.22)'  },
   { key: 'ok',       emoji: '🤔', text: '还行',  activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.09)',  borderColor: 'rgba(91,91,214,0.22)'  },
@@ -145,125 +154,142 @@ const reactions = [
   { key: 'addicted', emoji: '🔥', text: '上瘾了', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.09)',borderColor: 'rgba(255,122,69,0.22)' },
 ]
 
-const initialPosts = [
-  {
-    id: 'p1', author: '张代码', authorId: 'u1', authorColor: '#5B5BD6',
-    model: 'Claude Sonnet', time: '10分钟前',
-    content: '用 Claude 帮我把一个 3000 行的老项目重构成 TypeScript，顺便补了单测，效果超出预期。Cursor + Claude 的组合真的很香，就是 token 烧得有点猛 😅',
-    cost: '18.60', tokens: '28,400', likes: 142, comments: 37, meoo: 56,
-    liked: false, myMeoo: false, myReaction: '',
-    images: [
-      'https://picsum.photos/seed/code1/600/400',
-      'https://picsum.photos/seed/code2/600/400',
-      'https://picsum.photos/seed/code3/600/400',
-    ],
-  },
-  {
-    id: 'p2', author: '王建明', authorId: 'u3', authorColor: '#D6943A',
-    model: 'GPT-4o', time: '今天 11:08',
-    content: '写了一篇技术文档，反复让它改格式改措辞，改了12轮。最后发现直接把要求写清楚第一轮就出来了。这课交得值。',
-    cost: '56.20', tokens: '890,000', likes: 156, comments: 23, meoo: 89,
-    liked: false, myMeoo: false, myReaction: '',
-    images: [],
-  },
-  {
-    id: 'p3', author: '陈省钱', authorId: 'u4', authorColor: '#2F8A57',
-    model: 'Claude Haiku', time: '1小时前',
-    content: '分享一个省钱心得：把翻译任务切到 Haiku，准确率几乎一样，token 只花 1/5。用 Sonnet 翻译真的是在交智商税。',
-    cost: '0.40', tokens: '8,000', likes: 256, comments: 68, meoo: 203,
-    liked: false, myMeoo: false, myReaction: '',
-    images: ['https://picsum.photos/seed/save1/800/500'],
-  },
-  {
-    id: 'p4', author: '王爆款', authorId: 'u6', authorColor: '#C84634',
-    model: 'Claude Sonnet', time: '2小时前',
-    content: '今天测了一个 Agent 工作流：自动读取竞品信息 → 生成对比报告 → 转化为 PPT 大纲，跑了 3 次才稳定，前两次各种幻觉。但稳定之后真的可以一键跑，值得那些 token。',
-    cost: '56.20', tokens: '890,000', likes: 311, comments: 94, meoo: 189,
-    liked: false, myMeoo: false, myReaction: '',
-    images: [
-      'https://picsum.photos/seed/agent1/600/400',
-      'https://picsum.photos/seed/agent2/600/400',
-    ],
-  },
-]
-
-const morePosts: Record<number, any[]> = {
-  2: [
-    {
-      id: 'p5', author: '林产品', authorId: 'u7', authorColor: '#7C3AED',
-      model: 'Claude Opus', time: '昨天',
-      content: '用 Claude Opus 写了份完整的 PRD，结构清晰逻辑自洽，但是 token 花了快 200k。这钱花得有点心疼但是确实省了我一个下午。',
-      cost: '12.30', tokens: '198,000', likes: 89, comments: 14, meoo: 42,
-      liked: false, myMeoo: false, myReaction: '',
-      images: ['https://picsum.photos/seed/prd1/600/400'],
-    },
-    {
-      id: 'p6', author: '黄数据', authorId: 'u8', authorColor: '#0891B2',
-      model: 'GPT-4.1', time: '昨天 18:22',
-      content: '用 GPT 分析了一份 5000 行的用户行为数据，输出了竞品分析和增长建议，然后让它帮我做成了 Notion 页面，前后不到 20 分钟。',
-      cost: '8.80', tokens: '142,000', likes: 203, comments: 31, meoo: 76,
-      liked: false, myMeoo: false, myReaction: '',
-      images: [],
-    },
-    {
-      id: 'p7', author: '余前端', authorId: 'u9', authorColor: '#059669',
-      model: 'Claude Sonnet', time: '2天前',
-      content: '把 Figma 截图丢进去直接生成了可跑的 Vue 组件，只改了 10 行。这才是 AI 应该做的事情，不是帮我解释代码。',
-      cost: '3.20', tokens: '48,000', likes: 445, comments: 57, meoo: 188,
-      liked: false, myMeoo: false, myReaction: '',
-      images: [
-        'https://picsum.photos/seed/figma1/600/400',
-        'https://picsum.photos/seed/figma2/600/400',
-      ],
-    },
-  ],
-  3: [],
+// ── 数据格式化工具 ──
+const formatTime = (isoStr: string): string => {
+  const now = Date.now()
+  const ts = new Date(isoStr).getTime()
+  const diff = now - ts
+  if (diff < 60_000) return '刚刚'
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}分钟前`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}小时前`
+  if (diff < 172_800_000) return '昨天'
+  const d = new Date(isoStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-const posts = ref([...initialPosts])
+const formatCost = (amount: string | null, currency: string): string => {
+  if (!amount) return '0.00'
+  const n = parseFloat(amount)
+  if (isNaN(n)) return '0.00'
+  if (currency === 'CNY') return n.toFixed(2)
+  // 外币转显示（USD → CNY 估算，或直接显示美元符号）
+  return `$${n.toFixed(4)}`
+}
+
+const formatTokens = (total: number | null): string => {
+  if (!total) return '0'
+  if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`
+  if (total >= 1_000) return `${(total / 1_000).toFixed(1)}K`
+  return String(total)
+}
+
+// 默认头像色阶（当 displayColor 为 null 时）
+const FALLBACK_COLORS = ['#5B5BD6', '#7C3AED', '#0891B2', '#059669', '#D6943A', '#C84634']
+const fallbackColor = (userId: number) => FALLBACK_COLORS[userId % FALLBACK_COLORS.length]
+
+interface PostItem {
+  id: number
+  author: string
+  authorId: number
+  authorColor: string
+  model: string
+  time: string
+  content: string
+  images: string[]
+  cost: string
+  tokens: string
+  likes: number
+  comments: number
+  meoo: number
+  liked: boolean
+  myMeoo: boolean
+  myReaction: string
+}
+
+const mapApiPost = (item: FeedItem): PostItem => ({
+  id: item.id,
+  author: item.user.nickname,
+  authorId: item.user.id,
+  authorColor: item.user.displayColor || fallbackColor(item.user.id),
+  model: item.modelName,
+  time: formatTime(item.createdAt),
+  content: item.noteText,
+  images: item.images,
+  cost: formatCost(item.costAmount, item.currency),
+  tokens: formatTokens(item.totalTokens),
+  // 社交互动数暂无后端支持，本地初始化为 0
+  likes: 0,
+  comments: 0,
+  meoo: 0,
+  liked: false,
+  myMeoo: false,
+  myReaction: item.reaction || '',
+})
+
+// ── 状态 ──
+const posts = ref<PostItem[]>([])
 const refreshing = ref(false)
 const loading = ref(false)
 const noMore = ref(false)
-const page = ref(2)
+const page = ref(1)
+
+// ── 数据加载 ──
+const loadPage = async (pageNum: number) => {
+  const res = await getFeed({ page: pageNum, pageSize: 20 })
+  return res
+}
 
 const onRefresh = async () => {
   refreshing.value = true
-  await new Promise(r => setTimeout(r, 1200))
-  posts.value = initialPosts.map(p => ({ ...p, liked: false, myMeoo: false, myReaction: '' }))
-  page.value = 2
-  noMore.value = false
-  refreshing.value = false
+  try {
+    const res = await loadPage(1)
+    posts.value = res.list.map(mapApiPost)
+    page.value = 1
+    noMore.value = res.pagination.page >= res.pagination.totalPages
+  } catch (err) {
+    // 之前是静默失败，调试时难定位，这里保留列表并给出明确提示
+    console.error('[feed-post] refresh failed:', err)
+    uni.showToast({ title: '动态加载失败', icon: 'none' })
+  } finally {
+    refreshing.value = false
+  }
 }
 
 const onLoadMore = async () => {
   if (loading.value || noMore.value) return
   loading.value = true
-  await new Promise(r => setTimeout(r, 800))
-  const next = morePosts[page.value] ?? []
-  if (next.length === 0) {
-    noMore.value = true
-  } else {
-    posts.value.push(...next)
-    page.value++
+  try {
+    const nextPage = page.value + 1
+    const res = await loadPage(nextPage)
+    posts.value.push(...res.list.map(mapApiPost))
+    page.value = nextPage
+    noMore.value = nextPage >= res.pagination.totalPages
+  } catch (err) {
+    console.error('[feed-post] load more failed:', err)
+    uni.showToast({ title: '加载更多失败', icon: 'none' })
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
+// 首次加载
+onMounted(onRefresh)
+
 // ── 情绪反应 ──
-const rxnTarget = ref<any>(null)
-const showReactions = (item: any) => { rxnTarget.value = item }
+const rxnTarget = ref<PostItem | null>(null)
+const showReactions = (item: PostItem) => { rxnTarget.value = item }
 const pickReaction = (key: string) => {
   if (rxnTarget.value) rxnTarget.value.myReaction = rxnTarget.value.myReaction === key ? '' : key
   rxnTarget.value = null
 }
 
 // ── 互动 ──
-const toggleLike = (item: any) => { item.liked = !item.liked; item.likes += item.liked ? 1 : -1 }
-const toggleMeoo = (item: any) => { item.myMeoo = !item.myMeoo; item.meoo += item.myMeoo ? 1 : -1 }
+const toggleLike = (item: PostItem) => { item.liked = !item.liked; item.likes += item.liked ? 1 : -1 }
+const toggleMeoo = (item: PostItem) => { item.myMeoo = !item.myMeoo; item.meoo += item.myMeoo ? 1 : -1 }
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
-const sharePost  = (_item: any) => uni.showShareMenu({ withShareTicket: true })
+const sharePost  = (_item: PostItem) => uni.showShareMenu({ withShareTicket: true })
 
-const showMore = (item: any) => {
+const showMore = (item: PostItem) => {
   uni.showActionSheet({
     itemList: ['不感兴趣', '举报', '复制链接'],
     success: ({ tapIndex }) => {
@@ -280,8 +306,8 @@ const showMore = (item: any) => {
   })
 }
 
-const toPost   = (id: string) => uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
-const toAuthor = (id: string) => uni.navigateTo({ url: `/pages/author/index?id=${id}` })
+const toPost   = (id: number) => uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
+const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=${id}` })
 </script>
 
 <style lang="scss" scoped>
@@ -393,6 +419,18 @@ const toAuthor = (id: string) => uni.navigateTo({ url: `/pages/author/index?id=$
     display: flex; align-items: center; gap: 6rpx; padding: 10rpx 14rpx;
     .pc-act-n { font-size: 24rpx; color: #9CA3AF; }
   }
+}
+
+/* ── 空状态 ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+  gap: 16rpx;
+
+  .empty-txt { font-size: 30rpx; color: #6B7280; font-weight: 600; }
+  .empty-sub { font-size: 24rpx; color: #9CA3AF; }
 }
 
 /* ── 加载状态 ── */

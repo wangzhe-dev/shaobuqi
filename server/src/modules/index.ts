@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authRouter } from './auth'
 import { draftsRouter } from './drafts'
+import { feedRouter } from './feed'
 import { meRouter } from './me'
 import { skillsRouter } from './skills'
 import { statsRouter } from './stats'
@@ -12,3 +13,4 @@ apiRouter.use('/skills', skillsRouter)
 apiRouter.use('/me', meRouter)
 apiRouter.use('/stats', statsRouter)
 apiRouter.use('/drafts', draftsRouter)
+apiRouter.use('/feed', feedRouter)

@@ -1,8 +1,30 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
 import AutoImport from 'unplugin-auto-import/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { requestUrl, apiPrefix } from './src/config'
+
+const apiPrefix = 'h5api'
+
+const normalizeProxyTarget = (rawTarget: string): string => {
+	if (!rawTarget) return rawTarget
+
+	try {
+		const url = new URL(rawTarget)
+		if (url.pathname === '/' || url.pathname === '') {
+			url.pathname = `/${apiPrefix}`
+		}
+		return url.toString().replace(/\/$/, '')
+	} catch {
+		return rawTarget
+	}
+}
+
+const resolveProxyTarget = (mode: string): string => {
+	const env = loadEnv(mode, process.cwd(), '')
+	const envTarget = (env.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || '').trim()
+	const fallbackTarget = 'https://dev.xxx.com/stage-api'
+	return normalizeProxyTarget(envTarget || fallbackTarget)
+}
 
 const pwaAssetVersion = Date.now().toString()
 
@@ -17,7 +39,9 @@ const injectVersionedPwaIcons = () => ({
 	}
 })
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+	const proxyTarget = resolveProxyTarget(mode)
+	return {
 	plugins: [
 		uni(),
 		AutoImport({
@@ -151,10 +175,11 @@ export default defineConfig({
 		open: true,
 		proxy: {
 			[`/${apiPrefix}`]: {
-				target: requestUrl,
+				target: proxyTarget,
 				changeOrigin: true,
 				rewrite: (path : string) => path.replace(new RegExp(`^\/${apiPrefix}`), '')
 			}
 		}
 	}
+}
 })
