@@ -74,6 +74,19 @@
           <text class="sc-title">{{ skill.title }}</text>
           <text class="sc-summary">{{ skill.summary }}</text>
 
+          <!-- 图片九宫格 -->
+          <view
+            v-if="skill.images && skill.images.length"
+            class="sc-imgs"
+            :class="`gi-${skill.images.length >= 3 ? (skill.images.length > 3 ? 'many' : 3) : skill.images.length}`"
+          >
+            <image
+              v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
+              :src="src" class="sc-img" mode="aspectFill"
+              @tap.stop="previewImg(skill.images, i)"
+            />
+          </view>
+
           <view class="sc-tags">
             <view v-for="tag in skill.tags.slice(0, 3)" :key="tag" class="sc-tag">
               <text class="sc-tag-t">{{ tag }}</text>
@@ -285,6 +298,11 @@ const initialSkills = [
     successRate: '93%', copyCount: '8.3k', favoriteCount: '2.1k',
     author: '阿泽修图', authorColor: '#D6943A',
     featured: true, isNew: true, lowCost: false, highConsume: false, stable: true,
+    images: [
+      'https://picsum.photos/seed/ps1/600/400',
+      'https://picsum.photos/seed/ps2/600/400',
+      'https://picsum.photos/seed/ps3/600/400',
+    ],
   },
   {
     id: 's2', title: '前端 Bug 定位与修复助手',
@@ -312,6 +330,7 @@ const initialSkills = [
     successRate: '91%', copyCount: '5.9k', favoriteCount: '1.9k',
     author: '许稳稳', authorColor: '#D6943A',
     featured: true, isNew: false, lowCost: false, highConsume: false, stable: true,
+    images: ['https://picsum.photos/seed/ec1/800/500'],
   },
   {
     id: 's5', title: '短视频口播脚本生成器',
@@ -321,6 +340,10 @@ const initialSkills = [
     successRate: '89%', copyCount: '5.1k', favoriteCount: '1.6k',
     author: '王创作', authorColor: '#7B5B3C',
     featured: false, isNew: true, lowCost: false, highConsume: false, stable: false,
+    images: [
+      'https://picsum.photos/seed/vlog1/600/400',
+      'https://picsum.photos/seed/vlog2/600/400',
+    ],
   },
   {
     id: 's6', title: '英语口语陪练教练',
@@ -413,9 +436,10 @@ const onLoadMore = async () => {
   loading.value = false
 }
 
-const copySkill = (_skill: any) => uni.showToast({ title: '已复制 Skill', icon: 'success' })
-const toSkill   = (id: string)  => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
-const toSearch  = ()            => uni.navigateTo({ url: '/pages/search/index' })
+const copySkill  = (_skill: any) => uni.showToast({ title: '已复制 Skill', icon: 'success' })
+const toSkill    = (id: string)  => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+const toSearch   = ()            => uni.navigateTo({ url: '/pages/search/index' })
+const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
 
 const parseMetricNumber = (value: string) => {
   const raw = String(value).trim().toLowerCase()
@@ -613,6 +637,18 @@ const displaySkills = computed(() => {
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
     overflow: hidden; font-size: 24rpx; color: rgba(0,0,0,0.50);
     line-height: 1.65; margin-bottom: 18rpx;
+  }
+
+  .sc-imgs {
+    display: flex; flex-wrap: wrap; margin-bottom: 18rpx;
+    .sc-img { object-fit: cover; }
+    &.gi-1 .sc-img { width: 100%; height: 340rpx; border-radius: 16rpx; }
+    &.gi-2 { gap: 4rpx;
+      .sc-img { width: calc(50% - 2rpx); height: 220rpx; border-radius: 12rpx; }
+    }
+    &.gi-3, &.gi-many { gap: 4rpx;
+      .sc-img { width: calc(33.33% - 3rpx); height: 190rpx; border-radius: 10rpx; }
+    }
   }
 
   .sc-tags {
