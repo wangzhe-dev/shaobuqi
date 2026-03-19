@@ -144,8 +144,9 @@
 </template>
 
 <script setup lang="ts">
-import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost } from '@/api/feed'
-import type { FeedItem } from '@/api/feed'
+import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost, updateFeedReaction } from '@/api/feed'
+import type { FeedItem, FeedReaction } from '@/api/feed'
+import { useUserStore } from '@/stores'
 
 const reactions = [
   { key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)',  borderColor: 'rgba(47,138,87,0.22)'  },
@@ -204,6 +205,18 @@ interface PostItem {
   liked: boolean
   myMeoo: boolean
   myReaction: string
+}
+
+const userStore = useUserStore()
+
+const ensureLogin = () => {
+  if (userStore.token) return true
+
+  uni.showToast({ title: '请先登录', icon: 'none' })
+  setTimeout(() => {
+    uni.navigateTo({ url: '/pages/login/index' })
+  }, 300)
+  return false
 }
 
 const mapApiPost = (item: FeedItem): PostItem => ({
@@ -277,13 +290,33 @@ onMounted(onRefresh)
 // ── 情绪反应 ──
 const rxnTarget = ref<PostItem | null>(null)
 const showReactions = (item: PostItem) => { rxnTarget.value = item }
-const pickReaction = (key: string) => {
-  if (rxnTarget.value) rxnTarget.value.myReaction = rxnTarget.value.myReaction === key ? '' : key
+const pickReaction = async (key: string) => {
+  const target = rxnTarget.value
+  if (!target) return
+
+  if (!ensureLogin()) {
+    rxnTarget.value = null
+    return
+  }
+
+  const prevReaction = target.myReaction
+  const nextReaction = prevReaction === key ? '' : key
+  target.myReaction = nextReaction
   rxnTarget.value = null
+
+  try {
+    const result = await updateFeedReaction(target.id, (nextReaction || null) as FeedReaction | null)
+    target.myReaction = result.reaction || ''
+  } catch (err) {
+    console.error('[feed-post] update reaction failed:', err)
+    target.myReaction = prevReaction
+  }
 }
 
 // ── 互动 ──
 const toggleLike = async (item: PostItem) => {
+  if (!ensureLogin()) return
+
   const prevLiked = item.liked
   const prevLikes = item.likes
 
@@ -302,6 +335,8 @@ const toggleLike = async (item: PostItem) => {
 }
 
 const toggleMeoo = async (item: PostItem) => {
+  if (!ensureLogin()) return
+
   const prevMyMeoo = item.myMeoo
   const prevMeoo = item.meoo
 

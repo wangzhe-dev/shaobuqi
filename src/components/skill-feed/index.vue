@@ -397,114 +397,13 @@ const setSort = (key: string) => {
 }
 const resetFilter = () => { filterScene.value = '全部'; filterToken.value = '全部'; filterRate.value = '全部' }
 
-const initialSkills = [
-  {
-    id: 's1', title: 'PS 人像精修提示词（参数版）',
-    summary: '把照片问题转成可直接操作的 PS 步骤与参数区间，适合人像和电商主图。',
-    scene: '设计', tags: ['PS修图', '参数建议', '人像优化'],
-    avgToken: '1.9k', model: 'GPT-4.1', modelColor: '#2F8A57',
-    successRate: '93%', copyCount: '8.3k', favoriteCount: '2.1k',
-    author: '阿泽修图', authorColor: '#D6943A',
-    featured: true, isNew: true, lowCost: false, highConsume: false, stable: true,
-    images: [
-      'https://picsum.photos/seed/ps1/600/400',
-      'https://picsum.photos/seed/ps2/600/400',
-      'https://picsum.photos/seed/ps3/600/400',
-    ],
-  },
-  {
-    id: 's2', title: '前端 Bug 定位与修复助手',
-    summary: '先根因排序再给最小改动补丁，附带回归检查清单，适合线上快速救火。',
-    scene: '编程', tags: ['Bug定位', '最小改动', '回归测试'],
-    avgToken: '2.1k', model: 'Claude Sonnet', modelColor: '#C7A06A',
-    successRate: '90%', copyCount: '7.6k', favoriteCount: '2.0k',
-    author: '周知行', authorColor: '#9A6530',
-    featured: true, isNew: false, lowCost: false, highConsume: false, stable: true,
-  },
-  {
-    id: 's3', title: '会议纪要行动项提取器',
-    summary: '把会议原文拆成"决策+待办+负责人+截止日期"，方便团队直接执行。',
-    scene: '办公', tags: ['会议纪要', '行动项', '项目管理'],
-    avgToken: '1.1k', model: 'GPT-4o-mini', modelColor: '#2F8A57',
-    successRate: '93%', copyCount: '6.9k', favoriteCount: '1.8k',
-    author: '刘效率', authorColor: '#2F8A57',
-    featured: false, isNew: true, lowCost: true, highConsume: false, stable: true,
-  },
-  {
-    id: 's4', title: '电商主图卖点文案生成器',
-    summary: '生成高点击主图短文案和副标题，适合淘宝、拼多多、抖店场景。',
-    scene: '电商', tags: ['主图文案', '卖点提炼', '电商转化'],
-    avgToken: '1.5k', model: 'GPT-4.1', modelColor: '#2F8A57',
-    successRate: '91%', copyCount: '5.9k', favoriteCount: '1.9k',
-    author: '许稳稳', authorColor: '#D6943A',
-    featured: true, isNew: false, lowCost: false, highConsume: false, stable: true,
-    images: ['https://picsum.photos/seed/ec1/800/500'],
-  },
-  {
-    id: 's5', title: '短视频口播脚本生成器',
-    summary: '输出30~60秒口播稿，含开场钩子、中段观点和结尾互动引导。',
-    scene: '自媒体', tags: ['口播脚本', '短视频', '内容创作'],
-    avgToken: '1.8k', model: 'Claude Sonnet', modelColor: '#C7A06A',
-    successRate: '89%', copyCount: '5.1k', favoriteCount: '1.6k',
-    author: '王创作', authorColor: '#7B5B3C',
-    featured: false, isNew: true, lowCost: false, highConsume: false, stable: false,
-    images: [
-      'https://picsum.photos/seed/vlog1/600/400',
-      'https://picsum.photos/seed/vlog2/600/400',
-    ],
-  },
-  {
-    id: 's6', title: '英语口语陪练教练',
-    summary: '按场景陪练口语，先纠错再给更自然表达，适合面试、旅行和商务沟通。',
-    scene: '学习', tags: ['口语训练', '纠错改写', '英语学习'],
-    avgToken: '1.6k', model: 'GPT-4o', modelColor: '#2F8A57',
-    successRate: '88%', copyCount: '4.4k', favoriteCount: '1.3k',
-    author: '陈可', authorColor: '#2F8A57',
-    featured: false, isNew: false, lowCost: false, highConsume: false, stable: true,
-  },
-]
-
-const moreSkills: Record<number, any[]> = {
-  2: [
-    {
-      id: 's7', title: '竞品对比分析框架',
-      summary: '给定产品名称自动生成维度框架→填充数据→输出结论，思路清晰不跑偏。',
-      scene: '分析', tags: ['竞品分析', '框架输出', '策略报告'],
-      avgToken: '4.1k', model: 'Claude Opus', modelColor: '#7C3AED',
-      successRate: '85%', copyCount: '3.8k', favoriteCount: '1.1k',
-      author: '王爆款', authorColor: '#C84634',
-      featured: false, isNew: false, lowCost: false, highConsume: true, stable: false,
-    },
-    {
-      id: 's8', title: 'PR Review 助手',
-      summary: '按安全/性能/可读性三个维度逐文件输出评审意见，附修改建议代码片段。',
-      scene: '编程', tags: ['Code Review', '安全检查', '可读性'],
-      avgToken: '2.6k', model: 'Claude Sonnet', modelColor: '#C7A06A',
-      successRate: '91%', copyCount: '9.2k', favoriteCount: '2.8k',
-      author: '张代码', authorColor: '#5B5BD6',
-      featured: true, isNew: false, lowCost: false, highConsume: false, stable: true,
-    },
-    {
-      id: 's9', title: '高质量双语对照翻译器',
-      summary: '输出原文+译文对照格式，保留术语一致性，比逐句翻译节省 60% token。',
-      scene: '翻译', tags: ['双语对照', '术语统一', '高效翻译'],
-      avgToken: '1.8k', model: 'GPT-4o', modelColor: '#2F8A57',
-      successRate: '93%', copyCount: '12.3k', favoriteCount: '3.5k',
-      author: '陈省钱', authorColor: '#2F8A57',
-      featured: true, isNew: false, lowCost: true, highConsume: false, stable: true,
-    },
-  ],
-  3: [],
-}
-
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
 
-const skills    = ref([...initialSkills])
+const skills    = ref<any[]>([])
 const refreshing = ref(false)
 const loading    = ref(false)
 const noMore     = ref(false)
 const page       = ref(1)
-const usingMockData = ref(true)
 const PAGE_SIZE = 10
 
 const formatCount = (value: number | null | undefined) => {
@@ -581,13 +480,10 @@ const currentMaxAvgTokens = computed(() => {
 })
 
 const loadSkillsFromApi = async (reset = false) => {
-  if (reset) {
-    page.value = 1
-    noMore.value = false
-  }
+  const targetPage = reset ? 1 : page.value
 
   const data = await getSkillList({
-    page: page.value,
+    page: targetPage,
     pageSize: PAGE_SIZE,
     sort: activeSort.value as any,
     scene: filterScene.value === '全部' ? undefined : filterScene.value,
@@ -601,9 +497,8 @@ const loadSkillsFromApi = async (reset = false) => {
   if (reset) skills.value = list
   else skills.value.push(...list)
 
-  usingMockData.value = false
-  noMore.value = totalPages > 0 ? page.value >= totalPages : list.length < PAGE_SIZE
-  if (!noMore.value) page.value += 1
+  noMore.value = totalPages > 0 ? targetPage >= totalPages : list.length < PAGE_SIZE
+  page.value = noMore.value ? targetPage : targetPage + 1
 }
 
 // 把刚发布的 skill 注入到列表顶部（24h 内有效）
@@ -618,15 +513,15 @@ const injectPublishedSkill = () => {
 const onRefresh = async () => {
   resetCarouselState()
   refreshing.value = true
+
   try {
     await loadSkillsFromApi(true)
-  } catch {
-    usingMockData.value = true
-    skills.value = [...initialSkills]
-    page.value = 2
-    noMore.value = false
     injectPublishedSkill()
+  } catch {
+    console.error('[skill-feed] refresh failed')
+    uni.showToast({ title: 'Skill 列表加载失败', icon: 'none' })
   }
+
   refreshing.value = false
 }
 
@@ -639,22 +534,14 @@ defineExpose({ refreshPublished: injectPublishedSkill })
 const onLoadMore = async () => {
   if (loading.value || noMore.value) return
   loading.value = true
-  if (usingMockData.value) {
-    await new Promise(r => setTimeout(r, 800))
-    const next = moreSkills[page.value] ?? []
-    if (next.length === 0) {
-      noMore.value = true
-    } else {
-      skills.value.push(...next)
-      page.value++
-    }
-  } else {
-    try {
-      await loadSkillsFromApi(false)
-    } catch {
-      noMore.value = true
-    }
+
+  try {
+    await loadSkillsFromApi(false)
+  } catch {
+    console.error('[skill-feed] load more failed')
+    uni.showToast({ title: '加载更多失败', icon: 'none' })
   }
+
   loading.value = false
 }
 

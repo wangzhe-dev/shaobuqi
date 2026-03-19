@@ -230,111 +230,280 @@
 
 <script setup lang="ts">
 import { nextTick } from 'vue'
+import {
+	createFeedComment,
+	getFeedComments,
+	getFeedPost,
+	likeFeedComment,
+	likeFeedPost,
+	meooFeedPost,
+	type FeedComment,
+	type FeedItem,
+	type FeedReaction,
+	unlikeFeedComment,
+	unlikeFeedPost,
+	unmeooFeedPost,
+	updateFeedReaction,
+} from '@/api/feed'
+import { useUserStore } from '@/stores'
 
-const isLiked       = ref(false)
-const isResonated   = ref(false)
-const isFollowing   = ref(false)
+type CommentItem = {
+	id: number
+	user: string
+	userId: number
+	color: string
+	time: string
+	model: string | null
+	cost: string | null
+	tokens: string | null
+	content: string
+	likes: number
+	liked: boolean
+	parentId: number | null
+}
+
+const FALLBACK_COLORS = ['#5B5BD6', '#7C3AED', '#0891B2', '#059669', '#D6943A', '#C84634']
+const fallbackColor = (userId: number) => FALLBACK_COLORS[userId % FALLBACK_COLORS.length]
+
+const modelColor = (modelName: string) => {
+	const val = modelName.toLowerCase()
+	if (val.includes('claude')) return '#C7A06A'
+	if (val.includes('gpt')) return '#2F8A57'
+	if (val.includes('deepseek')) return '#5E738A'
+	if (val.includes('gemini')) return '#D6943A'
+	return '#5B5BD6'
+}
+
+const formatRelativeTime = (isoStr: string): string => {
+	const now = Date.now()
+	const ts = new Date(isoStr).getTime()
+	if (Number.isNaN(ts)) return '--'
+	const diff = now - ts
+	if (diff < 60_000) return '刚刚'
+	if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}分钟前`
+	if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}小时前`
+	if (diff < 172_800_000) return '昨天'
+	const d = new Date(isoStr)
+	return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+const formatCost = (amount: string | null, currency: string): string => {
+	if (!amount) return '0.00'
+	const n = Number.parseFloat(amount)
+	if (!Number.isFinite(n)) return '0.00'
+	if (currency !== 'CNY') return n.toFixed(4)
+	return n.toFixed(2)
+}
+
+const formatTokens = (total: number | null): string => {
+	if (!total) return '0'
+	if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`
+	if (total >= 1_000) return `${(total / 1_000).toFixed(1)}K`
+	return String(total)
+}
+
+const userStore = useUserStore()
+const currentPostId = ref(0)
+
+const isLiked = ref(false)
+const isResonated = ref(false)
+const isFollowing = ref(false)
 const scrollIntoView = ref('')
-const showCmtPanel  = ref(false)
-const cmtText       = ref('')
-const replyTarget   = ref<any>(null)
-const loadingMore   = ref(false)
+const showCmtPanel = ref(false)
+const cmtText = ref('')
+const replyTarget = ref<CommentItem | null>(null)
+const loadingMore = ref(false)
 const noMoreComments = ref(false)
+const commentsPage = ref(1)
+const COMMENT_PAGE_SIZE = 20
 
 const reactions = [
-	{ key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)',  borderColor: 'rgba(47,138,87,0.28)'  },
-	{ key: 'ok',       emoji: '🤔', text: '还行',  activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)',  borderColor: 'rgba(91,91,214,0.28)'  },
-	{ key: 'regret',   emoji: '😬', text: '后悔了', activeColor: '#E45C1A', bgColor: 'rgba(228,92,26,0.10)', borderColor: 'rgba(228,92,26,0.28)'  },
+	{ key: 'worth', emoji: '✅', text: '值了', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)', borderColor: 'rgba(47,138,87,0.28)' },
+	{ key: 'ok', emoji: '🤔', text: '还行', activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)', borderColor: 'rgba(91,91,214,0.28)' },
+	{ key: 'regret', emoji: '😬', text: '后悔了', activeColor: '#E45C1A', bgColor: 'rgba(228,92,26,0.10)', borderColor: 'rgba(228,92,26,0.28)' },
 	{ key: 'addicted', emoji: '🔥', text: '上瘾了', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.10)', borderColor: 'rgba(255,122,69,0.28)' },
 ]
 
 const post = reactive({
-	id: 'p1',
-	author: '林晓珊',
-	authorColor: '#D6943A',
-	time: '今天 14:32',
-	model: 'Claude Opus',
-	modelColor: '#D6943A',
-	cost: '¥128.50',
-	tokens: '2,340,000',
-	duration: '约 3 小时',
-	rounds: 47,
-	content: `帮甲方改了 7 版 PPT，最后还是用了最开始那版。
-
-中间经历了：加颜色→去颜色→换字体→改排版→加图→去图→回到原版。
-
-钱花了，但经验攒了——我学到了什么叫"甲方的想法只有甲方知道"。下次我先让 AI 帮我生成 10 版，让甲方自己选，省得我来回改。
-
-顺便一提，Claude Opus 的审美真的不错，配色建议每次都比我强。`,
-	images: [
-		'https://picsum.photos/seed/ppt1/600/400',
-		'https://picsum.photos/seed/ppt2/600/400',
-	],
-	mood: 'worth',
-	likes: 284,
-	comments: 47,
-	resonates: 163,
+	id: '0',
+	author: '匿名用户',
+	authorColor: '#5B5BD6',
+	time: '--',
+	model: '--',
+	modelColor: '#5B5BD6',
+	cost: '0.00',
+	tokens: '0',
+	duration: '--',
+	rounds: '--',
+	content: '',
+	images: [] as string[],
+	mood: '',
+	likes: 0,
+	comments: 0,
+	resonates: 0,
 })
 
-const comments = ref([
-	{
-		id: 'c1', user: '王建明', color: '#9A6530', time: '1小时前',
-		model: 'GPT-4o', cost: '¥89.20', tokens: '1,560,000 tokens',
-		content: '我也是！帮客户改方案，来回改了9版，最后客户说"就用第一版吧"。我直接关电脑了。',
-		likes: 67, liked: false,
-	},
-	{
-		id: 'c2', user: '张晴', color: '#7B5B3C', time: '2小时前',
-		model: null, cost: null, tokens: null,
-		content: '所以现在我的策略是第一版故意做差，让甲方改，然后第三版放出精品。成功率提升了80%。',
-		likes: 124, liked: true,
-	},
-	{
-		id: 'c3', user: '陈佳慧', color: '#2F8A57', time: '3小时前',
-		model: 'Claude Sonnet', cost: '¥34.80', tokens: '640,000 tokens',
-		content: '¥128 的课程费，比很多付费课便宜，而且是实战学的。算值了。',
-		likes: 89, liked: false,
-	},
-	{
-		id: 'c4', user: '刘明远', color: '#9A2F28', time: '昨天',
-		model: null, cost: null, tokens: null,
-		content: '甲方确实只有甲方自己知道自己想要什么，而且他们自己也不知道。AI 来了也没用。',
-		likes: 201, liked: false,
-	},
-])
+const comments = ref<CommentItem[]>([])
 
-// 分页备用评论
-const extraComments = [
-	{
-		id: 'c5', user: '吴设计', color: '#7C3AED', time: '昨天 23:11',
-		model: 'Claude Sonnet', cost: '¥22.10', tokens: '380,000 tokens',
-		content: 'PPT 的本质是说服工具不是设计作品。AI 懂审美但不懂人心，这课值。',
-		likes: 93, liked: false,
-	},
-	{
-		id: 'c6', user: '孙产品', color: '#059669', time: '2天前',
-		model: null, cost: null, tokens: null,
-		content: '建议下次直接问甲方：用3个词描述你理想的效果。然后让AI先出10版供选，省得来回改。',
-		likes: 156, liked: false,
-	},
-	{
-		id: 'c7', user: '赵运营', color: '#D6943A', time: '3天前',
-		model: 'GPT-4.1', cost: '¥15.40', tokens: '260,000 tokens',
-		content: '这就是为什么我现在每次接需求必须先做需求确认文档，让对方签字再动手。AI 再强也要管预期。',
-		likes: 78, liked: false,
-	},
-]
+const ensureLogin = () => {
+	if (userStore.token) return true
+	uni.showToast({ title: '请先登录', icon: 'none' })
+	setTimeout(() => {
+		uni.navigateTo({ url: '/pages/login/index' })
+	}, 300)
+	return false
+}
 
-onLoad(() => {
+const applyPost = (item: FeedItem) => {
+	post.id = `${item.id}`
+	post.author = item.user.nickname || '匿名用户'
+	post.authorColor = item.user.displayColor || fallbackColor(item.user.id)
+	post.time = formatRelativeTime(item.createdAt)
+	post.model = item.modelName || '--'
+	post.modelColor = modelColor(post.model)
+	post.cost = formatCost(item.costAmount, item.currency)
+	post.tokens = formatTokens(item.totalTokens)
+	post.duration = '--'
+	post.rounds = '--'
+	post.content = item.noteText || ''
+	post.images = Array.isArray(item.images) ? item.images : []
+	post.mood = item.reaction || ''
+	post.likes = item.likes ?? 0
+	post.comments = item.comments ?? 0
+	post.resonates = item.meoo ?? 0
+
+	isLiked.value = !!item.liked
+	isResonated.value = !!item.myMeoo
+}
+
+const mapComment = (item: FeedComment): CommentItem => ({
+	id: item.id,
+	user: item.user.nickname || '用户',
+	userId: item.user.id,
+	color: item.user.displayColor || fallbackColor(item.user.id),
+	time: formatRelativeTime(item.createdAt),
+	model: null,
+	cost: null,
+	tokens: null,
+	content: item.content,
+	likes: item.likes ?? 0,
+	liked: !!item.liked,
+	parentId: item.parentId
+})
+
+const loadPost = async () => {
+	const detail = await getFeedPost(currentPostId.value)
+	applyPost(detail)
+}
+
+const loadComments = async (reset: boolean) => {
+	const targetPage = reset ? 1 : commentsPage.value
+	const res = await getFeedComments(currentPostId.value, {
+		page: targetPage,
+		pageSize: COMMENT_PAGE_SIZE
+	})
+	const list = Array.isArray(res?.list) ? res.list.map(mapComment) : []
+
+	if (reset) comments.value = list
+	else comments.value.push(...list)
+
+	const totalPages = Number(res?.pagination?.totalPages ?? 0)
+	noMoreComments.value = totalPages > 0 ? targetPage >= totalPages : list.length < COMMENT_PAGE_SIZE
+	commentsPage.value = noMoreComments.value ? targetPage : targetPage + 1
+}
+
+onLoad((query: any) => {
 	uni.setNavigationBarTitle({ title: '消耗详情' })
+	const parsedId = Number(`${query?.id || ''}`.replace(/[^0-9]/g, ''))
+	if (!Number.isInteger(parsedId) || parsedId <= 0) {
+		uni.showToast({ title: '动态不存在', icon: 'none' })
+		setTimeout(() => {
+			uni.navigateBack()
+		}, 600)
+		return
+	}
+	currentPostId.value = parsedId
+
+	uni.showLoading({ title: '加载中...' })
+	void Promise.all([loadPost(), loadComments(true)])
+		.catch(() => {
+			uni.showToast({ title: '动态加载失败', icon: 'none' })
+		})
+		.finally(() => {
+			uni.hideLoading()
+		})
 })
 
 /* ── 互动 ── */
-const setMood      = (key: string) => { post.mood = post.mood === key ? '' : key }
-const toggleLike   = () => { isLiked.value = !isLiked.value;   post.likes     += isLiked.value     ? 1 : -1 }
-const toggleResonate = () => { isResonated.value = !isResonated.value; post.resonates += isResonated.value ? 1 : -1 }
+const setMood = async (key: string) => {
+	if (!ensureLogin()) return
+	const prevMood = post.mood
+	const nextMood = prevMood === key ? '' : key
+	post.mood = nextMood
+	try {
+		const res = await updateFeedReaction(currentPostId.value, (nextMood || null) as FeedReaction | null)
+		post.mood = res.reaction || ''
+	} catch {
+		post.mood = prevMood
+	}
+}
+
+const toggleLike = async () => {
+	if (!ensureLogin()) return
+
+	const prevLiked = isLiked.value
+	const prevLikes = post.likes
+
+	isLiked.value = !prevLiked
+	post.likes += isLiked.value ? 1 : -1
+
+	try {
+		const res = isLiked.value ? await likeFeedPost(currentPostId.value) : await unlikeFeedPost(currentPostId.value)
+		isLiked.value = !!res.liked
+		post.likes = res.likes ?? 0
+	} catch {
+		isLiked.value = prevLiked
+		post.likes = prevLikes
+	}
+}
+
+const toggleResonate = async () => {
+	if (!ensureLogin()) return
+
+	const prev = isResonated.value
+	const prevCount = post.resonates
+	isResonated.value = !prev
+	post.resonates += isResonated.value ? 1 : -1
+
+	try {
+		const res = isResonated.value ? await meooFeedPost(currentPostId.value) : await unmeooFeedPost(currentPostId.value)
+		isResonated.value = !!res.myMeoo
+		post.resonates = res.meoo ?? 0
+	} catch {
+		isResonated.value = prev
+		post.resonates = prevCount
+	}
+}
+
 const toggleFollow = () => { isFollowing.value = !isFollowing.value }
-const likeComment  = (c: any) => { c.liked = !c.liked; c.likes += c.liked ? 1 : -1 }
+
+const likeComment = async (c: CommentItem) => {
+	if (!ensureLogin()) return
+
+	const prevLiked = c.liked
+	const prevLikes = c.likes
+	c.liked = !prevLiked
+	c.likes += c.liked ? 1 : -1
+
+	try {
+		const res = c.liked ? await likeFeedComment(c.id) : await unlikeFeedComment(c.id)
+		c.liked = !!res.liked
+		c.likes = res.likes ?? 0
+	} catch {
+		c.liked = prevLiked
+		c.likes = prevLikes
+	}
+}
 
 /* ── 滚动到评论 ── */
 const scrollToComments = () => {
@@ -343,40 +512,42 @@ const scrollToComments = () => {
 }
 
 /* ── 评论输入面板 ── */
-const openCmtPanel = (target?: any) => {
+const openCmtPanel = (target?: CommentItem) => {
+	if (!ensureLogin()) return
 	replyTarget.value = target ?? null
-	cmtText.value     = ''
+	cmtText.value = ''
 	showCmtPanel.value = true
 }
 
 const closeCmtPanel = () => {
 	showCmtPanel.value = false
-	replyTarget.value  = null
-	cmtText.value      = ''
+	replyTarget.value = null
+	cmtText.value = ''
 }
 
-const submitComment = () => {
+const submitComment = async () => {
 	const text = cmtText.value.trim()
-	if (!text) return
+	if (!text || !currentPostId.value) return
+	if (!ensureLogin()) return
+
 	const prefix = replyTarget.value ? `回复 @${replyTarget.value.user}：` : ''
-	comments.value.unshift({
-		id:      `c${Date.now()}`,
-		user:    '我',
-		color:   '#5B5BD6',
-		time:    '刚刚',
-		model:   null,
-		cost:    null,
-		tokens:  null,
-		content: prefix + text,
-		likes:   0,
-		liked:   false,
-	})
-	post.comments++
-	closeCmtPanel()
-	uni.showToast({ title: '评论成功', icon: 'success' })
+	const payload = {
+		content: `${prefix}${text}`,
+		parentId: replyTarget.value?.id || undefined
+	}
+
+	try {
+		const res = await createFeedComment(currentPostId.value, payload)
+		if (res?.comment) comments.value.unshift(mapComment(res.comment))
+		post.comments = Number(res?.comments ?? post.comments + 1)
+		closeCmtPanel()
+		uni.showToast({ title: '评论成功', icon: 'success' })
+	} catch {
+		uni.showToast({ title: '评论失败', icon: 'none' })
+	}
 }
 
-const replyComment = (c: any) => {
+const replyComment = (c: CommentItem) => {
 	scrollToComments()
 	openCmtPanel(c)
 }
@@ -385,13 +556,10 @@ const replyComment = (c: any) => {
 const loadMoreComments = async () => {
 	if (loadingMore.value || noMoreComments.value) return
 	loadingMore.value = true
-	await new Promise(r => setTimeout(r, 800))
-	const batch = extraComments.splice(0, 3)
-	if (batch.length > 0) {
-		comments.value.push(...batch)
-	}
-	if (extraComments.length === 0) {
-		noMoreComments.value = true
+	try {
+		await loadComments(false)
+	} catch {
+		uni.showToast({ title: '加载评论失败', icon: 'none' })
 	}
 	loadingMore.value = false
 }
@@ -413,7 +581,7 @@ const showAuthorMore = () => {
 	})
 }
 
-const share      = () => uni.showShareMenu({ withShareTicket: true })
+const share = () => uni.showShareMenu({ withShareTicket: true })
 const previewImg = (images: string[], current: number) =>
 	uni.previewImage({ urls: images, current: images[current] })
 </script>
