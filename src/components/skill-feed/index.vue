@@ -195,8 +195,12 @@
 </template>
 
 <script setup lang="ts">
+import { copySkill as copySkillApi, getSkillList } from '@/api/skill'
+import { useUserStore } from '@/stores'
+
 const emit = defineEmits<{ edgeSwipe: [dir: 'left' | 'right'] }>()
 const showFilter  = ref(false)
+const userStore = useUserStore()
 
 const sortTabs = [
   { key: 'recommend',   label: '推荐' },
@@ -499,7 +503,108 @@ const skills    = ref([...initialSkills])
 const refreshing = ref(false)
 const loading    = ref(false)
 const noMore     = ref(false)
-const page       = ref(2)
+const page       = ref(1)
+const usingMockData = ref(true)
+const PAGE_SIZE = 10
+
+const formatCount = (value: number | null | undefined) => {
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n) || n <= 0) return '0'
+  if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
+  return `${Math.round(n)}`
+}
+
+const formatToken = (value: number | null | undefined) => {
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n) || n <= 0) return '--'
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return `${Math.round(n)}`
+}
+
+const formatRate = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
+  return `${Number(value).toFixed(0)}%`
+}
+
+const modelColor = (modelName: string) => {
+  const val = modelName.toLowerCase()
+  if (val.includes('claude')) return '#C7A06A'
+  if (val.includes('gpt')) return '#2F8A57'
+  if (val.includes('deepseek')) return '#5E738A'
+  if (val.includes('gemini')) return '#D6943A'
+  return '#5B5BD6'
+}
+
+const mapApiSkill = (item: any) => {
+  const copyCountNum = Number(item?.copyCount ?? 0)
+  const tokenNum = Number(item?.avgTotalTokens ?? 0)
+  const rateNum = Number(item?.successRate ?? 0)
+  const title = `${item?.title || '未命名 Skill'}`
+  const creatorName = `${item?.creator?.nickname || '匿名用户'}`
+  const scene = `${item?.scene || '其他'}`
+
+  return {
+    id: `${item?.id}`,
+    title,
+    summary: `${item?.summary || ''}`,
+    scene,
+    tags: Array.isArray(item?.tags) ? item.tags : [],
+    avgToken: formatToken(tokenNum),
+    model: `${item?.modelName || '--'}`,
+    modelColor: modelColor(`${item?.modelName || ''}`),
+    successRate: formatRate(rateNum),
+    copyCount: formatCount(copyCountNum),
+    favoriteCount: formatCount(Number(item?.favoriteCount ?? 0)),
+    author: creatorName,
+    authorColor: `${item?.creator?.displayColor || '#5B5BD6'}`,
+    featured: copyCountNum >= 5000,
+    isNew: false,
+    lowCost: tokenNum > 0 && tokenNum < 1200,
+    highConsume: tokenNum > 8000,
+    stable: rateNum >= 90,
+    images: item?.coverImage ? [item.coverImage] : [],
+  }
+}
+
+const currentMinSuccessRate = computed(() => {
+  if (filterRate.value === '> 90%') return 90
+  if (filterRate.value === '> 80%') return 80
+  if (filterRate.value === '> 70%') return 70
+  return undefined
+})
+
+const currentMaxAvgTokens = computed(() => {
+  if (filterToken.value === '< 1k') return 1000
+  if (filterToken.value === '1k~3k') return 3000
+  if (filterToken.value === '3k~8k') return 8000
+  return undefined
+})
+
+const loadSkillsFromApi = async (reset = false) => {
+  if (reset) {
+    page.value = 1
+    noMore.value = false
+  }
+
+  const data = await getSkillList({
+    page: page.value,
+    pageSize: PAGE_SIZE,
+    sort: activeSort.value as any,
+    scene: filterScene.value === '全部' ? undefined : filterScene.value,
+    minSuccessRate: currentMinSuccessRate.value,
+    maxAvgTotalTokens: currentMaxAvgTokens.value
+  })
+
+  const list = Array.isArray(data?.list) ? data.list.map(mapApiSkill) : []
+  const totalPages = Number(data?.pagination?.totalPages ?? 0)
+
+  if (reset) skills.value = list
+  else skills.value.push(...list)
+
+  usingMockData.value = false
+  noMore.value = totalPages > 0 ? page.value >= totalPages : list.length < PAGE_SIZE
+  if (!noMore.value) page.value += 1
+}
 
 // 把刚发布的 skill 注入到列表顶部（24h 内有效）
 const injectPublishedSkill = () => {
@@ -513,16 +618,20 @@ const injectPublishedSkill = () => {
 const onRefresh = async () => {
   resetCarouselState()
   refreshing.value = true
-  await new Promise(r => setTimeout(r, 1200))
-  skills.value = [...initialSkills]
-  page.value = 2
-  noMore.value = false
-  injectPublishedSkill()
+  try {
+    await loadSkillsFromApi(true)
+  } catch {
+    usingMockData.value = true
+    skills.value = [...initialSkills]
+    page.value = 2
+    noMore.value = false
+    injectPublishedSkill()
+  }
   refreshing.value = false
 }
 
 onMounted(() => {
-  injectPublishedSkill()
+  onRefresh()
 })
 
 defineExpose({ refreshPublished: injectPublishedSkill })
@@ -530,18 +639,41 @@ defineExpose({ refreshPublished: injectPublishedSkill })
 const onLoadMore = async () => {
   if (loading.value || noMore.value) return
   loading.value = true
-  await new Promise(r => setTimeout(r, 800))
-  const next = moreSkills[page.value] ?? []
-  if (next.length === 0) {
-    noMore.value = true
+  if (usingMockData.value) {
+    await new Promise(r => setTimeout(r, 800))
+    const next = moreSkills[page.value] ?? []
+    if (next.length === 0) {
+      noMore.value = true
+    } else {
+      skills.value.push(...next)
+      page.value++
+    }
   } else {
-    skills.value.push(...next)
-    page.value++
+    try {
+      await loadSkillsFromApi(false)
+    } catch {
+      noMore.value = true
+    }
   }
   loading.value = false
 }
 
-const copySkill  = (_skill: any) => uni.showToast({ title: '已复制 Skill', icon: 'success' })
+watch([activeSort, filterScene, filterToken, filterRate], () => {
+  if (refreshing.value) return
+  if (loading.value) return
+  void onRefresh()
+})
+
+const copySkill  = async (skill: any) => {
+  if (userStore.token) {
+    try {
+      await copySkillApi(skill.id, { sourceChannel: 'feed' })
+    } catch {
+      // ignore API record error in UI action
+    }
+  }
+  uni.showToast({ title: '已复制 Skill', icon: 'success' })
+}
 const toSkill    = (id: string)  => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 const toSearch   = ()            => uni.navigateTo({ url: '/pages/search/index' })
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })

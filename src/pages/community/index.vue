@@ -332,8 +332,11 @@
 
 <script setup lang="ts">
 	import { getCurrentInstance } from 'vue'
+	import { copySkill as copySkillApi, getSkillList, getTrends } from '@/api/skill'
+	import { useUserStore } from '@/stores'
 
 	const instance = getCurrentInstance()
+	const userStore = useUserStore()
 	onShow(() => {
 		;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 1 })
 	})
@@ -391,6 +394,52 @@
 		},
 	])
 	const burnTabs = ['Skill', '场景', '模型']
+	const sceneIconMap: Record<string, { icon: string; color: string }> = {
+		写作: { icon: 'compose', color: '#C84634' },
+		编程: { icon: 'gear-filled', color: '#5E738A' },
+		办公: { icon: 'calendar-filled', color: '#4F6C82' },
+		自媒体: { icon: 'videocam-filled', color: '#7B5B3C' },
+		学习: { icon: 'staff-filled', color: '#2F8A57' },
+		设计: { icon: 'color', color: '#9A6530' },
+		电商: { icon: 'shop-filled', color: '#D6943A' }
+	}
+
+	const modelFamily = (modelName: string) => {
+		const name = modelName.toLowerCase()
+		if (name.includes('claude')) return 'Claude 系'
+		if (name.includes('gpt')) return 'GPT 系'
+		if (name.includes('deepseek')) return 'DeepSeek 系'
+		if (name.includes('gemini')) return 'Gemini 系'
+		return '其他'
+	}
+
+	const modelColor = (modelName: string) => {
+		const name = modelName.toLowerCase()
+		if (name.includes('claude')) return '#C7A06A'
+		if (name.includes('gpt')) return '#2F8A57'
+		if (name.includes('deepseek')) return '#5E738A'
+		if (name.includes('gemini')) return '#D6943A'
+		return '#5B5BD6'
+	}
+
+	const formatCount = (value: number | null | undefined) => {
+		const n = Number(value ?? 0)
+		if (!Number.isFinite(n) || n <= 0) return '0'
+		if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
+		return `${Math.round(n)}`
+	}
+
+	const formatToken = (value: number | null | undefined) => {
+		const n = Number(value ?? 0)
+		if (!Number.isFinite(n) || n <= 0) return '--'
+		if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+		return `${Math.round(n)}`
+	}
+
+	const formatRate = (value: number | null | undefined) => {
+		if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
+		return `${Number(value).toFixed(0)}%`
+	}
 
 	const topBurnSkills = ref([
 		{ id: 's5', title: '全自动 PRD 文档生成', scene: '办公', avgToken: '6.5k' },
@@ -466,7 +515,113 @@
 		{ id: 'r3', title: '极简翻译润色器', time: '3天前' }
 	])
 
+	const loadTrendData = async () => {
+		try {
+			const [trendData, skillData] = await Promise.all([
+				getTrends({ days: 7 }),
+				getSkillList({ page: 1, pageSize: 20, sort: 'mostCopy' })
+			])
+
+			const sceneStats = Array.isArray(trendData?.sceneStats) ? trendData.sceneStats : []
+			if (sceneStats.length) {
+				const maxUsage = Math.max(...sceneStats.map((item: any) => Number(item?.usageCount ?? 0)), 1)
+				topBurnScenes.value = sceneStats.slice(0, 5).map((item: any) => {
+					const scene = `${item?.scene || '其他'}`
+					const iconMeta = sceneIconMap[scene] || { icon: 'help-filled', color: '#9CA3AF' }
+					return {
+						name: scene,
+						icon: iconMeta.icon,
+						color: iconMeta.color,
+						count: formatCount(item?.usageCount),
+						avgToken: formatToken(item?.avgTotalTokens)
+					}
+				})
+				sceneTrends.value = sceneStats.slice(0, 5).map((item: any) => {
+					const scene = `${item?.scene || '其他'}`
+					const iconMeta = sceneIconMap[scene] || { icon: 'help-filled', color: '#9CA3AF' }
+					const usage = Number(item?.usageCount ?? 0)
+					return {
+						name: scene,
+						icon: iconMeta.icon,
+						color: iconMeta.color,
+						pct: Math.round((usage / maxUsage) * 100),
+						growth: Math.max(5, Math.round((usage / maxUsage) * 35))
+					}
+				})
+			}
+
+			const modelStats = Array.isArray(trendData?.modelStats) ? trendData.modelStats : []
+			if (modelStats.length) {
+				const maxInput = Math.max(...modelStats.map((item: any) => Number(item?.avgInputTokens ?? 0)), 1)
+				const maxOutput = Math.max(...modelStats.map((item: any) => Number(item?.avgOutputTokens ?? 0)), 1)
+
+				topBurnModels.value = modelStats.slice(0, 5).map((item: any) => {
+					const usage = Number(item?.usageCount ?? 0)
+					const usageInK = usage <= 0 ? '0' : `${(usage / 1000).toFixed(1)}`.replace(/\.0$/, '')
+					return {
+						name: `${item?.modelName || '未知模型'}`,
+						count: usageInK,
+						avgCost: item?.avgCost === null || item?.avgCost === undefined ? '--' : `¥${Number(item.avgCost).toFixed(2)}`
+					}
+				})
+
+				modelCompare.value = modelStats.slice(0, 4).map((item: any) => {
+					const modelName = `${item?.modelName || '未知模型'}`
+					const input = Number(item?.avgInputTokens ?? 0)
+					const output = Number(item?.avgOutputTokens ?? 0)
+					return {
+						name: modelName,
+						family: modelFamily(modelName),
+						color: modelColor(modelName),
+						avgInput: formatToken(input),
+						avgOutput: formatToken(output),
+						avgTotal: formatToken(item?.avgTotalTokens),
+						inputPct: Math.max(12, Math.round((input / maxInput) * 100)),
+						outputPct: Math.max(12, Math.round((output / maxOutput) * 100))
+					}
+				})
+			}
+
+			const highValue = Array.isArray(trendData?.highValueSkills) ? trendData.highValueSkills : []
+			if (highValue.length) {
+				highValueSkills.value = highValue.slice(0, 5).map((item: any) => ({
+					id: `${item?.id || ''}`,
+					title: `${item?.title || '未命名 Skill'}`,
+					scene: `${item?.scene || '其他'}`,
+					avgToken: formatToken(item?.avgTotalTokens),
+					copyCount: formatCount(item?.copyCount),
+					successRate: formatRate(item?.successRate)
+				}))
+				myRecentSkills.value = highValue.slice(0, 3).map((item: any) => ({
+					id: `${item?.id || ''}`,
+					title: `${item?.title || '未命名 Skill'}`,
+					time: '近期'
+				}))
+			}
+
+			const skillList = Array.isArray(skillData?.list) ? skillData.list : []
+			const sortedByToken = skillList
+				.filter((item: any) => Number(item?.avgTotalTokens ?? 0) > 0)
+				.sort((a: any, b: any) => Number(b?.avgTotalTokens ?? 0) - Number(a?.avgTotalTokens ?? 0))
+				.slice(0, 5)
+
+			if (sortedByToken.length) {
+				topBurnSkills.value = sortedByToken.map((item: any) => ({
+					id: `${item?.id || ''}`,
+					title: `${item?.title || '未命名 Skill'}`,
+					scene: `${item?.scene || '其他'}`,
+					avgToken: formatToken(item?.avgTotalTokens)
+				}))
+			}
+		} catch {}
+	}
+
+	onMounted(() => {
+		void loadTrendData()
+	})
+
 	const toSkill = (id: string) => {
+		if (!id) return
 		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 	}
 
@@ -474,7 +629,12 @@
 		uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
 	}
 
-	const copySkill = (_skill: any) => {
+	const copySkill = async (skill: any) => {
+		if (userStore.token && skill?.id) {
+			try {
+				await copySkillApi(skill.id, { sourceChannel: 'trend' })
+			} catch {}
+		}
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })
 	}
 </script>

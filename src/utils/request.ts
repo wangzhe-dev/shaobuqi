@@ -6,9 +6,10 @@ import { useUserStore } from '@/stores'
 
 const service = new Request()
 
-// 白名单
+// 白名单（不附加 Authorization 头）
 const whiteList = [
-	'/auth/wxlogin'
+	'/auth/wxlogin',
+	'/auth/login/password'
 ]
 
 // 是否正在刷新的标记

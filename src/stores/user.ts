@@ -1,17 +1,17 @@
 import { defineStore } from 'pinia'
 import { loginPage } from '@/config'
-import type { GetInfo } from '@/types/api/user'
+import type { UserInfo } from '@/types/api/user'
 
 export const useUserStore = defineStore('user', () => {
 	// 用户信息
-	const userInfo = ref<GetInfo.Body | null>()
+	const userInfo = ref<UserInfo | null>()
 	const token = ref()
 
 	const setToken = (val : string) => {
 		token.value = val
 	}
 
-	const setUserInfo = (val : GetInfo.Body | null) => {
+	const setUserInfo = (val : UserInfo | null) => {
 		userInfo.value = val
 	}
 

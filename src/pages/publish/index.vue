@@ -164,6 +164,8 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
+import { createSkill } from '@/api/skill'
+import { useUserStore } from '@/stores'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
@@ -178,6 +180,7 @@ type PostForm = {
 }
 
 const instance = getCurrentInstance()
+const userStore = useUserStore()
 const editorCtx = ref<any>(null)
 const formats = ref<Record<string, any>>({})
 const mediaList = ref<string[]>([])
@@ -389,24 +392,51 @@ const goBack = () => {
 	})
 }
 
-const doPublish = () => {
+const doPublish = async () => {
 	if (!canPublish.value) {
 		uni.showToast({ title: '请输入标题或内容', icon: 'none' })
 		return
 	}
-	const id = `p-${Date.now()}`
+	if (!userStore.token) {
+		uni.showToast({ title: '请先登录', icon: 'none' })
+		setTimeout(() => {
+			uni.navigateTo({ url: '/pages/login/index' })
+		}, 300)
+		return
+	}
+
 	const now = new Date()
 	const brief = buildBrief(form.text) || form.title.trim()
 	const scene = form.scene || '其他'
 
-	uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now))
-	uni.setStorageSync(FEED_PUBLISHED_KEY, buildFeedItem(id, brief, scene))
+	uni.showLoading({ title: '发布中...' })
+	try {
+		const result = await createSkill({
+			title: form.title.trim() || '无标题',
+			brief,
+			scene,
+			status: 1,
+			tags: form.tags,
+			fullPrompt: form.text.trim(),
+			fullPromptHtml: form.html.trim(),
+			contentImages: [...mediaList.value],
+			useScenes: form.tags.length ? form.tags : [scene],
+			steps: ['复制内容', '粘贴到 AI 工具', '按需调整']
+		})
 
-	uni.showToast({ title: '发布成功', icon: 'success' })
-	setTimeout(() => {
-		resetForm()
-		uni.navigateTo({ url: '/pages/detail/skill?fromPublish=1' })
-	}, 600)
+		const id = `${result?.id || Date.now()}`
+		uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now))
+		uni.setStorageSync(FEED_PUBLISHED_KEY, buildFeedItem(id, brief, scene))
+
+		uni.hideLoading()
+		uni.showToast({ title: '发布成功', icon: 'success' })
+		setTimeout(() => {
+			resetForm()
+			uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+		}, 600)
+	} catch {
+		uni.hideLoading()
+	}
 }
 
 onShow(() => {

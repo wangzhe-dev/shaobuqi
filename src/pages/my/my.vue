@@ -5,15 +5,14 @@
 		<view class="profile-card" :style="profileCardStyle">
 			<view class="pc-row">
 				<view class="avatar-wrap">
-					<view class="avatar"><text class="avatar-t">林</text></view>
+					<view class="avatar"><text class="avatar-t">{{ profile.name[0] || '我' }}</text></view>
 					<view class="lv-badge">Lv.4</view>
 				</view>
 				<view class="pc-info">
-					<text class="pc-name">林小雨</text>
-					<text class="pc-bio">不断验证Skill，不断分享经验</text>
+					<text class="pc-name">{{ profile.name }}</text>
+					<text class="pc-bio">{{ profile.bio }}</text>
 					<view class="pc-tags">
-						<text class="pc-tag">写作</text>
-						<text class="pc-tag">自媒体</text>
+						<text v-for="tag in profile.tags" :key="tag" class="pc-tag">{{ tag }}</text>
 					</view>
 				</view>
 				<view class="edit-btn" @tap="editProfile">
@@ -23,17 +22,17 @@
 
 			<view class="stats-bar">
 				<view class="stat-item">
-					<text class="sv">23</text>
+					<text class="sv">{{ profile.publishedSkillCount }}</text>
 					<text class="sl">发布 Skill</text>
 				</view>
 				<view class="stat-div" />
 				<view class="stat-item">
-					<text class="sv orange">8.4k</text>
+					<text class="sv orange">{{ profile.totalCopyCount }}</text>
 					<text class="sl">被复制</text>
 				</view>
 				<view class="stat-div" />
 				<view class="stat-item">
-					<text class="sv green">91%</text>
+					<text class="sv green">{{ profile.avgSuccessRate }}</text>
 					<text class="sl">平均复现率</text>
 				</view>
 			</view>
@@ -46,6 +45,9 @@
 				<text class="sh-more" @tap="toAllSkills">全部 ›</text>
 			</view>
 			<view class="skill-list">
+				<view v-if="mySkills.length === 0" class="empty-row">
+					<text class="empty-t">还没有发布 Skill</text>
+				</view>
 				<view
 					v-for="skill in mySkills"
 					:key="skill.id"
@@ -79,6 +81,52 @@
 			</view>
 		</view>
 
+		<!-- ── 我的收藏 ── -->
+		<view class="section">
+			<view class="section-hd">
+				<text class="sh-title">我的收藏</text>
+			</view>
+			<view class="list-card">
+				<view v-if="myFavorites.length === 0" class="empty-row">
+					<text class="empty-t">还没有收藏 Skill</text>
+				</view>
+				<view
+					v-for="favorite in myFavorites"
+					:key="favorite.id"
+					class="line-item"
+					@tap="toSkill(favorite.id)"
+				>
+					<view class="item-main">
+						<text class="item-title">{{ favorite.title }}</text>
+						<text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
+					</view>
+					<text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
+				</view>
+			</view>
+		</view>
+
+		<!-- ── 我的复制 ── -->
+		<view class="section">
+			<view class="section-hd">
+				<text class="sh-title">我的复制</text>
+			</view>
+			<view class="list-card">
+				<view v-if="myCopies.length === 0" class="empty-row">
+					<text class="empty-t">还没有复制记录</text>
+				</view>
+				<view
+					v-for="copy in myCopies"
+					:key="copy.id"
+					class="line-item"
+				>
+					<view class="item-main">
+						<text class="item-title">{{ copy.title }}</text>
+						<text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+
 		<!-- ── 设置 ── -->
 		<view class="section">
 			<view class="settings-card">
@@ -107,14 +155,18 @@
 
 <script setup lang="ts">
 	import { getCurrentInstance } from 'vue'
+	import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
 	import { useSysInfoStore } from '@/stores'
+	import { useUserStore } from '@/stores'
 
 	const instance = getCurrentInstance()
 	onShow(() => {
 		// #ifdef MP-WEIXIN
 		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
 		// #endif
+		loadMyData()
 	})
+	const userStore = useUserStore()
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
@@ -128,13 +180,113 @@
 	})
 
 	const mySkills = ref([
-		{ id: 's1', title: '万能长文写作框架',   scene: '写作',   time: '2天前',
+		{ id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
 		  copyCount: '1.2k', favoriteCount: '312', successRate: '94%', feedbackCount: '43'  },
 		{ id: 's2', title: '爆款自媒体选题生成', scene: '自媒体', time: '5天前',
 		  copyCount: '890',  favoriteCount: '234', successRate: '87%', feedbackCount: '31'  },
 		{ id: 's3', title: '极简翻译润色器',     scene: '写作',   time: '2周前',
 		  copyCount: '5.2k', favoriteCount: '1.8k', successRate: '96%', feedbackCount: '128' },
 	])
+
+	const myFavorites = ref<Array<{
+		id: string
+		title: string
+		scene: string
+		creator: string
+		favoriteCount: string
+	}>>([])
+
+	const myCopies = ref<Array<{
+		id: string
+		title: string
+		scene: string
+		time: string
+	}>>([])
+
+	const profile = reactive({
+		name: '我',
+		bio: '不断验证Skill，不断分享经验',
+		tags: ['Skill'],
+		publishedSkillCount: '0',
+		totalCopyCount: '0',
+		avgSuccessRate: '--'
+	})
+
+	const formatCount = (value: number | null | undefined) => {
+		const n = Number(value ?? 0)
+		if (!Number.isFinite(n) || n <= 0) return '0'
+		if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
+		return `${Math.round(n)}`
+	}
+
+	const formatRate = (value: number | null | undefined) => {
+		if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
+		return `${Number(value).toFixed(0)}%`
+	}
+
+	const formatRelativeTime = (time: string | null | undefined) => {
+		if (!time) return '--'
+		const date = new Date(time)
+		if (Number.isNaN(date.getTime())) return '--'
+		const diff = Date.now() - date.getTime()
+		const day = 24 * 60 * 60 * 1000
+		if (diff < day) return '今天'
+		if (diff < 2 * day) return '1天前'
+		if (diff < 7 * day) return `${Math.floor(diff / day)}天前`
+		return `${Math.floor(diff / (7 * day))}周前`
+	}
+
+	const loadMyData = async () => {
+		if (!userStore.token) return
+
+		try {
+			const me = await getMyProfile()
+			profile.name = me?.nickname || '我'
+			profile.bio = me?.bio || '不断验证Skill，不断分享经验'
+			profile.tags = me?.bio ? ['创作者'] : ['Skill']
+			profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
+			profile.totalCopyCount = formatCount(me?.totalCopyCount)
+			profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
+		} catch {}
+
+		try {
+			const skillData = await getMySkills({ page: 1, pageSize: 20, status: 1 })
+			const list = Array.isArray(skillData?.list) ? skillData.list : []
+			mySkills.value = list.map((skill: any) => ({
+				id: `${skill.id}`,
+				title: skill.title,
+				scene: skill.scene || '其他',
+				time: formatRelativeTime(skill.publishAt || skill.updatedAt),
+				copyCount: formatCount(skill.copyCount),
+				favoriteCount: formatCount(skill.favoriteCount),
+				successRate: formatRate(skill.successRate),
+				feedbackCount: formatCount(skill.feedbackCount)
+			}))
+		} catch {}
+
+		try {
+			const favoriteData = await getMyFavorites({ page: 1, pageSize: 8 })
+			const list = Array.isArray(favoriteData?.list) ? favoriteData.list : []
+			myFavorites.value = list.map((item: any) => ({
+				id: `${item?.skill?.id || ''}`,
+				title: `${item?.skill?.title || '未命名 Skill'}`,
+				scene: `${item?.skill?.scene || '其他'}`,
+				creator: `${item?.skill?.creator?.nickname || '匿名用户'}`,
+				favoriteCount: formatCount(item?.skill?.favoriteCount)
+			}))
+		} catch {}
+
+		try {
+			const copyData = await getMyCopies({ page: 1, pageSize: 8 })
+			const list = Array.isArray(copyData?.list) ? copyData.list : []
+			myCopies.value = list.map((item: any) => ({
+				id: `${item?.id || ''}`,
+				title: `${item?.skill?.title || '已删除 Skill'}`,
+				scene: `${item?.skill?.scene || '其他'}`,
+				time: formatRelativeTime(item?.createdAt)
+			}))
+		} catch {}
+	}
 
 	const cacheSize = ref('计算中...')
 	onMounted(() => {
@@ -147,7 +299,13 @@
 		})
 	})
 
-	const toSkill     = (id: string) => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+	const toSkill = (id: string) => {
+		if (!id) {
+			uni.showToast({ title: 'Skill 已不存在', icon: 'none' })
+			return
+		}
+		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+	}
 	const toAllSkills = () => uni.navigateTo({ url: '/pages/skill/index' })
 	const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
 
@@ -332,6 +490,57 @@
 			.ss-lab { font-size: 18rpx; color: #9CA3AF; }
 		}
 	}
+}
+
+.list-card {
+	background: #FFFFFF;
+	border-radius: 24rpx;
+	overflow: hidden;
+}
+
+.line-item {
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+	padding: 22rpx 20rpx;
+	border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+	&:last-child { border-bottom: none; }
+	&:active { background: #F8F8FF; }
+}
+
+.item-main {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6rpx;
+}
+
+.item-title {
+	font-size: 26rpx;
+	font-weight: 600;
+	color: #1A1A2E;
+}
+
+.item-sub {
+	font-size: 22rpx;
+	color: #9CA3AF;
+}
+
+.item-meta {
+	font-size: 22rpx;
+	color: #6B7280;
+}
+
+.empty-row {
+	display: flex;
+	justify-content: center;
+	padding: 28rpx 20rpx;
+}
+
+.empty-t {
+	font-size: 24rpx;
+	color: #9CA3AF;
 }
 
 /* ── 设置 ── */

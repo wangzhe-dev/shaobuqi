@@ -158,6 +158,8 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
+import { createSkillFeedback } from '@/api/skill'
+import { useUserStore } from '@/stores'
 
 const modelOptions = [
 	'Claude Sonnet', 'Claude Opus', 'Claude Haiku',
@@ -174,6 +176,8 @@ const reactions = [
 const editorCtx     = ref<any>(null)
 const formats       = ref<Record<string, any>>({})
 const showFormatBar = ref(false)
+const userStore = useUserStore()
+const skillId = ref('')
 
 const form = reactive({
 	model:    '',
@@ -187,6 +191,12 @@ const form = reactive({
 
 const canPublish = computed(() => !!form.model && !!form.text.trim())
 const hasContent = computed(() => !!form.text.trim() || form.images.length > 0)
+
+const reactionToStatus = (reaction: string): 'success' | 'normal' | 'fail' => {
+	if (reaction === 'worth' || reaction === 'addicted') return 'success'
+	if (reaction === 'regret') return 'fail'
+	return 'normal'
+}
 
 /* ── editor ── */
 const onEditorReady = () => {
@@ -258,13 +268,42 @@ const publish = () => {
 		uni.showToast({ title: '请选择模型并填写内容', icon: 'none' })
 		return
 	}
-	uni.showLoading({ title: '发布中...' })
-	setTimeout(() => {
-		uni.hideLoading()
-		uni.showToast({ title: '发布成功', icon: 'success' })
-		setTimeout(() => uni.navigateBack(), 800)
-	}, 600)
+
+	if (!userStore.token) {
+		uni.showToast({ title: '请先登录', icon: 'none' })
+		setTimeout(() => {
+			uni.navigateTo({ url: '/pages/login/index' })
+		}, 300)
+		return
+	}
+
+	const doSubmit = async () => {
+		uni.showLoading({ title: '发布中...' })
+		try {
+			if (skillId.value) {
+				await createSkillFeedback(skillId.value, {
+					status: reactionToStatus(form.reaction),
+					comment: form.text.trim(),
+					modelName: form.model,
+					totalTokens: form.tokens ? Number(form.tokens) : undefined,
+					costAmount: form.cost ? Number(form.cost) : undefined,
+					isPublic: true
+				})
+			}
+			uni.hideLoading()
+			uni.showToast({ title: '发布成功', icon: 'success' })
+			setTimeout(() => uni.navigateBack(), 800)
+		} catch {
+			uni.hideLoading()
+		}
+	}
+
+	void doSubmit()
 }
+
+onLoad((query: any) => {
+	skillId.value = `${query?.skillId || ''}`.replace(/[^0-9]/g, '')
+})
 </script>
 
 <style lang="scss" scoped>

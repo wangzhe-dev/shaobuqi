@@ -1,7 +1,7 @@
 import { http } from '@/utils/request'
-import type { GetInfo } from '@/types/api/user'
+import type { UserInfo } from '@/types/api/user'
 
-// 获取用户信息
+// 获取当前登录用户信息
 export const getInfo = () => {
-	return http.get<GetInfo.Body>('/system/user/getProduceInfo')
+	return http.get<UserInfo>('/me/profile')
 }
