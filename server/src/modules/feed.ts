@@ -71,6 +71,10 @@ const updateReactionSchema = z.object({
   reaction: reactionEnum.nullable()
 })
 
+const updateImagesSchema = z.object({
+  images: z.array(z.string().trim().min(1).max(500)).max(9).optional().default([])
+})
+
 const createCommentSchema = z.object({
   content: z.string().trim().min(1).max(1000),
   parentId: z.coerce.number().int().positive().optional().nullable()
@@ -331,6 +335,58 @@ feedRouter.post('/', requireAuth, async (req, res) => {
   }
 
   sendSuccess(res, mapFeedItem(row), '发布成功')
+})
+
+// PUT /feed/:id/images — 更新动态图片（仅本人）
+feedRouter.put('/:id/images', requireAuth, async (req, res) => {
+  const postId = parsePositiveId(req.params.id)
+  if (!postId) {
+    sendError(res, '动态 ID 不合法', 400)
+    return
+  }
+
+  const parsed = updateImagesSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, '图片参数不合法', 400)
+    return
+  }
+
+  const postRows = await queryRows<PostOwnerRow[]>(
+    `SELECT id, user_id
+    FROM skill_usage_records
+    WHERE id = ?
+      AND note_text IS NOT NULL
+      AND note_text != ''
+    LIMIT 1`,
+    [postId]
+  )
+
+  const post = postRows[0]
+  if (!post) {
+    sendError(res, '动态不存在', 404)
+    return
+  }
+
+  const userId = req.auth!.userId
+  if (post.user_id !== userId) {
+    sendError(res, '仅可修改自己的动态图片', 403)
+    return
+  }
+
+  await execWrite(
+    `UPDATE skill_usage_records
+    SET images_json = ?
+    WHERE id = ?`,
+    [stringifyJson(parsed.data.images), postId]
+  )
+
+  const row = await getFeedItemById(postId, userId)
+  if (!row) {
+    sendSuccess(res, { id: postId, images: parsed.data.images }, '图片更新成功')
+    return
+  }
+
+  sendSuccess(res, mapFeedItem(row), '图片更新成功')
 })
 
 // POST /feed/:id/like — 点赞

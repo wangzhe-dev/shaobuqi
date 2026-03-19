@@ -81,6 +81,10 @@ export interface CreateFeedCommentPayload {
   parentId?: number | null
 }
 
+export interface UpdateFeedPostImagesPayload {
+  images: string[]
+}
+
 export interface PostLikeActionResponse {
   postId: number
   liked: boolean
@@ -114,6 +118,10 @@ export const getFeedPost = (id: number | string) => {
 
 export const createFeedPost = (data: CreateFeedPostPayload) => {
   return http.post<FeedItem>(`/feed`, data)
+}
+
+export const updateFeedPostImages = (id: number | string, data: UpdateFeedPostImagesPayload) => {
+  return http.put<FeedItem>(`/feed/${id}/images`, data)
 }
 
 export const likeFeedPost = (id: number | string) => {

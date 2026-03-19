@@ -164,7 +164,8 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
-import { createSkill } from '@/api/skill'
+import { createSkill, updateSkill } from '@/api/skill'
+import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
 import { useUserStore } from '@/stores'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
@@ -239,16 +240,7 @@ const insertDivider = () => { if (ensureEditor()) editorCtx.value.insertDivider(
 const onEmoji = () => uni.showToast({ title: '表情功能开发中', icon: 'none' })
 
 const insertEditorImage = () => {
-	if (!ensureEditor()) return
-	uni.chooseImage({
-		count: 1,
-		sizeType: ['compressed'],
-		sourceType: ['album', 'camera'],
-		success: (res) => {
-			const src = res.tempFilePaths?.[0]
-			if (src) editorCtx.value.insertImage({ src, alt: '内容图片' })
-		}
-	})
+	pickMedia()
 }
 
 /* ── media ── */
@@ -264,10 +256,7 @@ const pickMedia = () => {
 }
 
 const pickVideo = () => {
-	uni.chooseVideo({
-		sourceType: ['album', 'camera'],
-		success: (res) => mediaList.value.push(res.tempFilePath)
-	})
+	uni.showToast({ title: '当前仅支持图片上传', icon: 'none' })
 }
 
 const removeMedia = (i: number) => mediaList.value.splice(i, 1)
@@ -310,7 +299,7 @@ const formatDate = (d: Date) =>
 	`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 /* ── payload builders ── */
-const buildSkillPayload = (id: string, brief: string, scene: string, now: Date) => ({
+const buildSkillPayload = (id: string, brief: string, scene: string, now: Date, contentImages: string[]) => ({
 	id,
 	title: form.title.trim() || '无标题',
 	scene,
@@ -334,13 +323,71 @@ const buildSkillPayload = (id: string, brief: string, scene: string, now: Date) 
 	weekUses: '0',
 	fullPrompt: form.text.trim(),
 	fullPromptHtml: form.html.trim(),
-	contentImages: [...mediaList.value],
+	images: contentImages.length ? [contentImages[0]] : [],
+	contentImages: [...contentImages],
 	variableNotes: '',
 	variables: [],
 	steps: ['复制内容', '粘贴到 AI 工具', '按需调整'],
 	feedbacks: [],
 	similarSkills: []
 })
+
+const toSkillImagePayload = (meta: UploadedImageMeta) => ({
+	imageUrl: meta.imageUrl,
+	storageProvider: meta.storageProvider,
+	bucketName: meta.bucketName,
+	objectKey: meta.objectKey,
+	mimeType: meta.mimeType,
+	fileSize: meta.fileSize
+})
+
+const uploadSkillImages = async (skillId: number, localPaths: string[]) => {
+	const contentImages = [] as Array<{
+		imageUrl: string
+		storageProvider: string
+		bucketName: string
+		objectKey: string
+		mimeType: string
+		fileSize: number
+	}>
+	const contentImageUrls: string[] = []
+
+	for (let i = 0; i < localPaths.length; i += 1) {
+		const uploaded = await uploadImageFile({
+			filePath: localPaths[i],
+			usage: 'skill_content',
+			skillId,
+			index: i + 1
+		})
+		contentImages.push(toSkillImagePayload(uploaded))
+		contentImageUrls.push(uploaded.imageUrl)
+	}
+
+	const coverImages: Array<{
+		imageUrl: string
+		storageProvider: string
+		bucketName: string
+		objectKey: string
+		mimeType: string
+		fileSize: number
+	}> = []
+
+	if (localPaths.length > 0) {
+		const uploadedCover = await uploadImageFile({
+			filePath: localPaths[0],
+			usage: 'skill_cover',
+			skillId,
+			index: 1
+		})
+		coverImages.push(toSkillImagePayload(uploadedCover))
+	}
+
+	return {
+		coverImages,
+		contentImages,
+		contentImageUrls
+	}
+}
 
 const buildFeedItem = (id: string, brief: string, scene: string) => ({
 	id,
@@ -419,13 +466,28 @@ const doPublish = async () => {
 			tags: form.tags,
 			fullPrompt: form.text.trim(),
 			fullPromptHtml: form.html.trim(),
-			contentImages: [...mediaList.value],
 			useScenes: form.tags.length ? form.tags : [scene],
 			steps: ['复制内容', '粘贴到 AI 工具', '按需调整']
 		})
 
-		const id = `${result?.id || Date.now()}`
-		uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now))
+		const skillId = Number(result?.id)
+		if (!Number.isInteger(skillId) || skillId <= 0) {
+			throw new Error('发布结果异常')
+		}
+
+		let uploadedContentUrls: string[] = []
+		if (mediaList.value.length > 0) {
+			const uploaded = await uploadSkillImages(skillId, mediaList.value)
+			uploadedContentUrls = uploaded.contentImageUrls
+
+			await updateSkill(skillId, {
+				coverImages: uploaded.coverImages,
+				contentImages: uploaded.contentImages
+			})
+		}
+
+		const id = `${skillId}`
+		uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now, uploadedContentUrls))
 		uni.setStorageSync(FEED_PUBLISHED_KEY, buildFeedItem(id, brief, scene))
 
 		uni.hideLoading()

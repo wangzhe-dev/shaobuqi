@@ -5,6 +5,7 @@ import { feedRouter } from './feed'
 import { meRouter } from './me'
 import { skillsRouter } from './skills'
 import { statsRouter } from './stats'
+import { uploadsRouter } from './uploads'
 
 export const apiRouter = Router()
 
@@ -14,3 +15,4 @@ apiRouter.use('/me', meRouter)
 apiRouter.use('/stats', statsRouter)
 apiRouter.use('/drafts', draftsRouter)
 apiRouter.use('/feed', feedRouter)
+apiRouter.use('/uploads', uploadsRouter)

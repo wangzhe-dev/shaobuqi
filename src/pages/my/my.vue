@@ -142,7 +142,7 @@
 					<view class="settings-icon-box">
 						<uni-icons type="info-filled" color="#9CA3AF" size="17" />
 					</view>
-					<text class="settings-label">关于少不起</text>
+					<text class="settings-label">关于烧不起</text>
 					<text class="settings-hint">v1.0.0</text>
 					<uni-icons type="right" size="13" color="#C8CBD4" />
 				</view>
@@ -154,10 +154,9 @@
 </template>
 
 <script setup lang="ts">
-	import { getCurrentInstance } from 'vue'
 	import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
-	import { useSysInfoStore } from '@/stores'
-	import { useUserStore } from '@/stores'
+import { useSysInfoStore, useUserStore } from '@/stores'
+import { getCurrentInstance } from 'vue'
 
 	const instance = getCurrentInstance()
 	onShow(() => {
@@ -173,9 +172,6 @@
 	const profileCardStyle = computed(() => {
 		// #ifdef H5
 		return { '--profile-safe-top-base': '16px' }
-		// #endif
-		// #ifndef H5
-		return { paddingTop: `${statusBarHeight.value + 16}px` }
 		// #endif
 	})
 
@@ -325,8 +321,8 @@
 
 	const showAbout = () => {
 		uni.showModal({
-			title: '少不起',
-			content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 少不起团队',
+			title: '烧不起',
+			content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队',
 			showCancel: false,
 			confirmText: '知道了',
 			confirmColor: '#5B5BD6',

@@ -3,6 +3,16 @@ import { z } from 'zod'
 
 dotenv.config()
 
+const BooleanFromEnv = z.preprocess((value) => {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+    if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+  }
+  return value
+}, z.boolean())
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
@@ -17,7 +27,15 @@ const EnvSchema = z.object({
   JWT_SECRET: z.string().min(16),
   JWT_EXPIRES_IN: z.string().default('7d'),
 
-  CORS_ORIGIN: z.string().default('*')
+  CORS_ORIGIN: z.string().default('*'),
+
+  MINIO_ENDPOINT: z.string().trim().min(1),
+  MINIO_PORT: z.coerce.number().int().positive().default(9000),
+  MINIO_USE_SSL: BooleanFromEnv.default(false),
+  MINIO_ACCESS_KEY: z.string().trim().min(1),
+  MINIO_SECRET_KEY: z.string().trim().min(1),
+  MINIO_BUCKET: z.string().trim().min(1),
+  MINIO_PUBLIC_BASE_URL: z.string().trim().min(1)
 })
 
 const parsed = EnvSchema.safeParse(process.env)

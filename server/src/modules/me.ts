@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import type { RowDataPacket } from 'mysql2/promise'
 import { z } from 'zod'
-import { queryRows } from '../db'
+import { execWrite, queryRows } from '../db'
 import { requireAuth } from '../middlewares/auth'
 import { buildPaginationMeta, parsePagination } from '../utils/pagination'
-import { sendSuccess } from '../utils/response'
+import { sendError, sendSuccess } from '../utils/response'
 import { mapUser, type UserRow } from './shared'
 
 type CountRow = RowDataPacket & { total: number }
@@ -50,6 +50,10 @@ const listSchema = z.object({
   pageSize: z.coerce.number().int().positive().max(100).optional()
 })
 
+const updateAvatarSchema = z.object({
+  avatarUrl: z.string().trim().min(1).max(500)
+})
+
 export const meRouter = Router()
 
 meRouter.use(requireAuth)
@@ -82,6 +86,24 @@ meRouter.get('/profile', async (req, res) => {
 
   const user = rows[0]
   sendSuccess(res, user ? mapUser(user) : null)
+})
+
+meRouter.put('/avatar', async (req, res) => {
+  const parsed = updateAvatarSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, '头像参数不合法', 400)
+    return
+  }
+
+  const userId = req.auth!.userId
+  await execWrite(
+    `UPDATE users
+    SET avatar_url = ?
+    WHERE id = ?`,
+    [parsed.data.avatarUrl, userId]
+  )
+
+  sendSuccess(res, { avatarUrl: parsed.data.avatarUrl }, '头像更新成功')
 })
 
 meRouter.get('/skills', async (req, res) => {

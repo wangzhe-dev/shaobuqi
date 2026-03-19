@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { z } from 'zod'
+import { env } from '../config'
 import { queryRows, withTransaction } from '../db'
 import { optionalAuth, requireAuth } from '../middlewares/auth'
 import { safeParseJson, stringifyJson } from '../utils/json'
@@ -52,6 +53,11 @@ type SkillImageRow = RowDataPacket & {
   image_url: string
   image_type: 'cover' | 'content'
   sort_no: number
+  storage_provider: string | null
+  bucket_name: string | null
+  object_key: string | null
+  mime_type: string | null
+  file_size: number | null
   width: number | null
   height: number | null
 }
@@ -132,6 +138,15 @@ type FeedbackAggRow = RowDataPacket & {
   success_total: number | null
 }
 
+type SkillImageInput = {
+  imageUrl: string
+  storageProvider: string | null
+  bucketName: string | null
+  objectKey: string | null
+  mimeType: string | null
+  fileSize: number | null
+}
+
 const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().max(100).optional(),
@@ -144,6 +159,18 @@ const listQuerySchema = z.object({
   minSuccessRate: z.coerce.number().min(0).max(100).optional(),
   maxAvgTotalTokens: z.coerce.number().int().positive().optional()
 })
+
+const skillImagePayloadSchema = z.union([
+  z.string().trim().min(1).max(500),
+  z.object({
+    imageUrl: z.string().trim().min(1).max(500),
+    storageProvider: z.string().trim().max(32).optional().nullable(),
+    bucketName: z.string().trim().max(64).optional().nullable(),
+    objectKey: z.string().trim().max(255).optional().nullable(),
+    mimeType: z.string().trim().max(64).optional().nullable(),
+    fileSize: z.coerce.number().int().nonnegative().optional().nullable()
+  })
+])
 
 const skillPayloadSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -172,8 +199,8 @@ const skillPayloadSchema = z.object({
   steps: z.array(z.string().trim().min(1).max(255)).max(80).optional().default([]),
   useScenes: z.array(z.string().trim().min(1).max(64)).max(50).optional().default([]),
 
-  coverImages: z.array(z.string().trim().min(1).max(500)).max(9).optional().default([]),
-  contentImages: z.array(z.string().trim().min(1).max(500)).max(30).optional().default([]),
+  coverImages: z.array(skillImagePayloadSchema).max(9).optional().default([]),
+  contentImages: z.array(skillImagePayloadSchema).max(30).optional().default([]),
 
   recommendedModelName: z.string().trim().max(64).optional().nullable(),
   commonModelName: z.string().trim().max(64).optional().nullable()
@@ -250,6 +277,50 @@ const parseSkillId = (value: unknown): number | null => {
   const parsed = Number(raw)
   if (!Number.isInteger(parsed) || parsed <= 0) return null
   return parsed
+}
+
+const inferObjectKeyFromUrl = (imageUrl: string): string | null => {
+  const base = env.MINIO_PUBLIC_BASE_URL.replace(/\/+$/, '')
+  if (!imageUrl.startsWith(`${base}/`)) return null
+
+  const objectKey = imageUrl.slice(base.length + 1).trim().replace(/^\/+/, '')
+  return objectKey || null
+}
+
+const normalizeSkillImage = (item: z.infer<typeof skillImagePayloadSchema>): SkillImageInput => {
+  if (typeof item === 'string') {
+    const objectKey = inferObjectKeyFromUrl(item)
+    return {
+      imageUrl: item,
+      storageProvider: objectKey ? 'minio' : null,
+      bucketName: objectKey ? env.MINIO_BUCKET : null,
+      objectKey,
+      mimeType: null,
+      fileSize: null
+    }
+  }
+
+  const objectKey = item.objectKey?.trim() || inferObjectKeyFromUrl(item.imageUrl)
+  const storageProvider = item.storageProvider?.trim() || (objectKey ? 'minio' : null)
+  const bucketName = item.bucketName?.trim() || (storageProvider === 'minio' ? env.MINIO_BUCKET : null)
+  const fileSize = item.fileSize === null || item.fileSize === undefined
+    ? null
+    : Math.max(0, Math.trunc(item.fileSize))
+
+  return {
+    imageUrl: item.imageUrl,
+    storageProvider,
+    bucketName,
+    objectKey,
+    mimeType: item.mimeType?.trim() || null,
+    fileSize
+  }
+}
+
+const normalizeSkillImages = (items: Array<z.infer<typeof skillImagePayloadSchema>>): SkillImageInput[] => {
+  return items
+    .map((item) => normalizeSkillImage(item))
+    .filter((item) => !!item.imageUrl)
 }
 
 const makeTagSlug = (name: string): string | null => {
@@ -385,31 +456,78 @@ const replaceSkillTags = async (conn: PoolConnection, skillId: number, tagNames:
 const replaceSkillImages = async (
   conn: PoolConnection,
   skillId: number,
-  coverImages: string[],
-  contentImages: string[]
+  coverImages: SkillImageInput[],
+  contentImages: SkillImageInput[]
 ): Promise<void> => {
   await conn.execute('DELETE FROM skill_images WHERE skill_id = ?', [skillId])
 
-  const values: Array<{ imageUrl: string; imageType: 'cover' | 'content'; sortNo: number }> = []
+  const values: Array<{
+    imageUrl: string
+    imageType: 'cover' | 'content'
+    sortNo: number
+    storageProvider: string | null
+    bucketName: string | null
+    objectKey: string | null
+    mimeType: string | null
+    fileSize: number | null
+  }> = []
 
-  coverImages.forEach((url, idx) => {
-    values.push({ imageUrl: url, imageType: 'cover', sortNo: idx })
+  coverImages.forEach((image, idx) => {
+    values.push({
+      imageUrl: image.imageUrl,
+      imageType: 'cover',
+      sortNo: idx,
+      storageProvider: image.storageProvider,
+      bucketName: image.bucketName,
+      objectKey: image.objectKey,
+      mimeType: image.mimeType,
+      fileSize: image.fileSize
+    })
   })
-  contentImages.forEach((url, idx) => {
-    values.push({ imageUrl: url, imageType: 'content', sortNo: idx })
+  contentImages.forEach((image, idx) => {
+    values.push({
+      imageUrl: image.imageUrl,
+      imageType: 'content',
+      sortNo: idx,
+      storageProvider: image.storageProvider,
+      bucketName: image.bucketName,
+      objectKey: image.objectKey,
+      mimeType: image.mimeType,
+      fileSize: image.fileSize
+    })
   })
 
   if (values.length === 0) return
 
-  const placeholders = values.map(() => '(?, ?, ?, ?)').join(', ')
+  const placeholders = values.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')
   const params: unknown[] = []
 
   for (const item of values) {
-    params.push(skillId, item.imageUrl, item.imageType, item.sortNo)
+    params.push(
+      skillId,
+      item.imageUrl,
+      item.imageType,
+      item.sortNo,
+      item.storageProvider ?? null,
+      item.bucketName ?? null,
+      item.objectKey ?? null,
+      item.mimeType ?? null,
+      item.fileSize ?? null
+    )
   }
 
   await conn.execute(
-    `INSERT INTO skill_images (skill_id, image_url, image_type, sort_no)
+    `INSERT INTO skill_images (
+      skill_id,
+      image_url,
+      image_type,
+      sort_no,
+      storage_provider,
+      bucket_name,
+      object_key,
+      mime_type,
+      file_size
+    )
     VALUES ${placeholders}`,
     params as any[]
   )
@@ -1027,7 +1145,12 @@ skillsRouter.post('/', requireAuth, async (req, res) => {
     const newSkillId = Number(insertSkillResult.insertId)
 
     await insertSkillContentVersion(conn, newSkillId, toContentInputFromCreatePayload(payload))
-    await replaceSkillImages(conn, newSkillId, payload.coverImages, payload.contentImages)
+    await replaceSkillImages(
+      conn,
+      newSkillId,
+      normalizeSkillImages(payload.coverImages),
+      normalizeSkillImages(payload.contentImages)
+    )
     await replaceSkillTags(conn, newSkillId, payload.tags)
     await refreshUserPublishedSkillCount(conn, userId)
 
@@ -1116,23 +1239,60 @@ skillsRouter.put('/:id', requireAuth, async (req, res) => {
 
     if ('coverImages' in payload || 'contentImages' in payload) {
       const [imageRows] = await conn.query<RowDataPacket[]>(
-        `SELECT image_url, image_type
+        `SELECT
+          image_url,
+          image_type,
+          storage_provider,
+          bucket_name,
+          object_key,
+          mime_type,
+          file_size
         FROM skill_images
         WHERE skill_id = ?
         ORDER BY sort_no ASC, id ASC`,
         [skillId]
       )
 
-      const currentCover = (imageRows as Array<{ image_url: string; image_type: 'cover' | 'content' }>)
+      const currentCover = (imageRows as Array<{
+        image_url: string
+        image_type: 'cover' | 'content'
+        storage_provider: string | null
+        bucket_name: string | null
+        object_key: string | null
+        mime_type: string | null
+        file_size: number | null
+      }>)
         .filter((row) => row.image_type === 'cover')
-        .map((row) => row.image_url)
+        .map((row) => ({
+          imageUrl: row.image_url,
+          storageProvider: row.storage_provider,
+          bucketName: row.bucket_name,
+          objectKey: row.object_key,
+          mimeType: row.mime_type,
+          fileSize: row.file_size === null ? null : Number(row.file_size)
+        }))
 
-      const currentContent = (imageRows as Array<{ image_url: string; image_type: 'cover' | 'content' }>)
+      const currentContent = (imageRows as Array<{
+        image_url: string
+        image_type: 'cover' | 'content'
+        storage_provider: string | null
+        bucket_name: string | null
+        object_key: string | null
+        mime_type: string | null
+        file_size: number | null
+      }>)
         .filter((row) => row.image_type === 'content')
-        .map((row) => row.image_url)
+        .map((row) => ({
+          imageUrl: row.image_url,
+          storageProvider: row.storage_provider,
+          bucketName: row.bucket_name,
+          objectKey: row.object_key,
+          mimeType: row.mime_type,
+          fileSize: row.file_size === null ? null : Number(row.file_size)
+        }))
 
-      const nextCover = 'coverImages' in payload ? payload.coverImages ?? [] : currentCover
-      const nextContent = 'contentImages' in payload ? payload.contentImages ?? [] : currentContent
+      const nextCover = 'coverImages' in payload ? normalizeSkillImages(payload.coverImages ?? []) : currentCover
+      const nextContent = 'contentImages' in payload ? normalizeSkillImages(payload.contentImages ?? []) : currentContent
 
       await replaceSkillImages(conn, skillId, nextCover, nextContent)
     }

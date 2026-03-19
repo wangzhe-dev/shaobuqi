@@ -4,6 +4,10 @@ export const getMyProfile = () => {
 	return http.get<any>('/me/profile')
 }
 
+export const updateMyAvatar = (avatarUrl: string) => {
+	return http.put<{ avatarUrl: string }>('/me/avatar', { avatarUrl })
+}
+
 export const getMySkills = (params?: { page?: number; pageSize?: number; status?: number }) => {
 	return http.get<any>('/me/skills', params)
 }

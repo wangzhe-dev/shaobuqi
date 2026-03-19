@@ -34,6 +34,13 @@ npm run dev
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
 - `CORS_ORIGIN`
+- `MINIO_ENDPOINT`
+- `MINIO_PORT`
+- `MINIO_USE_SSL`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `MINIO_BUCKET`
+- `MINIO_PUBLIC_BASE_URL`
 
 ## 3. 开发账号
 
@@ -87,6 +94,7 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 ### Me
 
 - `GET /h5api/me/profile`
+- `PUT /h5api/me/avatar`
 - `GET /h5api/me/skills`
 - `GET /h5api/me/favorites`
 - `GET /h5api/me/copies`
@@ -106,6 +114,7 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 
 - `GET /h5api/feed`
 - `POST /h5api/feed`
+- `PUT /h5api/feed/:id/images`
 - `GET /h5api/feed/:id`
 - `POST /h5api/feed/:id/like`
 - `DELETE /h5api/feed/:id/like`
@@ -116,6 +125,10 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 - `POST /h5api/feed/:id/comments`
 - `POST /h5api/feed/comments/:id/like`
 - `DELETE /h5api/feed/comments/:id/like`
+
+### Upload
+
+- `POST /h5api/uploads/image` (multipart/form-data, `file` + `usage`)
 
 ## 6. 健康检查
 

@@ -159,8 +159,9 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
 import { createSkillFeedback } from '@/api/skill'
-import { createFeedPost } from '@/api/feed'
+import { createFeedPost, updateFeedPostImages } from '@/api/feed'
 import type { FeedReaction } from '@/api/feed'
+import { uploadImageFile } from '@/api/upload'
 import { useUserStore } from '@/stores'
 
 const modelOptions = [
@@ -250,6 +251,22 @@ const removeImage = (idx: number) => { form.images.splice(idx, 1) }
 
 const onEmoji = () => uni.showToast({ title: '表情功能开发中', icon: 'none' })
 
+const uploadFeedImages = async (usageRecordId: number, localPaths: string[]) => {
+	const urls: string[] = []
+
+	for (let i = 0; i < localPaths.length; i += 1) {
+		const uploaded = await uploadImageFile({
+			filePath: localPaths[i],
+			usage: 'feed_image',
+			usageRecordId,
+			index: i + 1
+		})
+		urls.push(uploaded.imageUrl)
+	}
+
+	return urls
+}
+
 /* ── nav ── */
 const goBack = () => {
 	if (!hasContent.value) {
@@ -293,15 +310,21 @@ const publish = () => {
 
 			const reaction = form.reaction ? (form.reaction as FeedReaction) : undefined
 
-			await createFeedPost({
+			const feedPost = await createFeedPost({
 				skillId: Number.isInteger(maybeSkillId) && (maybeSkillId as number) > 0 ? maybeSkillId : undefined,
 				modelName: form.model,
 				totalTokens: toNumber(form.tokens),
 				costAmount: toNumber(form.cost),
 				reaction,
 				noteText: form.text.trim(),
-				images: form.images
+				images: []
 			})
+
+			const usageRecordId = Number(feedPost?.id)
+			if (Number.isInteger(usageRecordId) && usageRecordId > 0 && form.images.length > 0) {
+				const imageUrls = await uploadFeedImages(usageRecordId, form.images)
+				await updateFeedPostImages(usageRecordId, { images: imageUrls })
+			}
 
 			if (skillId.value) {
 				await createSkillFeedback(skillId.value, {

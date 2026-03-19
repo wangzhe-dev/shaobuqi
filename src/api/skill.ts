@@ -1,5 +1,16 @@
 import { http } from '@/utils/request'
 
+export type SkillImageInput =
+	| string
+	| {
+		imageUrl: string
+		storageProvider?: string | null
+		bucketName?: string | null
+		objectKey?: string | null
+		mimeType?: string | null
+		fileSize?: number | null
+	}
+
 export type SkillListQuery = {
 	page?: number
 	pageSize?: number
@@ -31,8 +42,8 @@ export type CreateSkillPayload = {
 	steps?: string[]
 	useScenes?: string[]
 
-	coverImages?: string[]
-	contentImages?: string[]
+	coverImages?: SkillImageInput[]
+	contentImages?: SkillImageInput[]
 
 	recommendedModelName?: string | null
 	commonModelName?: string | null
