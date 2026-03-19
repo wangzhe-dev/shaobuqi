@@ -159,6 +159,8 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
 import { createSkillFeedback } from '@/api/skill'
+import { createFeedPost } from '@/api/feed'
+import type { FeedReaction } from '@/api/feed'
 import { useUserStore } from '@/stores'
 
 const modelOptions = [
@@ -280,13 +282,34 @@ const publish = () => {
 	const doSubmit = async () => {
 		uni.showLoading({ title: '发布中...' })
 		try {
+			const toNumber = (raw: string): number | undefined => {
+				if (!raw) return undefined
+				const n = Number(raw)
+				if (!Number.isFinite(n) || n < 0) return undefined
+				return n
+			}
+
+			const maybeSkillId = skillId.value ? Number(skillId.value) : undefined
+
+			const reaction = form.reaction ? (form.reaction as FeedReaction) : undefined
+
+			await createFeedPost({
+				skillId: Number.isInteger(maybeSkillId) && (maybeSkillId as number) > 0 ? maybeSkillId : undefined,
+				modelName: form.model,
+				totalTokens: toNumber(form.tokens),
+				costAmount: toNumber(form.cost),
+				reaction,
+				noteText: form.text.trim(),
+				images: form.images
+			})
+
 			if (skillId.value) {
 				await createSkillFeedback(skillId.value, {
 					status: reactionToStatus(form.reaction),
 					comment: form.text.trim(),
 					modelName: form.model,
-					totalTokens: form.tokens ? Number(form.tokens) : undefined,
-					costAmount: form.cost ? Number(form.cost) : undefined,
+					totalTokens: toNumber(form.tokens),
+					costAmount: toNumber(form.cost),
 					isPublic: true
 				})
 			}

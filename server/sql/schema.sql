@@ -177,6 +177,59 @@ CREATE TABLE IF NOT EXISTS `skill_usage_records` (
   CONSTRAINT `fk_skill_usage_copy` FOREIGN KEY (`copy_id`) REFERENCES `skill_copies` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `feed_post_likes` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usage_record_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_feed_post_likes_post_user` (`usage_record_id`, `user_id`),
+  KEY `idx_feed_post_likes_user_time` (`user_id`, `created_at`),
+  CONSTRAINT `fk_feed_post_likes_post` FOREIGN KEY (`usage_record_id`) REFERENCES `skill_usage_records` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_feed_post_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `feed_post_resonates` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usage_record_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_feed_post_resonates_post_user` (`usage_record_id`, `user_id`),
+  KEY `idx_feed_post_resonates_user_time` (`user_id`, `created_at`),
+  CONSTRAINT `fk_feed_post_resonates_post` FOREIGN KEY (`usage_record_id`) REFERENCES `skill_usage_records` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_feed_post_resonates_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `feed_post_comments` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usage_record_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `parent_id` BIGINT UNSIGNED DEFAULT NULL,
+  `content` VARCHAR(1000) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_feed_post_comments_post_time` (`usage_record_id`, `created_at`),
+  KEY `idx_feed_post_comments_parent` (`parent_id`, `created_at`),
+  KEY `idx_feed_post_comments_user_time` (`user_id`, `created_at`),
+  CONSTRAINT `fk_feed_post_comments_post` FOREIGN KEY (`usage_record_id`) REFERENCES `skill_usage_records` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_feed_post_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_feed_post_comments_parent` FOREIGN KEY (`parent_id`) REFERENCES `feed_post_comments` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `feed_post_comment_likes` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `comment_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_feed_post_comment_likes_comment_user` (`comment_id`, `user_id`),
+  KEY `idx_feed_post_comment_likes_user_time` (`user_id`, `created_at`),
+  CONSTRAINT `fk_feed_post_comment_likes_comment` FOREIGN KEY (`comment_id`) REFERENCES `feed_post_comments` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_feed_post_comment_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `skill_feedbacks` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `skill_id` BIGINT UNSIGNED NOT NULL,

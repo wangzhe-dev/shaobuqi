@@ -102,6 +102,21 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 
 - `GET /h5api/stats/trends`
 
+### Feed
+
+- `GET /h5api/feed`
+- `POST /h5api/feed`
+- `GET /h5api/feed/:id`
+- `POST /h5api/feed/:id/like`
+- `DELETE /h5api/feed/:id/like`
+- `POST /h5api/feed/:id/meoo`
+- `DELETE /h5api/feed/:id/meoo`
+- `PUT /h5api/feed/:id/reaction`
+- `GET /h5api/feed/:id/comments`
+- `POST /h5api/feed/:id/comments`
+- `POST /h5api/feed/comments/:id/like`
+- `DELETE /h5api/feed/comments/:id/like`
+
 ## 6. 健康检查
 
 - `GET /healthz`

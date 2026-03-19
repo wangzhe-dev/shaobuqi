@@ -144,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { getFeed } from '@/api/feed'
+import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost } from '@/api/feed'
 import type { FeedItem } from '@/api/feed'
 
 const reactions = [
@@ -217,12 +217,11 @@ const mapApiPost = (item: FeedItem): PostItem => ({
   images: item.images,
   cost: formatCost(item.costAmount, item.currency),
   tokens: formatTokens(item.totalTokens),
-  // 社交互动数暂无后端支持，本地初始化为 0
-  likes: 0,
-  comments: 0,
-  meoo: 0,
-  liked: false,
-  myMeoo: false,
+  likes: item.likes ?? 0,
+  comments: item.comments ?? 0,
+  meoo: item.meoo ?? 0,
+  liked: !!item.liked,
+  myMeoo: !!item.myMeoo,
   myReaction: item.reaction || '',
 })
 
@@ -284,8 +283,41 @@ const pickReaction = (key: string) => {
 }
 
 // ── 互动 ──
-const toggleLike = (item: PostItem) => { item.liked = !item.liked; item.likes += item.liked ? 1 : -1 }
-const toggleMeoo = (item: PostItem) => { item.myMeoo = !item.myMeoo; item.meoo += item.myMeoo ? 1 : -1 }
+const toggleLike = async (item: PostItem) => {
+  const prevLiked = item.liked
+  const prevLikes = item.likes
+
+  item.liked = !prevLiked
+  item.likes += item.liked ? 1 : -1
+
+  try {
+    const res = item.liked ? await likeFeedPost(item.id) : await unlikeFeedPost(item.id)
+    item.liked = !!res.liked
+    item.likes = res.likes ?? 0
+  } catch (err) {
+    console.error('[feed-post] toggle like failed:', err)
+    item.liked = prevLiked
+    item.likes = prevLikes
+  }
+}
+
+const toggleMeoo = async (item: PostItem) => {
+  const prevMyMeoo = item.myMeoo
+  const prevMeoo = item.meoo
+
+  item.myMeoo = !prevMyMeoo
+  item.meoo += item.myMeoo ? 1 : -1
+
+  try {
+    const res = item.myMeoo ? await meooFeedPost(item.id) : await unmeooFeedPost(item.id)
+    item.myMeoo = !!res.myMeoo
+    item.meoo = res.meoo ?? 0
+  } catch (err) {
+    console.error('[feed-post] toggle meoo failed:', err)
+    item.myMeoo = prevMyMeoo
+    item.meoo = prevMeoo
+  }
+}
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
 const sharePost  = (_item: PostItem) => uni.showShareMenu({ withShareTicket: true })
 
