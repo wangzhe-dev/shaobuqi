@@ -14,10 +14,20 @@
     </view>
 
     <!-- 排序 Tab -->
-    <scroll-view class="sort-bar" scroll-x :show-scrollbar="false">
+    <scroll-view
+      class="sort-bar"
+      scroll-x
+      :show-scrollbar="false"
+      :scroll-into-view="activeSortTabId"
+      scroll-with-animation
+      @touchstart="onSortGestureStart"
+      @touchend="onSortGestureEnd"
+      @touchcancel="onGestureCancel"
+    >
       <view class="sort-row">
         <view
           v-for="tab in sortTabs" :key="tab.key"
+          :id="`sort-tab-${tab.key}`"
           class="sort-tab" :class="{ active: activeSort === tab.key }"
           @tap="setSort(tab.key)"
         >
@@ -27,6 +37,7 @@
     </scroll-view>
 
     <!-- Skill 列表 -->
+    <view class="list-outer">
     <scroll-view
       class="list-scroll"
       scroll-y
@@ -35,13 +46,19 @@
       refresher-default-style="black"
       :refresher-triggered="refreshing"
       lower-threshold="100"
+      @touchstart="onListGestureStart"
+      @touchend="onListGestureEnd"
+      @touchcancel="onGestureCancel"
       @refresherrefresh="onRefresh"
       @scrolltolower="onLoadMore"
     >
       <view class="skill-list">
         <view
-          v-for="skill in skills" :key="skill.id"
+          v-for="skill in displaySkills" :key="skill.id"
           class="skill-card"
+          @touchstart="onListGestureStart"
+          @touchend="onListGestureEnd"
+          @touchcancel="onGestureCancel"
           @tap="toSkill(skill.id)"
         >
           <!-- 标签行 -->
@@ -98,6 +115,10 @@
         </view>
       </view>
 
+      <view v-if="displaySkills.length === 0 && !loading && !refreshing" class="empty-state">
+        <text class="empty-state-t">没有符合当前筛选条件的 Skill</text>
+      </view>
+
       <!-- 底部加载状态 -->
       <view class="load-footer">
         <view v-if="loading" class="load-ing">
@@ -112,6 +133,7 @@
 
       <view class="list-bottom" />
     </scroll-view>
+    </view>
 
     <!-- 筛选浮层（在 scroll-view 外） -->
     <view v-if="showFilter" class="overlay" @tap="showFilter = false" />
@@ -162,11 +184,8 @@
 </template>
 
 <script setup lang="ts">
+const emit = defineEmits<{ edgeSwipe: [dir: 'left' | 'right'] }>()
 const showFilter  = ref(false)
-const activeSort  = ref('recommend')
-const filterScene = ref('全部')
-const filterToken = ref('全部')
-const filterRate  = ref('全部')
 
 const sortTabs = [
   { key: 'recommend',   label: '推荐' },
@@ -176,6 +195,79 @@ const sortTabs = [
   { key: 'bestValue',   label: '性价比最高' },
   { key: 'highRate',    label: '复现率最高' },
 ]
+
+const activeSort = ref('recommend')
+const activeSortTabId = computed(() => `sort-tab-${activeSort.value}`)
+
+const SWIPE_X_THRESHOLD = 56
+const SWIPE_Y_LIMIT = 80
+const SWIPE_MAX_DURATION = 1200
+
+let touchStartX = 0
+let touchStartY = 0
+let touchStartAt = 0
+let touching = false
+let gestureSource: 'sort' | 'list' | '' = ''
+
+const stepSort = (delta: number) => {
+  const current = sortTabs.findIndex(tab => tab.key === activeSort.value)
+  if (current < 0) return false
+  const next = Math.min(sortTabs.length - 1, Math.max(0, current + delta))
+  if (next !== current) {
+    activeSort.value = sortTabs[next].key
+    return true
+  }
+  return false
+}
+
+const onGestureStart = (e: any, source: 'sort' | 'list') => {
+  if (showFilter.value) return
+  const touch = e.touches?.[0]
+  if (!touch) return
+  touching = true
+  gestureSource = source
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  touchStartAt = Date.now()
+}
+
+const onGestureEnd = (e: any, source: 'sort' | 'list') => {
+  if (!touching) return
+  touching = false
+
+  const touch = e.changedTouches?.[0]
+  if (!touch || showFilter.value) return
+
+  const dx = touch.clientX - touchStartX
+  const dy = touch.clientY - touchStartY
+  const dt = Date.now() - touchStartAt
+  const isHorizontal = Math.abs(dx) > Math.abs(dy)
+  const passedThreshold = Math.abs(dx) > SWIPE_X_THRESHOLD && Math.abs(dy) < SWIPE_Y_LIMIT
+  const inDuration = dt <= SWIPE_MAX_DURATION
+
+  if (!isHorizontal || !passedThreshold || !inDuration) return
+
+  const dir: 'left' | 'right' = dx < 0 ? 'left' : 'right'
+  const changed = stepSort(dir === 'left' ? 1 : -1)
+  if (!changed && (source || gestureSource)) emit('edgeSwipe', dir)
+}
+
+const onGestureCancel = () => {
+  touching = false
+  gestureSource = ''
+  touchStartX = 0
+  touchStartY = 0
+  touchStartAt = 0
+}
+
+const onSortGestureStart = (e: any) => { onGestureStart(e, 'sort') }
+const onSortGestureEnd = (e: any) => { onGestureEnd(e, 'sort') }
+const onListGestureStart = (e: any) => { onGestureStart(e, 'list') }
+const onListGestureEnd = (e: any) => { onGestureEnd(e, 'list') }
+
+const filterScene = ref('全部')
+const filterToken = ref('全部')
+const filterRate  = ref('全部')
 
 const scenes      = ['全部', '写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
 const tokenRanges = ['全部', '< 1k', '1k~3k', '3k~8k', '> 8k']
@@ -306,6 +398,94 @@ const onLoadMore = async () => {
 const copySkill = (_skill: any) => uni.showToast({ title: '已复制 Skill', icon: 'success' })
 const toSkill   = (id: string)  => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 const toSearch  = ()            => uni.navigateTo({ url: '/pages/search/index' })
+
+const parseMetricNumber = (value: string) => {
+  const raw = String(value).trim().toLowerCase()
+  if (!raw) return 0
+  const num = Number.parseFloat(raw.replace(/[^0-9.]/g, ''))
+  if (!Number.isFinite(num)) return 0
+  if (raw.includes('k')) return num * 1000
+  if (raw.includes('m')) return num * 1000 * 1000
+  return num
+}
+
+const parseRate = (value: string) => parseMetricNumber(value)
+const parseToken = (value: string) => parseMetricNumber(value)
+const parseCount = (value: string) => parseMetricNumber(value)
+const parseSkillId = (id: string) => Number.parseInt(String(id).replace(/[^0-9]/g, ''), 10) || 0
+
+const inTokenRange = (skill: any) => {
+  const token = parseToken(skill.avgToken)
+  if (filterToken.value === '全部') return true
+  if (filterToken.value === '< 1k') return token < 1000
+  if (filterToken.value === '1k~3k') return token >= 1000 && token <= 3000
+  if (filterToken.value === '3k~8k') return token > 3000 && token <= 8000
+  if (filterToken.value === '> 8k') return token > 8000
+  return true
+}
+
+const inRateRange = (skill: any) => {
+  const rate = parseRate(skill.successRate)
+  if (filterRate.value === '全部') return true
+  if (filterRate.value === '> 90%') return rate > 90
+  if (filterRate.value === '> 80%') return rate > 80
+  if (filterRate.value === '> 70%') return rate > 70
+  return true
+}
+
+const byRecommend = (a: any, b: any) => {
+  const featured = Number(b.featured) - Number(a.featured)
+  if (featured !== 0) return featured
+  const stable = Number(b.stable) - Number(a.stable)
+  if (stable !== 0) return stable
+  const rate = parseRate(b.successRate) - parseRate(a.successRate)
+  if (rate !== 0) return rate
+  return parseCount(b.copyCount) - parseCount(a.copyCount)
+}
+
+const byNewest = (a: any, b: any) => {
+  const isNew = Number(b.isNew) - Number(a.isNew)
+  if (isNew !== 0) return isNew
+  return parseSkillId(b.id) - parseSkillId(a.id)
+}
+
+const byMostCopy = (a: any, b: any) => parseCount(b.copyCount) - parseCount(a.copyCount)
+const byLowestToken = (a: any, b: any) => parseToken(a.avgToken) - parseToken(b.avgToken)
+
+const byBestValue = (a: any, b: any) => {
+  const score = (skill: any) => {
+    const token = Math.max(parseToken(skill.avgToken), 1)
+    const rate = parseRate(skill.successRate)
+    const copy = parseCount(skill.copyCount)
+    const stableBonus = skill.stable ? 1.05 : 1
+    return (rate * copy * stableBonus) / token
+  }
+  return score(b) - score(a)
+}
+
+const byHighRate = (a: any, b: any) => {
+  const rate = parseRate(b.successRate) - parseRate(a.successRate)
+  if (rate !== 0) return rate
+  return parseCount(b.copyCount) - parseCount(a.copyCount)
+}
+
+const sortSkillList = (list: any[]) => {
+  const sorted = [...list]
+  if (activeSort.value === 'newest') return sorted.sort(byNewest)
+  if (activeSort.value === 'mostCopy') return sorted.sort(byMostCopy)
+  if (activeSort.value === 'lowestToken') return sorted.sort(byLowestToken)
+  if (activeSort.value === 'bestValue') return sorted.sort(byBestValue)
+  if (activeSort.value === 'highRate') return sorted.sort(byHighRate)
+  return sorted.sort(byRecommend)
+}
+
+const displaySkills = computed(() => {
+  const filtered = skills.value.filter((skill) => {
+    const sceneOk = filterScene.value === '全部' || skill.scene === filterScene.value
+    return sceneOk && inTokenRange(skill) && inRateRange(skill)
+  })
+  return sortSkillList(filtered)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -366,11 +546,19 @@ const toSearch  = ()            => uni.navigateTo({ url: '/pages/search/index' }
 }
 
 /* ── 列表 ── */
+.list-outer { flex: 1; height: 0; display: flex; flex-direction: column; }
 .list-scroll { flex: 1; height: 0; overflow: hidden; }
 
 .skill-list {
   padding: 20rpx 24rpx 0;
   display: flex; flex-direction: column; gap: 20rpx;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 72rpx 24rpx 20rpx;
+  .empty-state-t { font-size: 24rpx; color: #9CA3AF; }
 }
 
 .skill-card {

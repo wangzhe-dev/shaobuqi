@@ -26,6 +26,7 @@
     <swiper
       class="tab-swiper"
       :current="activeTab"
+      :disable-touch="activeTab === 1"
       :duration="280"
       @change="onSwiperChange"
     >
@@ -33,7 +34,7 @@
         <feed-post />
       </swiper-item>
       <swiper-item class="tab-pane">
-        <skill-feed />
+        <skill-feed @edge-swipe="onSkillEdgeSwipe" />
       </swiper-item>
     </swiper>
 
@@ -58,6 +59,10 @@ const feedTabs  = ['消耗', 'Skill']
 const switchTab      = (i: number)  => { activeTab.value = i }
 const onSwiperChange = (e: any)     => { activeTab.value = e.detail.current }
 const toCreateRecord = ()           => uni.navigateTo({ url: '/pages/publish/record' })
+const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
+  if (dir === 'left')  activeTab.value = Math.min(feedTabs.length - 1, activeTab.value + 1)
+  else                 activeTab.value = Math.max(0, activeTab.value - 1)
+}
 </script>
 
 <style lang="scss" scoped>
