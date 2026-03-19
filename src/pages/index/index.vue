@@ -135,7 +135,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
 .fab {
   position: fixed;
   right: 40rpx;
-  bottom: calc(108rpx + env(safe-area-inset-bottom));
+  bottom: calc(130rpx + env(safe-area-inset-bottom));
   width: 96rpx;
   height: 96rpx;
   border-radius: 50%;

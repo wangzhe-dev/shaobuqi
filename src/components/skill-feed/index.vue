@@ -93,23 +93,6 @@
             </view>
           </view>
 
-          <!-- Token / 模型 / 复现率 -->
-          <view class="sc-meta-bar">
-            <view class="sc-token">
-              <uni-icons type="fire-filled" size="13" color="#E45C1A" />
-              <text class="sc-token-v">{{ skill.avgToken }}</text>
-              <text class="sc-token-u">tokens</text>
-            </view>
-            <view class="sc-model">
-              <text class="sc-model-dot" :style="{ color: skill.modelColor }">●</text>
-              <text class="sc-model-n">{{ skill.model }}</text>
-            </view>
-            <view class="sc-rate">
-              <text class="sc-rate-v">{{ skill.successRate }}</text>
-              <text class="sc-rate-l">复现率</text>
-            </view>
-          </view>
-
           <!-- 作者 + 复制 -->
           <view class="sc-foot">
             <view class="sc-author-wrap">
@@ -655,25 +638,6 @@ const displaySkills = computed(() => {
     display: flex; gap: 10rpx; margin-bottom: 20rpx;
     .sc-tag { background: rgba(0,0,0,0.05); padding: 6rpx 16rpx; border-radius: 8rpx; }
     .sc-tag-t { font-size: 20rpx; color: rgba(0,0,0,0.50); }
-  }
-
-  .sc-meta-bar {
-    display: flex; align-items: center; gap: 24rpx;
-    background: rgba(0,0,0,0.03); border-radius: 16rpx;
-    padding: 16rpx 20rpx; margin-bottom: 20rpx;
-
-    .sc-token { display: flex; align-items: center; gap: 6rpx;
-      .sc-token-v { font-size: 26rpx; font-weight: 800; color: #E45C1A; }
-      .sc-token-u { font-size: 18rpx; color: rgba(0,0,0,0.40); }
-    }
-    .sc-model { display: flex; align-items: center; gap: 6rpx;
-      .sc-model-dot { font-size: 16rpx; }
-      .sc-model-n { font-size: 22rpx; color: rgba(0,0,0,0.6); font-weight: 500; }
-    }
-    .sc-rate { margin-left: auto; display: flex; align-items: baseline; gap: 4rpx;
-      .sc-rate-v { font-size: 26rpx; font-weight: 700; color: #2F8A57; }
-      .sc-rate-l { font-size: 18rpx; color: rgba(0,0,0,0.40); }
-    }
   }
 
   .sc-foot {

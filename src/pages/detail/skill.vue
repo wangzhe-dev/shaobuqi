@@ -64,6 +64,13 @@
       <view class="skill-intro">
         <text class="si-title">简介</text>
         <text class="si-text">{{ skill.brief }}</text>
+        <!-- 图片九宫格 -->
+        <view v-if="skill.images && skill.images.length" class="skill-imgs"
+          :class="`gi-${skill.images.length <= 4 ? skill.images.length : 'many'}`">
+          <image v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
+            :src="src" class="skill-img" mode="aspectFill"
+            @tap="previewSkillImage(skill.images, i)" />
+        </view>
       </view>
 
       <!-- 使用场景 -->
@@ -75,64 +82,6 @@
           </view>
         </view>
       </view>
-			<!-- 3. 消耗证据区（橙色强调） -->
-			<view v-if="hasConsumeData" class="section-card token-section">
-				<view class="section-header">
-					<uni-icons class="section-badge" type="fire-filled" size="18" color="#E45C1A" />
-					<text class="section-title">消耗</text>
-					<text class="section-subtitle">社区真实使用数据</text>
-				</view>
-
-				<!-- Token 核心数据 -->
-				<view class="token-grid">
-					<view class="token-item token-item-main">
-						<text class="ti-val orange">{{ skill.avgTotalToken }}</text>
-						<text class="ti-label">平均总 token</text>
-					</view>
-					<view class="token-item">
-						<text class="ti-val">{{ skill.avgInputToken }}</text>
-						<text class="ti-label">输入 token</text>
-					</view>
-					<view class="token-item">
-						<text class="ti-val">{{ skill.avgOutputToken }}</text>
-						<text class="ti-label">输出 token</text>
-					</view>
-				</view>
-
-				<!-- 成本与模型 -->
-				<view class="cost-row">
-					<view class="cost-item">
-						<text class="cost-label">预计成本区间</text>
-						<text class="cost-val orange">{{ skill.estimatedCost }}</text>
-					</view>
-					<view class="cost-divider" />
-					<view class="cost-item">
-						<text class="cost-label">推荐模型</text>
-						<text class="cost-val">{{ skill.recommendedModel }}</text>
-					</view>
-					<view class="cost-divider" />
-					<view class="cost-item">
-						<text class="cost-label">社区常用</text>
-						<text class="cost-val">{{ skill.commonModel }}</text>
-					</view>
-				</view>
-
-				<!-- 使用统计 -->
-				<view class="usage-stats-row">
-					<view class="us-item">
-						<text class="us-val">{{ skill.totalUses }}</text>
-						<text class="us-label">社区复现次数</text>
-					</view>
-					<view class="us-item">
-						<text class="us-val green">{{ skill.successRate }}</text>
-						<text class="us-label">复现成功率</text>
-					</view>
-					<view class="us-item">
-						<text class="us-val blue">{{ skill.weekUses }}</text>
-						<text class="us-label">近7日使用</text>
-					</view>
-				</view>
-			</view>
 
 				<!-- 4. Skill 正文区 -->
 					<view class="section-card skill-content-card">
@@ -339,6 +288,7 @@
 			feedbackCount: '168',
 			brief: '适合把“照片问题”变成可执行的 PS 操作步骤，包含工具、顺序和参数区间。',
 			useScenes: ['人像精修', '电商主图', '写真后期', '证件照优化'],
+			images: ['https://picsum.photos/seed/skill1a/600/400', 'https://picsum.photos/seed/skill1b/600/400', 'https://picsum.photos/seed/skill1c/600/400'],
 			avgInputToken: '0.7k',
 			avgOutputToken: '1.2k',
 			avgTotalToken: '1.9k',
@@ -413,6 +363,7 @@
 			feedbackCount: '142',
 			brief: '先定位再修复，输出最小可行补丁和回归测试点，适合 Vue/React 项目。',
 			useScenes: ['线上报错', '页面白屏', '接口异常', '性能抖动'],
+			images: ['https://picsum.photos/seed/skill2a/600/400', 'https://picsum.photos/seed/skill2b/600/400'],
 			avgInputToken: '1.1k',
 			avgOutputToken: '1.0k',
 			avgTotalToken: '2.1k',
@@ -487,6 +438,7 @@
 			feedbackCount: '126',
 			brief: '把会议记录拆成决策、行动项、负责人和截止日期，直接可发到群里执行。',
 			useScenes: ['项目例会', '产品评审', '销售复盘', '跨部门沟通'],
+			images: ['https://picsum.photos/seed/skill3a/600/400'],
 			avgInputToken: '0.8k',
 			avgOutputToken: '0.4k',
 			avgTotalToken: '1.2k',
@@ -551,6 +503,7 @@
 			feedbackCount: '117',
 			brief: '聚焦主图一句话卖点，适合淘宝/拼多多/抖店等电商平台。',
 			useScenes: ['主图卖点', '详情页首屏', '活动海报', '直播间贴片'],
+			images: ['https://picsum.photos/seed/skill4a/600/400', 'https://picsum.photos/seed/skill4b/600/400', 'https://picsum.photos/seed/skill4c/600/400', 'https://picsum.photos/seed/skill4d/600/400'],
 			avgInputToken: '0.6k',
 			avgOutputToken: '0.9k',
 			avgTotalToken: '1.5k',
@@ -616,6 +569,7 @@
 			feedbackCount: '102',
 			brief: '适合 30~60 秒短视频口播，含开场钩子、核心内容和结尾引导。',
 			useScenes: ['抖音口播', '小红书视频', '知识分享', '产品种草'],
+			images: ['https://picsum.photos/seed/skill5a/600/400', 'https://picsum.photos/seed/skill5b/600/400', 'https://picsum.photos/seed/skill5c/600/400'],
 			avgInputToken: '0.8k',
 			avgOutputToken: '1.0k',
 			avgTotalToken: '1.8k',
@@ -683,6 +637,7 @@
 			feedbackCount: '88',
 			brief: '按真实对话场景做英语口语训练，先纠错再给更自然表达。',
 			useScenes: ['面试英语', '出国旅行', '商务会议', '日常口语'],
+			images: ['https://picsum.photos/seed/skill6a/600/400', 'https://picsum.photos/seed/skill6b/600/400'],
 			avgInputToken: '0.9k',
 			avgOutputToken: '0.7k',
 			avgTotalToken: '1.6k',
@@ -742,20 +697,6 @@
 
 	const skill = ref(cloneSkill('s1'))
 
-	const hasConsumeData = computed(() => {
-		if (skill.value.showConsume === false) return false
-		const values = [
-			skill.value.avgInputToken,
-			skill.value.avgOutputToken,
-			skill.value.avgTotalToken,
-			skill.value.estimatedCost
-		]
-		return values.some((item) => {
-			const text = `${item ?? ''}`.trim()
-			return !!text && text !== '--' && text !== '0'
-		})
-	})
-
 	const promptHtmlNodes = computed(() => {
 		const html = `${skill.value.fullPromptHtml || ''}`.trim()
 		return html || ''
@@ -785,6 +726,11 @@
 		})
 	}
 
+	const previewSkillImage = (images: string[], idx: number) => {
+		if (!images || !images.length) return
+		uni.previewImage({ current: images[idx] || images[0], urls: images })
+	}
+
 	const previewContentImage = (idx: number) => {
 		const images = Array.isArray(skill.value.contentImages) ? skill.value.contentImages.filter((item: any) => !!item) : []
 		if (!images.length) return
@@ -810,15 +756,7 @@
 				feedbackCount: payload.feedbackCount ?? skill.value.feedbackCount,
 				brief: payload.brief ?? skill.value.brief,
 				useScenes: Array.isArray(payload.useScenes) && payload.useScenes.length ? payload.useScenes : skill.value.useScenes,
-				avgInputToken: payload.avgInputToken ?? skill.value.avgInputToken,
-				avgOutputToken: payload.avgOutputToken ?? skill.value.avgOutputToken,
-				avgTotalToken: payload.avgTotalToken ?? skill.value.avgTotalToken,
-				estimatedCost: payload.estimatedCost ?? skill.value.estimatedCost,
-				recommendedModel: payload.recommendedModel ?? skill.value.recommendedModel,
-				commonModel: payload.commonModel ?? skill.value.commonModel,
-				showConsume: typeof payload.showConsume === 'boolean' ? payload.showConsume : skill.value.showConsume,
-				totalUses: payload.totalUses ?? skill.value.totalUses,
-				weekUses: payload.weekUses ?? skill.value.weekUses,
+				images: Array.isArray(payload.images) ? payload.images.slice(0, 9) : (skill.value.images || []),
 				fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
 				fullPromptHtml: payload.fullPromptHtml ?? skill.value.fullPromptHtml,
 				contentImages: Array.isArray(payload.contentImages) ? payload.contentImages.slice(0, 9) : (skill.value.contentImages || []),
@@ -1172,84 +1110,27 @@
 		}
 	}
 
-	/* 3. 消耗证据区 */
-	.token-section {
-		border-color: rgba(228, 92, 26,0.15);
-	}
-
-	.token-grid {
+	/* 图片九宫格 */
+	.skill-imgs {
 		display: flex;
-		gap: 16rpx;
-		margin-bottom: 20rpx;
+		flex-wrap: wrap;
+		gap: 4rpx;
+		margin-top: 16rpx;
 
-		.token-item {
-			flex: 1;
-			background: rgba(0,0,0,0.03);
-			border-radius: 16rpx;
-			padding: 20rpx 12rpx;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 8rpx;
+		.skill-img { border-radius: 10rpx; display: block; }
 
-			.ti-val { font-size: 30rpx; font-weight: 800; color: rgba(0,0,0,0.70); }
-			.ti-val.orange { font-size: 40rpx; color: #E45C1A; }
-			.ti-label { font-size: 20rpx; color: rgba(0,0,0,0.40); text-align: center; }
-
-			&.token-item-main { background: rgba(228, 92, 26,0.08); border: 1rpx solid rgba(228, 92, 26,0.2); }
-		}
+		/* 1张：宽横图 */
+		&.gi-1 .skill-img { width: 100%; height: 360rpx; border-radius: 16rpx; }
+		/* 2张：并排各半 */
+		&.gi-2 .skill-img { width: calc(50% - 2rpx); height: 240rpx; }
+		/* 3张：三等分一行 */
+		&.gi-3 .skill-img { width: calc(33.33% - 3rpx); height: 200rpx; }
+		/* 4张：2×2 方格 */
+		&.gi-4 .skill-img { width: calc(50% - 2rpx); height: 220rpx; }
+		/* 5-9张：每行3列自然换行，末行左对齐 */
+		&.gi-many .skill-img { width: calc(33.33% - 3rpx); height: 190rpx; }
 	}
 
-	.cost-row {
-		display: flex;
-		align-items: center;
-		background: rgba(0,0,0,0.03);
-		border-radius: 16rpx;
-		padding: 18rpx 0;
-		margin-bottom: 20rpx;
-
-		.cost-item {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 6rpx;
-
-			.cost-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
-			.cost-val { font-size: 26rpx; font-weight: 700; color: #1A1A1A; }
-			.cost-val.orange { color: #E45C1A; }
-		}
-
-		.cost-divider {
-			width: 1rpx;
-			height: 36rpx;
-			background: rgba(0,0,0,0.08);
-		}
-	}
-
-	.usage-stats-row {
-		display: flex;
-		align-items: center;
-		gap: 0;
-
-		.us-item {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 6rpx;
-			padding: 16rpx 0;
-			background: rgba(0,0,0,0.03);
-			border-radius: 16rpx;
-
-			& + .us-item { margin-left: 12rpx; }
-
-			.us-val { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
-			.us-val.green { color: #2F8A57; }
-			.us-val.blue { color: #5E738A; }
-			.us-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
-		}
-	}
 
 		/* 4. Skill 正文区 */
 		.skill-content-card {
