@@ -138,13 +138,20 @@
 					<text class="settings-hint">{{ cacheSize }}</text>
 					<uni-icons type="right" size="13" color="#C8CBD4" />
 				</view>
-				<view class="settings-row last" @tap="showAbout">
+				<view class="settings-row" @tap="showAbout">
 					<view class="settings-icon-box">
 						<uni-icons type="info-filled" color="#9CA3AF" size="17" />
 					</view>
 					<text class="settings-label">关于烧不起</text>
 					<text class="settings-hint">v1.0.0</text>
 					<uni-icons type="right" size="13" color="#C8CBD4" />
+				</view>
+				<view class="settings-row last logout-row" @tap="logoutConfirm">
+					<view class="settings-icon-box">
+						<uni-icons type="undo" color="#E45C1A" size="17" />
+					</view>
+					<text class="settings-label logout-label">退出登录</text>
+					<uni-icons type="right" size="13" color="#EABAA7" />
 				</view>
 			</view>
 		</view>
@@ -326,6 +333,24 @@ import { getCurrentInstance } from 'vue'
 			showCancel: false,
 			confirmText: '知道了',
 			confirmColor: '#5B5BD6',
+		})
+	}
+
+	const logoutConfirm = () => {
+		if (!userStore.token) {
+			uni.showToast({ title: '当前未登录', icon: 'none' })
+			return
+		}
+
+		uni.showModal({
+			title: '退出登录',
+			content: '确定要退出当前账号吗？',
+			confirmText: '退出',
+			confirmColor: '#E45C1A',
+			success: ({ confirm }) => {
+				if (!confirm) return
+				userStore.logout()
+			}
 		})
 	}
 </script>
@@ -570,6 +595,15 @@ import { getCurrentInstance } from 'vue'
 		font-size: 24rpx; color: #9CA3AF;
 		margin-right: 6rpx;
 	}
+}
+
+.logout-row {
+	background: rgba(228, 92, 26, 0.04);
+}
+
+.logout-label {
+	color: #E45C1A !important;
+	font-weight: 600;
 }
 
 .page-bottom { height: calc(80rpx + env(safe-area-inset-bottom)); }

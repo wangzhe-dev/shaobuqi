@@ -1,28 +1,36 @@
 <template>
 	<view class="page">
+		<!-- ─── Hero ─────────────────────────────────────────────── -->
 		<view class="hero">
-			<text class="hero-title">烧不起</text>
-			<text class="hero-sub">{{ isRegister ? '注册账号，开始使用' : '登录后可发布 / 收藏 / 反馈 Skill' }}</text>
+			<view class="deco-ring r1" />
+			<view class="deco-ring r2" />
+			<view class="hero-body">
+				<view class="accent-line" />
+				<text class="hero-title">烧不起</text>
+				<text class="hero-sub">{{ isRegister ? '注册账号，开始使用' : '登录后可发布 · 收藏 · 反馈 Skill' }}</text>
+			</view>
 		</view>
 
-		<view class="card">
-			<!-- 微信授权回调时显示 loading -->
+		<!-- ─── Form sheet ─────────────────────────────────────────── -->
+		<view class="sheet">
 			<view v-if="wxLoading" class="wx-loading">
 				<text class="wx-loading-t">微信授权中...</text>
 			</view>
 
 			<template v-else>
-				<!-- Tab 切换 -->
+				<!-- Tabs -->
 				<view class="tab-bar">
 					<view class="tab-item" :class="{ active: !isRegister }" @tap="isRegister = false">
 						<text class="tab-t">登录</text>
+						<view class="tab-line" />
 					</view>
 					<view class="tab-item" :class="{ active: isRegister }" @tap="isRegister = true">
 						<text class="tab-t">注册</text>
+						<view class="tab-line" />
 					</view>
 				</view>
 
-				<!-- 登录表单 -->
+				<!-- Login form -->
 				<template v-if="!isRegister">
 					<!-- #ifdef H5 -->
 					<view v-if="inWechat" class="btn on wx-btn" @tap="doWxLogin">
@@ -30,81 +38,116 @@
 					</view>
 					<view v-if="inWechat" class="divider">
 						<view class="divider-line" />
-						<text class="divider-t">或</text>
+						<text class="divider-t">或者</text>
 						<view class="divider-line" />
 					</view>
 					<!-- #endif -->
 
-					<input
-						v-model="loginForm.identifier"
-						class="inp"
-						placeholder="手机号或邮箱"
-						placeholder-class="inp-ph"
-					/>
-					<input
-						v-model="loginForm.password"
-						class="inp"
-						type="password"
-						password
-						placeholder="密码（6位以上）"
-						placeholder-class="inp-ph"
-					/>
+					<view class="inp-wrap" :class="{ focused: focusedField === 'identifier' }">
+						<input
+							v-model="loginForm.identifier"
+							class="inp"
+							placeholder="手机号或邮箱"
+							placeholder-class="inp-ph"
+							@focus="focusedField = 'identifier'"
+							@blur="focusedField = ''"
+						/>
+					</view>
+					<view class="inp-wrap" :class="{ focused: focusedField === 'password' }">
+						<input
+							v-model="loginForm.password"
+							class="inp"
+							type="password"
+							password
+							placeholder="密码（6位以上）"
+							placeholder-class="inp-ph"
+							@focus="focusedField = 'password'"
+							@blur="focusedField = ''"
+						/>
+					</view>
 
-					<view class="tips">开发账号：13800000000 / 12345678</view>
+					<view class="dev-hint">
+						<text class="dev-hint-tag">DEV</text>
+						<text class="dev-hint-val">13800000000 · 12345678</text>
+					</view>
 
 					<view class="btn" :class="{ on: canLogin && !loading }" @tap="doLogin">
 						<text class="btn-t">{{ loading ? '登录中...' : '登录' }}</text>
 					</view>
 				</template>
 
-				<!-- 注册表单 -->
+				<!-- Register form -->
 				<template v-else>
-					<input
-						v-model="regForm.email"
-						class="inp"
-						placeholder="邮箱地址"
-						placeholder-class="inp-ph"
-					/>
-					<view class="code-row">
+					<view class="inp-wrap" :class="{ focused: focusedField === 'email' }">
 						<input
-							v-model="regForm.code"
-							class="inp code-inp"
-							placeholder="验证码"
+							v-model="regForm.email"
+							class="inp"
+							placeholder="邮箱地址"
 							placeholder-class="inp-ph"
-							maxlength="6"
+							@focus="focusedField = 'email'"
+							@blur="focusedField = ''"
 						/>
+					</view>
+					<view class="code-row">
+						<view class="inp-wrap" :class="{ focused: focusedField === 'code' }">
+							<input
+								v-model="regForm.code"
+								class="inp"
+								placeholder="验证码"
+								placeholder-class="inp-ph"
+								maxlength="6"
+								@focus="focusedField = 'code'"
+								@blur="focusedField = ''"
+							/>
+						</view>
 						<view class="send-btn" :class="{ disabled: countdown > 0 }" @tap="doSendCode">
-							<text class="send-btn-t">{{ countdown > 0 ? `${countdown}s` : '发送验证码' }}</text>
+							<text class="send-btn-t">{{ countdown > 0 ? `${countdown}s` : '发送' }}</text>
 						</view>
 					</view>
-					<input
-						v-model="regForm.nickname"
-						class="inp"
-						placeholder="昵称（可选，默认用邮箱前缀）"
-						placeholder-class="inp-ph"
-					/>
-					<input
-						v-model="regForm.password"
-						class="inp"
-						type="password"
-						password
-						placeholder="设置密码（6位以上）"
-						placeholder-class="inp-ph"
-					/>
-					<input
-						v-model="regForm.confirmPassword"
-						class="inp"
-						type="password"
-						password
-						placeholder="再次输入密码"
-						placeholder-class="inp-ph"
-					/>
+					<view class="inp-wrap" :class="{ focused: focusedField === 'nickname' }">
+						<input
+							v-model="regForm.nickname"
+							class="inp"
+							placeholder="昵称（可选）"
+							placeholder-class="inp-ph"
+							@focus="focusedField = 'nickname'"
+							@blur="focusedField = ''"
+						/>
+					</view>
+					<view class="inp-wrap" :class="{ focused: focusedField === 'regpwd' }">
+						<input
+							v-model="regForm.password"
+							class="inp"
+							type="password"
+							password
+							placeholder="设置密码（6位以上）"
+							placeholder-class="inp-ph"
+							@focus="focusedField = 'regpwd'"
+							@blur="focusedField = ''"
+						/>
+					</view>
+					<view class="inp-wrap" :class="{ focused: focusedField === 'confirm' }">
+						<input
+							v-model="regForm.confirmPassword"
+							class="inp"
+							type="password"
+							password
+							placeholder="再次确认密码"
+							placeholder-class="inp-ph"
+							@focus="focusedField = 'confirm'"
+							@blur="focusedField = ''"
+						/>
+					</view>
 
 					<view class="btn" :class="{ on: canRegister && !loading }" @tap="doRegister">
 						<text class="btn-t">{{ loading ? '注册中...' : '注册并登录' }}</text>
 					</view>
 				</template>
 			</template>
+		</view>
+
+		<view class="page-footer">
+			<text class="page-footer-t">登录即代表同意《用户协议》与《隐私政策》</text>
 		</view>
 	</view>
 </template>
@@ -118,6 +161,7 @@ const userStore = useUserStore()
 const loading = ref(false)
 const wxLoading = ref(false)
 const isRegister = ref(false)
+const focusedField = ref('')
 
 // #ifdef H5
 import { isWechat } from '@/utils/h5'
@@ -260,179 +304,290 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// ─── Page ────────────────────────────────────────────────────────────────────
 .page {
 	min-height: 100vh;
-	padding: 56rpx 36rpx;
-	box-sizing: border-box;
-	background: linear-gradient(160deg, #FFF8F3 0%, #F6F8FF 50%, #F9FAFB 100%);
+	background: #1A1A2E;
+	display: flex;
+	flex-direction: column;
 }
 
+// ─── Hero ────────────────────────────────────────────────────────────────────
 .hero {
-	margin: 40rpx 0 28rpx;
+	padding: 72rpx 48rpx 88rpx;
+	position: relative;
+	overflow: hidden;
+
+	.deco-ring {
+		position: absolute;
+		border-radius: 50%;
+	}
+
+	.r1 {
+		width: 440rpx;
+		height: 440rpx;
+		top: -160rpx;
+		right: -100rpx;
+		border: 1rpx solid rgba(91, 91, 214, 0.18);
+	}
+
+	.r2 {
+		width: 220rpx;
+		height: 220rpx;
+		top: 20rpx;
+		right: 50rpx;
+		border: 1rpx solid rgba(91, 91, 214, 0.1);
+		background: rgba(91, 91, 214, 0.04);
+	}
+
+	.hero-body {
+		position: relative;
+		z-index: 1;
+	}
+
+	.accent-line {
+		width: 48rpx;
+		height: 6rpx;
+		background: #5B5BD6;
+		border-radius: 4rpx;
+		margin-bottom: 26rpx;
+	}
+
 	.hero-title {
 		display: block;
-		font-size: 64rpx;
+		font-size: 84rpx;
 		font-weight: 900;
-		color: #1F2937;
-		letter-spacing: 2rpx;
+		color: #FFFFFF;
+		letter-spacing: 4rpx;
+		line-height: 1;
+		margin-bottom: 20rpx;
 	}
+
 	.hero-sub {
 		display: block;
-		margin-top: 10rpx;
 		font-size: 24rpx;
-		color: #6B7280;
+		color: rgba(255, 255, 255, 0.38);
+		letter-spacing: 0.5rpx;
 	}
 }
 
-.card {
-	background: rgba(255, 255, 255, 0.88);
-	backdrop-filter: blur(8rpx);
-	border-radius: 26rpx;
-	padding: 28rpx;
-	box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.06);
+// ─── Sheet ───────────────────────────────────────────────────────────────────
+.sheet {
+	flex: 1;
+	background: #FFFFFF;
+	border-radius: 36rpx 36rpx 0 0;
+	margin-top: -36rpx;
+	padding: 48rpx 40rpx 60rpx;
+	box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.12);
 }
 
+// ─── Tab bar ─────────────────────────────────────────────────────────────────
 .tab-bar {
 	display: flex;
-	margin-bottom: 28rpx;
-	border-radius: 14rpx;
-	background: #F3F4F6;
-	padding: 6rpx;
-	gap: 6rpx;
+	gap: 40rpx;
+	margin-bottom: 40rpx;
 
 	.tab-item {
-		flex: 1;
-		height: 64rpx;
-		border-radius: 10rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		padding-bottom: 18rpx;
+		position: relative;
 
 		.tab-t {
-			font-size: 28rpx;
+			font-size: 30rpx;
 			font-weight: 600;
-			color: #9CA3AF;
+			color: #C8CDD8;
+		}
+
+		.tab-line {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 3rpx;
+			border-radius: 2rpx;
+			background: transparent;
 		}
 
 		&.active {
-			background: #fff;
-			box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
-
 			.tab-t {
-				color: #5B5BD6;
+				color: #1A1A2E;
+			}
+
+			.tab-line {
+				background: #5B5BD6;
 			}
 		}
 	}
 }
 
-.inp {
-	height: 88rpx;
+// ─── Inputs ──────────────────────────────────────────────────────────────────
+.inp-wrap {
+	height: 96rpx;
 	border-radius: 14rpx;
-	border: 1rpx solid rgba(0, 0, 0, 0.09);
-	padding: 0 20rpx;
-	font-size: 28rpx;
-	background: #fff;
+	border: 1.5rpx solid #EAECF0;
+	background: #F8F9FB;
 	margin-bottom: 16rpx;
+	padding: 0 22rpx;
+	display: flex;
+	align-items: center;
 	box-sizing: border-box;
+
+	&.focused {
+		border-color: #5B5BD6;
+		background: #FFFFFF;
+	}
+}
+
+.inp {
+	flex: 1;
+	height: 100%;
+	font-size: 28rpx;
+	color: #1A1A2E;
+	background: transparent;
 }
 
 .inp-ph {
-	color: #9CA3AF;
+	color: #BEC3CC;
+	font-size: 28rpx;
 }
 
-.tips {
-	font-size: 22rpx;
-	color: #6B7280;
-	background: rgba(91, 91, 214, 0.08);
-	border-radius: 10rpx;
-	padding: 14rpx;
-	margin: 8rpx 0 22rpx;
-}
-
-.btn {
-	height: 88rpx;
-	border-radius: 16rpx;
-	background: rgba(91, 91, 214, 0.35);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	.btn-t {
-		font-size: 30rpx;
-		font-weight: 800;
-		color: rgba(255, 255, 255, 0.9);
-	}
-
-	&.on {
-		background: #5B5BD6;
-	}
-}
-
+// ─── Code row ────────────────────────────────────────────────────────────────
 .code-row {
 	display: flex;
 	gap: 12rpx;
 	margin-bottom: 16rpx;
 
-	.code-inp {
+	.inp-wrap {
 		flex: 1;
 		margin-bottom: 0;
 	}
+}
 
-	.send-btn {
-		flex-shrink: 0;
-		height: 88rpx;
-		padding: 0 20rpx;
-		border-radius: 14rpx;
-		background: #5B5BD6;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+.send-btn {
+	flex-shrink: 0;
+	height: 96rpx;
+	padding: 0 28rpx;
+	border-radius: 14rpx;
+	background: #5B5BD6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	.send-btn-t {
+		font-size: 24rpx;
+		font-weight: 700;
+		color: #FFFFFF;
+		white-space: nowrap;
+	}
+
+	&.disabled {
+		background: #EAECF0;
 
 		.send-btn-t {
-			font-size: 24rpx;
-			font-weight: 600;
-			color: #fff;
-			white-space: nowrap;
-		}
-
-		&.disabled {
-			background: #C4C4E8;
+			color: #BEC3CC;
 		}
 	}
 }
 
-.wx-btn {
-	background: #07C160;
-	margin-bottom: 0;
+// ─── Dev hint ────────────────────────────────────────────────────────────────
+.dev-hint {
+	display: flex;
+	align-items: center;
+	gap: 14rpx;
+	padding: 16rpx 18rpx;
+	border-radius: 10rpx;
+	background: rgba(91, 91, 214, 0.06);
+	margin: 4rpx 0 24rpx;
+
+	.dev-hint-tag {
+		font-size: 18rpx;
+		font-weight: 700;
+		color: #5B5BD6;
+		background: rgba(91, 91, 214, 0.14);
+		padding: 4rpx 12rpx;
+		border-radius: 6rpx;
+		letter-spacing: 2rpx;
+	}
+
+	.dev-hint-val {
+		font-size: 22rpx;
+		color: #6B7280;
+	}
 }
 
+// ─── Button ──────────────────────────────────────────────────────────────────
+.btn {
+	height: 96rpx;
+	border-radius: 14rpx;
+	background: #EAECF0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 8rpx;
+
+	.btn-t {
+		font-size: 30rpx;
+		font-weight: 700;
+		color: #BEC3CC;
+	}
+
+	&.on {
+		background: #5B5BD6;
+
+		.btn-t {
+			color: #FFFFFF;
+		}
+	}
+
+	&.wx-btn {
+		background: #07C160;
+
+		.btn-t {
+			color: #FFFFFF;
+		}
+	}
+}
+
+// ─── Divider ─────────────────────────────────────────────────────────────────
 .divider {
 	display: flex;
 	align-items: center;
-	gap: 16rpx;
-	margin: 24rpx 0;
+	gap: 20rpx;
+	margin: 16rpx 0 24rpx;
 
 	.divider-line {
 		flex: 1;
 		height: 1rpx;
-		background: rgba(0, 0, 0, 0.08);
+		background: #EAECF0;
 	}
 
 	.divider-t {
 		font-size: 22rpx;
-		color: #9CA3AF;
+		color: #C8CDD8;
 	}
 }
 
+// ─── WX Loading ──────────────────────────────────────────────────────────────
 .wx-loading {
-	height: 120rpx;
+	height: 160rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 
 	.wx-loading-t {
 		font-size: 28rpx;
-		color: #6B7280;
+		color: #9CA3AF;
+	}
+}
+
+// ─── Footer ──────────────────────────────────────────────────────────────────
+.page-footer {
+	background: #FFFFFF;
+	padding: 0 40rpx 60rpx;
+	text-align: center;
+
+	.page-footer-t {
+		font-size: 20rpx;
+		color: #C8CDD8;
 	}
 }
 </style>
