@@ -146,9 +146,24 @@
 						</view>
 
 					<view class="skill-content-panel">
-						<text class="scp-text">{{ skill.fullPrompt }}</text>
+						<rich-text v-if="promptHtmlNodes" class="scp-rich" :nodes="promptHtmlNodes" />
+						<text v-else class="scp-text">{{ skill.fullPrompt }}</text>
 					</view>
-			</view>
+
+					<view v-if="Array.isArray(skill.contentImages) && skill.contentImages.length" class="content-img-block">
+						<text class="content-img-title">内容图片</text>
+						<view class="content-img-grid">
+							<image
+								v-for="(img, idx) in skill.contentImages"
+								:key="`${img}-${idx}`"
+								class="content-img"
+								:src="img"
+								mode="aspectFill"
+								@tap="previewContentImage(idx)"
+							/>
+						</view>
+					</view>
+				</view>
 
 			<view v-if="variableNotesText" class="section-card variable-notes-card">
 				<view class="section-header">
@@ -741,6 +756,11 @@
 		})
 	})
 
+	const promptHtmlNodes = computed(() => {
+		const html = `${skill.value.fullPromptHtml || ''}`.trim()
+		return html || ''
+	})
+
 	const variableNotesText = computed(() => {
 		const direct = `${skill.value.variableNotes || ''}`.trim()
 		if (direct) return direct
@@ -765,6 +785,15 @@
 		})
 	}
 
+	const previewContentImage = (idx: number) => {
+		const images = Array.isArray(skill.value.contentImages) ? skill.value.contentImages.filter((item: any) => !!item) : []
+		if (!images.length) return
+		uni.previewImage({
+			current: images[idx] || images[0],
+			urls: images
+		})
+	}
+
 	const applyPublishedSkill = (payload: any) => {
 		if (!payload || typeof payload !== 'object') return
 		skill.value = {
@@ -778,26 +807,28 @@
 			copyCount: payload.copyCount ?? skill.value.copyCount,
 			favoriteCount: payload.favoriteCount ?? skill.value.favoriteCount,
 			successRate: payload.successRate ?? skill.value.successRate,
-			feedbackCount: payload.feedbackCount ?? skill.value.feedbackCount,
-			brief: payload.brief ?? skill.value.brief,
-			useScenes: Array.isArray(payload.useScenes) && payload.useScenes.length ? payload.useScenes : skill.value.useScenes,
-			avgInputToken: payload.avgInputToken ?? skill.value.avgInputToken,
-			avgOutputToken: payload.avgOutputToken ?? skill.value.avgOutputToken,
-			avgTotalToken: payload.avgTotalToken ?? skill.value.avgTotalToken,
-			estimatedCost: payload.estimatedCost ?? skill.value.estimatedCost,
-			recommendedModel: payload.recommendedModel ?? skill.value.recommendedModel,
-			commonModel: payload.commonModel ?? skill.value.commonModel,
-			showConsume: typeof payload.showConsume === 'boolean' ? payload.showConsume : skill.value.showConsume,
-			totalUses: payload.totalUses ?? skill.value.totalUses,
-			weekUses: payload.weekUses ?? skill.value.weekUses,
-			fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
-			variableNotes: payload.variableNotes ?? skill.value.variableNotes,
-			variables: Array.isArray(payload.variables) && payload.variables.length ? payload.variables : skill.value.variables,
-			steps: Array.isArray(payload.steps) && payload.steps.length ? payload.steps : skill.value.steps,
-			feedbacks: Array.isArray(payload.feedbacks) ? payload.feedbacks : skill.value.feedbacks,
-			similarSkills: Array.isArray(payload.similarSkills) ? payload.similarSkills : skill.value.similarSkills
+				feedbackCount: payload.feedbackCount ?? skill.value.feedbackCount,
+				brief: payload.brief ?? skill.value.brief,
+				useScenes: Array.isArray(payload.useScenes) && payload.useScenes.length ? payload.useScenes : skill.value.useScenes,
+				avgInputToken: payload.avgInputToken ?? skill.value.avgInputToken,
+				avgOutputToken: payload.avgOutputToken ?? skill.value.avgOutputToken,
+				avgTotalToken: payload.avgTotalToken ?? skill.value.avgTotalToken,
+				estimatedCost: payload.estimatedCost ?? skill.value.estimatedCost,
+				recommendedModel: payload.recommendedModel ?? skill.value.recommendedModel,
+				commonModel: payload.commonModel ?? skill.value.commonModel,
+				showConsume: typeof payload.showConsume === 'boolean' ? payload.showConsume : skill.value.showConsume,
+				totalUses: payload.totalUses ?? skill.value.totalUses,
+				weekUses: payload.weekUses ?? skill.value.weekUses,
+				fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
+				fullPromptHtml: payload.fullPromptHtml ?? skill.value.fullPromptHtml,
+				contentImages: Array.isArray(payload.contentImages) ? payload.contentImages.slice(0, 9) : (skill.value.contentImages || []),
+				variableNotes: payload.variableNotes ?? skill.value.variableNotes,
+				variables: Array.isArray(payload.variables) && payload.variables.length ? payload.variables : skill.value.variables,
+				steps: Array.isArray(payload.steps) && payload.steps.length ? payload.steps : skill.value.steps,
+				feedbacks: Array.isArray(payload.feedbacks) ? payload.feedbacks : skill.value.feedbacks,
+				similarSkills: Array.isArray(payload.similarSkills) ? payload.similarSkills : skill.value.similarSkills
+			}
 		}
-	}
 
 	onLoad((query: any) => {
 		const isFromPublish = `${query?.fromPublish || ''}` === '1'
@@ -1220,30 +1251,62 @@
 		}
 	}
 
-	/* 4. Skill 正文区 */
-	.skill-content-card {
-		padding-top: 20rpx;
+		/* 4. Skill 正文区 */
+		.skill-content-card {
+			padding-top: 20rpx;
 
-		.section-header {
-			margin-bottom: 18rpx;
-		}
+			.section-header {
+				margin-bottom: 18rpx;
+			}
 
-		.skill-content-panel {
-			background: #191A31;
-			border-radius: 26rpx;
-			padding: 28rpx;
-			border: 1rpx solid rgba(255,255,255,0.06);
-		}
+			.skill-content-panel {
+				background: #191A31;
+				border-radius: 26rpx;
+				padding: 28rpx;
+				border: 1rpx solid rgba(255,255,255,0.06);
+			}
 
-		.scp-text {
-			display: block;
-			font-size: 24rpx;
-			color: #AEB7FF;
-			line-height: 1.72;
-			white-space: pre-wrap;
-			word-break: break-word;
+			.scp-text,
+			.scp-rich {
+				display: block;
+				font-size: 24rpx;
+				color: #AEB7FF;
+				line-height: 1.72;
+				white-space: pre-wrap;
+				word-break: break-word;
+			}
+
+			.scp-rich :deep(img) {
+				max-width: 100%;
+				height: auto;
+				border-radius: 10rpx;
+			}
+
+			.content-img-block {
+				margin-top: 18rpx;
+			}
+
+			.content-img-title {
+				display: block;
+				margin-bottom: 10rpx;
+				font-size: 22rpx;
+				font-weight: 700;
+				color: rgba(0, 0, 0, 0.60);
+			}
+
+			.content-img-grid {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 10rpx;
+			}
+
+			.content-img {
+				width: 100%;
+				height: 168rpx;
+				border-radius: 12rpx;
+				background: rgba(0, 0, 0, 0.04);
+			}
 		}
-	}
 
 	.variable-notes-card {
 		.vn-text {

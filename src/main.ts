@@ -6,6 +6,10 @@ import uniapi from './utils/common/uniapi'
 import { loginPage, imgUrl, mainColor } from './config'
 import 'sard-uniapp/global.d.ts'
 
+// #ifdef H5
+import quill from 'quill'
+// #endif
+
 // #ifdef MP-WEIXIN
 import mpShareMixin from './mixin/mp-share-mixin'
 // #endif
@@ -13,6 +17,10 @@ import mpShareMixin from './mixin/mp-share-mixin'
 // #ifdef H5
 import { createVNode, render } from 'vue'
 import PwaPrompt from './components/PwaPrompt.vue'
+
+if (typeof window !== 'undefined') {
+	;(window as Window & { Quill?: unknown }).Quill = quill
+}
 
 if (import.meta.env.DEV && import.meta.env.MODE !== 'production' && typeof document !== 'undefined') {
 	const script = document.createElement('script')

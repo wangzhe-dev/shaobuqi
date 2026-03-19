@@ -366,11 +366,22 @@ const moreSkills: Record<number, any[]> = {
   3: [],
 }
 
+const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
+
 const skills    = ref([...initialSkills])
 const refreshing = ref(false)
 const loading    = ref(false)
 const noMore     = ref(false)
 const page       = ref(2)
+
+// 把刚发布的 skill 注入到列表顶部（24h 内有效）
+const injectPublishedSkill = () => {
+  const published = uni.getStorageSync(FEED_PUBLISHED_KEY)
+  if (!published?.id) return
+  if (Date.now() - (published.publishedAt || 0) > 24 * 60 * 60 * 1000) return
+  if (skills.value.find((s: any) => s.id === published.id)) return
+  skills.value.unshift(published)
+}
 
 const onRefresh = async () => {
   refreshing.value = true
@@ -378,8 +389,15 @@ const onRefresh = async () => {
   skills.value = [...initialSkills]
   page.value = 2
   noMore.value = false
+  injectPublishedSkill()
   refreshing.value = false
 }
+
+onMounted(() => {
+  injectPublishedSkill()
+})
+
+defineExpose({ refreshPublished: injectPublishedSkill })
 
 const onLoadMore = async () => {
   if (loading.value || noMore.value) return
