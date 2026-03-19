@@ -1387,6 +1387,7 @@
 		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
 		background: #FFFFFF;
 		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		border-top: 1rpx solid rgba(0,0,0,0.07);
 		display: flex;
 		gap: 16rpx;
@@ -1511,6 +1512,51 @@
 				}
 				.cg-btn-text { font-size: 28rpx; font-weight: 600; color: rgba(0,0,0,0.85); }
 			}
+		}
+	}
+
+	/* 低版本微信 WebView 对 gap/grid 支持不完整，补充降级规则 */
+	@supports not (gap: 1px) {
+		.navbar .navbar-inner > * + * { margin-left: 16rpx; }
+		.navbar .nav-actions > * + * { margin-left: 8rpx; }
+		.section-header > * + * { margin-left: 10rpx; }
+		.copy-all-btn > * + * { margin-left: 6rpx; }
+
+		.scene-chip-list > * { margin-right: 12rpx; margin-bottom: 12rpx; }
+		.overview-section .author-row > * + * { margin-left: 12rpx; }
+		.overview-section .ov-stat > * + * { margin-top: 6rpx; }
+
+		.steps-list > * + * { margin-top: 16rpx; }
+		.steps-list .step-item > * + * { margin-left: 16rpx; }
+
+		.feedback-list > * + * { margin-top: 20rpx; }
+		.feedback-list .fb-head > * + * { margin-left: 12rpx; }
+		.feedback-list .fbt-item > * + * { margin-top: 4rpx; }
+
+		.similar-list > * + * { margin-top: 16rpx; }
+		.similar-list .similar-item > * + * { margin-left: 20rpx; }
+		.similar-list .si-meta > * + * { margin-left: 16rpx; }
+		.similar-list .si-token-wrap > * + * { margin-left: 4rpx; }
+
+		.bottom-bar > * + * { margin-left: 16rpx; }
+		.bottom-bar .bb-fav > * + * { margin-top: 4rpx; }
+		.bottom-bar .bb-copy-btn > * + * { margin-left: 12rpx; }
+
+		.copy-guide-sheet .cg-title-row > * + * { margin-left: 8rpx; }
+		.copy-guide-sheet .cg-actions > * + * { margin-top: 16rpx; }
+		.copy-guide-sheet .cg-btn > * + * { margin-left: 20rpx; }
+	}
+
+	@supports not (display: grid) {
+		.skill-content-card .content-img-grid {
+			display: flex;
+			flex-wrap: wrap;
+			margin: -5rpx;
+		}
+
+		.skill-content-card .content-img {
+			width: calc((100% - 30rpx) / 3);
+			margin: 5rpx;
 		}
 	}
 </style>

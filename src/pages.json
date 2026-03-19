@@ -103,47 +103,27 @@
 		// #ifdef MP-QQ
 		"custom": true,
 		// #endif
-		"height": "54px",
-		"fontSize": "11px",
-		"iconWidth": "24px",
-		"spacing": "4px",
 		"color": "#94979F",
 		"selectedColor": "#E45C1A",
 		"borderStyle": "white",
 		"backgroundColor": "#FFFFFF",
-		"iconfontSrc": "/static/fonts/uniicons.ttf",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"iconfont": {
-					"text": "\ue662",
-					"selectedText": "\ue663",
-					"fontSize": "24px",
-					"color": "#94979F",
-					"selectedColor": "#E45C1A"
-				},
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/homeactive.png",
 				"text": "首页"
 			},
 			{
 				"pagePath": "pages/publish/index",
-				"iconfont": {
-					"text": "\ue67b",
-					"selectedText": "\ue6c7",
-					"fontSize": "25px",
-					"color": "#94979F",
-					"selectedColor": "#E45C1A"
-				},
+				"iconPath": "static/tabbar/add.png",
+				"selectedIconPath": "static/tabbar/addactive.png",
 				"text": "发布"
 			},
 			{
 				"pagePath": "pages/my/my",
-				"iconfont": {
-					"text": "\ue699",
-					"selectedText": "\ue69d",
-					"fontSize": "24px",
-					"color": "#94979F",
-					"selectedColor": "#E45C1A"
-				},
+				"iconPath": "static/tabbar/me.png",
+				"selectedIconPath": "static/tabbar/meactive.png",
 				"text": "我的"
 			}
 		]

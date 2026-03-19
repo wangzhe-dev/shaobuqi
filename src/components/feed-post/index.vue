@@ -416,7 +416,11 @@ const toAuthor = (id: string) => uni.navigateTo({ url: `/pages/author/index?id=$
 
 /* ── 情绪反应弹层 ── */
 .rxn-mask {
-  position: fixed; inset: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0,0,0,0.35);
   display: flex; align-items: flex-end;
   z-index: 999;
@@ -444,5 +448,26 @@ const toAuthor = (id: string) => uni.navigateTo({ url: `/pages/author/index?id=$
       }
     }
   }
+}
+
+/* 低版本微信 WebView 对 flex gap 支持不完整，做一层 margin 降级 */
+@supports not (gap: 1px) {
+  .feed-wrap > * + * { margin-top: 20rpx; }
+
+  .pc-hd > * + * { margin-left: 16rpx; }
+  .pc-name-row > * + * { margin-left: 10rpx; }
+  .pc-model > * + * { margin-left: 6rpx; }
+
+  .pc-meta-row > * + * { margin-left: 16rpx; }
+  .pc-spend > * + * { margin-left: 8rpx; }
+  .pc-rxn-pill > * + * { margin-left: 6rpx; }
+
+  .pc-meoo > * + * { margin-left: 6rpx; }
+  .pc-act-grp > * + * { margin-left: 4rpx; }
+  .pc-act > * + * { margin-left: 6rpx; }
+
+  .no-more > * + * { margin-left: 20rpx; }
+  .rxn-options > * + * { margin-left: 16rpx; }
+  .rxn-opt > * + * { margin-top: 10rpx; }
 }
 </style>

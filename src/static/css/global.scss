@@ -47,13 +47,20 @@ html {
 	text-size-adjust: 100%;
 }
 
+// 保证 height:100% 链条在微信/Android WebView 中不断
+// 微信 X5 引擎不会自动把 html/body/#app 撑满，导致 scroll-view 高度塌陷
+html, body, #app {
+	height: 100%;
+}
+
 // 自定义导航栏顶部安全区适配
 // H5 中 statusBarHeight 始终为 0，需用 CSS 变量接管
 // 浏览器模式：env(safe-area-inset-top) = 0，不影响普通 H5
 // PWA standalone 模式：返回实际状态栏高度，防止内容被遮挡
 .navbar,
 .profile-header,
-.profile-hero {
+.profile-hero,
+.profile-card {
 	// !important 覆盖 Vue :style 绑定的 paddingTop: 0px 内联样式
 	padding-top: env(safe-area-inset-top) !important;
 }
@@ -73,6 +80,9 @@ html {
 
 .uni-tabbar {
 	box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06) !important;
+	// iOS 底部 home 条安全区：防止 tabBar 内容被 home 指示条遮挡
+	padding-bottom: constant(safe-area-inset-bottom) !important;
+	padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
 .uni-tabbar__content {
