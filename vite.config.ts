@@ -35,7 +35,7 @@ export default defineConfig({
 			// PWA 支持（仅 H5 构建生效）
 			// 图标使用 src/static/icons/ —— UniApp H5 会将其复制到 dist 的 static/icons/
 			VitePWA({
-				registerType: 'prompt', // 有新版本时提示用户，而非静默更新
+				registerType: 'autoUpdate', // 新版本自动激活并刷新页面，无需用户手动触发
 				injectRegister: 'auto',
 				manifestFilename: `manifest-${pwaAssetVersion}.webmanifest`,
 				manifest: {
