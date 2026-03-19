@@ -19,6 +19,9 @@
 		{
 			"path": "pages/publish/index",
 			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
 				"navigationBarTitleText": "发布",
 				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
@@ -71,6 +74,9 @@
 		{
 			"path": "pages/publish/record",
 			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
 				"navigationBarTitleText": "记一笔",
 				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"

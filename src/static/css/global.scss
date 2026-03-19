@@ -62,12 +62,14 @@ html, body, #app {
 .profile-hero,
 .profile-card {
 	// !important 覆盖 Vue :style 绑定的 paddingTop: 0px 内联样式
+	padding-top: constant(safe-area-inset-top) !important;
 	padding-top: env(safe-area-inset-top) !important;
 }
 
 // Tab-bar 底部占位：custom tab-bar 是 position:fixed，会遮挡 scroll 内容
 // 各 tab 页在 scroll-view 末尾插入此占位 view
 .tab-bar-placeholder {
+	height: calc(180rpx + constant(safe-area-inset-bottom));
 	height: calc(180rpx + env(safe-area-inset-bottom));
 	flex-shrink: 0;
 }
@@ -80,9 +82,6 @@ html, body, #app {
 
 .uni-tabbar {
 	box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06) !important;
-	// iOS 底部 home 条安全区：防止 tabBar 内容被 home 指示条遮挡
-	padding-bottom: constant(safe-area-inset-bottom) !important;
-	padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
 .uni-tabbar__content {
@@ -95,6 +94,29 @@ html, body, #app {
 	height: 0 !important;
 	border: 0 !important;
 	opacity: 0 !important;
+}
+
+// iOS 微信浏览器在普通网页模式下，uni 默认 safe-area 会导致 tabbar 视觉偏高
+html.wechat-ios-browser {
+	.uni-tabbar-bottom .uni-tabbar {
+		padding-bottom: 0 !important;
+	}
+
+	.uni-tabbar ~ .uni-placeholder {
+		margin-bottom: 0 !important;
+	}
+
+	.uni-app--showtabbar uni-page-wrapper {
+		height: calc(100% - var(--tab-bar-height)) !important;
+	}
+
+	.uni-app--showtabbar uni-page-wrapper::after {
+		height: var(--tab-bar-height) !important;
+	}
+
+	.uni-app--showtabbar uni-page-head[uni-page-head-type='default'] ~ uni-page-wrapper {
+		height: calc(100% - 44px - var(--tab-bar-height)) !important;
+	}
 }
 
 /* #endif */

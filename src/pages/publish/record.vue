@@ -3,6 +3,9 @@
 		<!-- Top nav -->
 		<view class="top-bar">
 			<text class="top-cancel" @tap="goBack">取消</text>
+			<!-- #ifdef H5 -->
+			<text class="top-title">记一笔</text>
+			<!-- #endif -->
 			<view class="btn-pub" :class="{ on: canPublish }" @tap="publish">
 				<text class="btn-pub-t">发布</text>
 			</view>
@@ -275,6 +278,7 @@ const publish = () => {
 
 /* ── top bar ── */
 .top-bar {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -282,13 +286,35 @@ const publish = () => {
 	flex-shrink: 0;
 }
 
+/* #ifdef H5 */
+.top-bar {
+	padding-top: calc(20rpx + constant(safe-area-inset-top));
+	padding-top: calc(20rpx + env(safe-area-inset-top));
+}
+/* #endif */
+
 .top-cancel {
 	font-size: 30rpx;
 	color: #6B7280;
 	font-weight: 500;
+	position: relative;
+	z-index: 1;
+}
+
+.top-title {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 34rpx;
+	color: #111827;
+	font-weight: 700;
+	line-height: 1;
+	pointer-events: none;
 }
 
 .btn-pub {
+	position: relative;
+	z-index: 1;
 	height: 60rpx;
 	padding: 0 32rpx;
 	border-radius: 100rpx;

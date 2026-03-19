@@ -20,6 +20,17 @@ import PwaPrompt from './components/PwaPrompt.vue'
 
 if (typeof window !== 'undefined') {
 	;(window as Window & { Quill?: unknown }).Quill = quill
+
+	const ua = window.navigator.userAgent.toLowerCase()
+	const isWechat = ua.includes('micromessenger')
+	const isIOS = /iphone|ipad|ipod/.test(ua)
+	const isStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+		|| (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+
+	// iOS 微信浏览器在普通网页模式下会重复计算底部安全区，导致 tabbar 偏高
+	if (isWechat && isIOS && !isStandalone) {
+		document.documentElement.classList.add('wechat-ios-browser')
+	}
 }
 
 if (import.meta.env.DEV && import.meta.env.MODE !== 'production' && typeof document !== 'undefined') {
