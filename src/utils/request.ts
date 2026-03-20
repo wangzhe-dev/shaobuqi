@@ -11,7 +11,9 @@ const whiteList = [
 	'/auth/wxlogin',
 	'/auth/login/password',
 	'/auth/send-code',
-	'/auth/register'
+	'/auth/register',
+	'/auth/send-reset-code',
+	'/auth/reset-password'
 ]
 
 // 登录态弹窗锁，避免并发请求重复弹出

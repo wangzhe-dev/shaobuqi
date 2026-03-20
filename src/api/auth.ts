@@ -16,3 +16,11 @@ export const sendEmailCode = (email: string) => {
 export const emailRegister = (data: { email: string; code: string; password: string; nickname?: string }) => {
 	return http.post<{ token: string; user: any }>('/auth/register', data)
 }
+
+export const sendResetCode = (email: string) => {
+	return http.post('/auth/send-reset-code', { email })
+}
+
+export const resetPassword = (data: { email: string; code: string; password: string }) => {
+	return http.post<{ token?: string; user?: any }>('/auth/reset-password', data)
+}

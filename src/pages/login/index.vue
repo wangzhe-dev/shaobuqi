@@ -24,10 +24,17 @@
 
 		<view class="auth-wrap">
 			<view class="auth-card">
-				<text class="card-title">{{ isRegister ? '创建你的账号' : '欢迎回来' }}</text>
-				<!-- <text class="card-subtitle">让灵感与效率在同一块液态画布上流动</text> -->
+				<!-- 找回密码模式：返回按钮 -->
+				<view v-if="isForgot" class="back-row" @tap="exitForgot">
+					<uni-icons type="left" size="16" color="#83ddff" />
+					<text class="back-text">返回登录</text>
+				</view>
 
-				<view class="segment">
+				<text class="card-title">{{ cardTitle }}</text>
+				<text v-if="isForgot" class="card-subtitle">通过邮箱验证码重置你的密码</text>
+
+				<!-- 登录 / 注册 切换（找回密码模式下隐藏） -->
+				<view v-if="!isForgot" class="segment">
 					<view class="segment-indicator" :style="{ transform: `translateX(${isRegister ? '100%' : '0'})` }" />
 					<view class="segment-item" :class="{ active: !isRegister }" @tap="switchMode(false)">
 						<text class="segment-text">登录</text>
@@ -37,6 +44,7 @@
 					</view>
 				</view>
 
+				<!-- 邮箱 -->
 				<view class="field">
 					<text class="field-label">邮箱</text>
 					<view
@@ -54,7 +62,7 @@
 							placeholder-class="inp-placeholder"
 							maxlength="60"
 							@focus="focusedField = activeEmailField"
-							@blur="focusedField = ''"
+							@blur="onEmailBlur"
 						/>
 						<uni-icons
 							v-if="activeEmailValue"
@@ -64,9 +72,19 @@
 							@tap.stop="clearEmail"
 						/>
 					</view>
+					<!-- 邮箱域名联想 -->
+					<view v-if="emailSuggestions.length" class="email-suggestions">
+						<text
+							v-for="domain in emailSuggestions"
+							:key="domain"
+							class="email-sug-item"
+							@tap.stop="applyEmailSuggestion(domain)"
+						>@{{ domain }}</text>
+					</view>
 					<text v-if="activeEmailTip" class="field-tip error">{{ activeEmailTip }}</text>
 				</view>
 
+				<!-- 注册：验证码 + 昵称 -->
 				<template v-if="isRegister">
 					<view class="field">
 						<text class="field-label">验证码</text>
@@ -76,6 +94,7 @@
 								<input
 									v-model="regForm.code"
 									class="inp"
+									type="number"
 									placeholder="6 位验证码"
 									placeholder-class="inp-placeholder"
 									maxlength="6"
@@ -106,7 +125,33 @@
 					</view>
 				</template>
 
-				<view class="field">
+				<!-- 找回密码：验证码 -->
+				<template v-if="isForgot">
+					<view class="field">
+						<text class="field-label">验证码</text>
+						<view class="code-row">
+							<view class="field-input code-input" :class="{ focused: focusedField === 'forgot-code' }">
+								<uni-icons type="paperplane-filled" size="16" color="#B8C8EB" />
+								<input
+									v-model="forgotForm.code"
+									class="inp"
+									type="number"
+									placeholder="6 位验证码"
+									placeholder-class="inp-placeholder"
+									maxlength="6"
+									@focus="focusedField = 'forgot-code'"
+									@blur="focusedField = ''"
+								/>
+							</view>
+							<view class="send-btn" :class="{ disabled: !canSendForgotCode }" @tap="doSendForgotCode">
+								<text class="send-btn-text">{{ forgotSendCodeText }}</text>
+							</view>
+						</view>
+					</view>
+				</template>
+
+				<!-- 密码（登录 / 注册，找回密码模式下隐藏） -->
+				<view v-if="!isForgot" class="field">
 					<text class="field-label">{{ isRegister ? '设置密码' : '登录密码' }}</text>
 					<view
 						class="field-input"
@@ -134,8 +179,13 @@
 					<text v-if="activePasswordTip || (!isRegister && loginServerTip)" class="field-tip error">
 						{{ !isRegister && loginServerTip ? loginServerTip : activePasswordTip }}
 					</text>
+					<!-- 连续输错提示 -->
+					<text v-if="!isRegister && loginFailCount >= 2" class="fail-hint" @tap="enterForgot">
+						连续输错？点此找回密码
+					</text>
 				</view>
 
+				<!-- 注册：确认密码 -->
 				<template v-if="isRegister">
 					<view class="field">
 						<text class="field-label">确认密码</text>
@@ -163,7 +213,57 @@
 					</view>
 				</template>
 
-				<view class="agreement" @tap="agreed = !agreed">
+				<!-- 找回密码：新密码 + 确认新密码 -->
+				<template v-if="isForgot">
+					<view class="field">
+						<text class="field-label">新密码</text>
+						<view class="field-input" :class="{ focused: focusedField === 'forgot-pwd' }">
+							<uni-icons type="locked-filled" size="16" color="#B8C8EB" />
+							<input
+								v-model="forgotForm.password"
+								class="inp"
+								:password="!showForgotPassword"
+								type="text"
+								placeholder="请设置至少 6 位新密码"
+								placeholder-class="inp-placeholder"
+								maxlength="32"
+								@focus="focusedField = 'forgot-pwd'"
+								@blur="focusedField = ''"
+							/>
+							<view class="icon-action" @tap="showForgotPassword = !showForgotPassword">
+								<uni-icons :type="showForgotPassword ? 'eye-slash-filled' : 'eye-filled'" size="18" color="#C4D0EA" />
+							</view>
+						</view>
+					</view>
+
+					<view class="field">
+						<text class="field-label">确认新密码</text>
+						<view
+							class="field-input"
+							:class="{ focused: focusedField === 'forgot-confirm', invalid: forgotForm.confirmPassword && !forgotPasswordMatched }"
+						>
+							<uni-icons type="locked-filled" size="16" color="#B8C8EB" />
+							<input
+								v-model="forgotForm.confirmPassword"
+								class="inp"
+								:password="!showForgotConfirm"
+								type="text"
+								placeholder="再次输入新密码"
+								placeholder-class="inp-placeholder"
+								maxlength="32"
+								@focus="focusedField = 'forgot-confirm'"
+								@blur="focusedField = ''"
+							/>
+							<view class="icon-action" @tap="showForgotConfirm = !showForgotConfirm">
+								<uni-icons :type="showForgotConfirm ? 'eye-slash-filled' : 'eye-filled'" size="18" color="#C4D0EA" />
+							</view>
+						</view>
+						<text v-if="forgotConfirmTip" class="field-tip error">{{ forgotConfirmTip }}</text>
+					</view>
+				</template>
+
+				<!-- 协议（找回密码模式下不显示） -->
+				<view v-if="!isForgot" class="agreement" @tap="agreed = !agreed">
 					<uni-icons :type="agreed ? 'checkbox-filled' : 'circle'" size="18" :color="agreed ? '#67D9FF' : '#9FB1D6'" />
 					<text class="agreement-text">同意</text>
 					<text class="agreement-link" @tap.stop="openAgreement">《用户协议》</text>
@@ -176,10 +276,11 @@
 					<text class="submit-text">{{ submitText }}</text>
 				</view>
 
-				<view class="helper-row">
+				<!-- 底部辅助链接（找回密码模式下不显示） -->
+				<view v-if="!isForgot" class="helper-row">
 					<text class="helper-text">{{ isRegister ? '已有账号？' : '没有账号？' }}</text>
 					<text class="helper-link" @tap="switchMode(!isRegister)">{{ isRegister ? '去登录' : '去注册' }}</text>
-					<text v-if="!isRegister" class="helper-link" @tap="forgotPassword">忘记密码</text>
+					<text v-if="!isRegister" class="helper-link" @tap="enterForgot">忘记密码</text>
 				</view>
 			</view>
 		</view>
@@ -191,10 +292,10 @@
 </template>
 
 <script setup lang="ts">
-import { emailRegister, passwordLogin, sendEmailCode } from '@/api/auth'
+import { emailRegister, passwordLogin, resetPassword, sendEmailCode, sendResetCode } from '@/api/auth'
 import { useSysInfoStore, useUserStore } from '@/stores'
 import { getSafeAreaTop } from '@/utils/safe-area'
-import { computed, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 const userStore = useUserStore()
 const sysInfo = useSysInfoStore()
@@ -206,6 +307,9 @@ const authPageStyle = computed(() => ({
 const EMAIL_REG = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i
 const CODE_REG = /^\d{6}$/
 const ICP_RECORD = '京ICP备2025111493号-2'
+const EMAIL_DOMAINS = ['qq.com', '163.com', 'gmail.com', '126.com', 'outlook.com', 'foxmail.com']
+const STORAGE_KEY_EMAIL = 'sbq_last_email'
+
 const liquidCards = [
 	{ label: '写作', icon: '✍️', color: '99, 215, 255' },
 	{ label: '编程', icon: '💻', color: '129, 167, 255' },
@@ -217,60 +321,162 @@ const liquidCards = [
 	{ label: '电商', icon: '🛒', color: '136, 200, 255' }
 ]
 
+// ---- 模式状态 ----
 const isRegister = ref(false)
+const isForgot = ref(false)
 const focusedField = ref('')
 const loading = ref(false)
-const sendingCode = ref(false)
-const countdown = ref(0)
-const agreed = ref(true)
+const agreed = ref(false) // 默认未勾选，需用户主动同意
 const loginServerTip = ref('')
+const loginFailCount = ref(0)
 
+// ---- 密码可见性 ----
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showConfirmPassword = ref(false)
+const showForgotPassword = ref(false)
+const showForgotConfirm = ref(false)
 
-const loginForm = reactive({ email: '', password: '' })
-const regForm = reactive({ email: '', code: '', nickname: '', password: '', confirmPassword: '' })
-
+// ---- 注册验证码倒计时 ----
+const sendingCode = ref(false)
+const countdown = ref(0)
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
+// ---- 找回密码验证码倒计时 ----
+const sendingForgotCode = ref(false)
+const forgotCountdown = ref(0)
+let forgotCountdownTimer: ReturnType<typeof setInterval> | null = null
+
+// ---- 邮箱域名联想 ----
+const emailSuggestions = ref<string[]>([])
+let emailBlurTimer: ReturnType<typeof setTimeout> | null = null
+
+// ---- 表单数据 ----
+const loginForm = reactive({ email: '', password: '' })
+const regForm = reactive({ email: '', code: '', nickname: '', password: '', confirmPassword: '' })
+const forgotForm = reactive({ email: '', code: '', password: '', confirmPassword: '' })
+
+// ---- 工具函数 ----
 const normalizeEmail = (value: string) => value.trim().toLowerCase()
 const isValidEmail = (value: string) => EMAIL_REG.test(normalizeEmail(value))
 
+// ---- 校验计算属性 ----
 const loginEmailValid = computed(() => isValidEmail(loginForm.email))
 const registerEmailValid = computed(() => isValidEmail(regForm.email))
+const forgotEmailValid = computed(() => isValidEmail(forgotForm.email))
 const registerCodeValid = computed(() => CODE_REG.test(regForm.code.trim()))
+const forgotCodeValid = computed(() => CODE_REG.test(forgotForm.code.trim()))
 const registerPasswordMatched = computed(() => regForm.password === regForm.confirmPassword)
+const forgotPasswordMatched = computed(() => forgotForm.password === forgotForm.confirmPassword)
 const loginPasswordValid = computed(() => loginForm.password.length >= 6 && !/\s/.test(loginForm.password))
 const registerPasswordValid = computed(() => regForm.password.length >= 6 && !/\s/.test(regForm.password))
+const forgotPasswordValid = computed(() => forgotForm.password.length >= 6 && !/\s/.test(forgotForm.password))
 
 const canLogin = computed(() => loginEmailValid.value && loginPasswordValid.value && agreed.value && !loading.value)
 const canRegister = computed(() => {
-	return registerEmailValid.value && registerCodeValid.value && registerPasswordValid.value && registerPasswordMatched.value && agreed.value && !loading.value
+	return registerEmailValid.value && registerCodeValid.value && registerPasswordValid.value
+		&& registerPasswordMatched.value && agreed.value && !loading.value
 })
-const canSubmit = computed(() => isRegister.value ? canRegister.value : canLogin.value)
+const canForgot = computed(() => {
+	return forgotEmailValid.value && forgotCodeValid.value && forgotPasswordValid.value
+		&& forgotPasswordMatched.value && !loading.value
+})
+const canSubmit = computed(() => {
+	if (isForgot.value) return canForgot.value
+	return isRegister.value ? canRegister.value : canLogin.value
+})
 
+// ---- 倒计时 ----
+const clearTimer = () => {
+	if (!countdownTimer) return
+	clearInterval(countdownTimer)
+	countdownTimer = null
+}
+const startCountdown = () => {
+	clearTimer()
+	countdown.value = 60
+	countdownTimer = setInterval(() => {
+		countdown.value -= 1
+		if (countdown.value <= 0) { countdown.value = 0; clearTimer() }
+	}, 1000)
+}
+const clearForgotTimer = () => {
+	if (!forgotCountdownTimer) return
+	clearInterval(forgotCountdownTimer)
+	forgotCountdownTimer = null
+}
+const startForgotCountdown = () => {
+	clearForgotTimer()
+	forgotCountdown.value = 60
+	forgotCountdownTimer = setInterval(() => {
+		forgotCountdown.value -= 1
+		if (forgotCountdown.value <= 0) { forgotCountdown.value = 0; clearForgotTimer() }
+	}, 1000)
+}
+
+// ---- 发送按钮文字 ----
 const sendCodeText = computed(() => {
 	if (sendingCode.value) return '发送中...'
 	if (countdown.value > 0) return `${countdown.value}s`
 	return '发送验证码'
 })
+const forgotSendCodeText = computed(() => {
+	if (sendingForgotCode.value) return '发送中...'
+	if (forgotCountdown.value > 0) return `${forgotCountdown.value}s`
+	return '发送验证码'
+})
+const canSendCode = computed(() => registerEmailValid.value && countdown.value === 0 && !sendingCode.value)
+const canSendForgotCode = computed(() => forgotEmailValid.value && forgotCountdown.value === 0 && !sendingForgotCode.value)
 
-const activeEmailField = computed(() => (isRegister.value ? 'reg-email' : 'login-email'))
+// ---- 标题与按钮文字 ----
+const cardTitle = computed(() => {
+	if (isForgot.value) return '找回密码'
+	return isRegister.value ? '创建你的账号' : '欢迎回来'
+})
+const submitText = computed(() => {
+	if (loading.value) {
+		if (isForgot.value) return '重置中...'
+		return isRegister.value ? '注册中...' : '登录中...'
+	}
+	if (isForgot.value) return '重置密码'
+	return isRegister.value ? '注册并登录' : '立即登录'
+})
+
+// ---- 三模式代理计算属性 ----
+const activeEmailField = computed(() => {
+	if (isForgot.value) return 'forgot-email'
+	return isRegister.value ? 'reg-email' : 'login-email'
+})
 const activeEmailModel = computed({
-	get: () => (isRegister.value ? regForm.email : loginForm.email),
+	get: () => {
+		if (isForgot.value) return forgotForm.email
+		return isRegister.value ? regForm.email : loginForm.email
+	},
 	set: (value: string) => {
-		if (isRegister.value) regForm.email = value
-		else {
+		if (isForgot.value) {
+			forgotForm.email = value
+		} else if (isRegister.value) {
+			regForm.email = value
+		} else {
 			loginForm.email = value
 			loginServerTip.value = ''
 		}
+		// 实时更新域名联想
+		updateEmailSuggestions(value)
 	}
 })
-const activeEmailValue = computed(() => (isRegister.value ? regForm.email : loginForm.email))
-const activeEmailValid = computed(() => (isRegister.value ? registerEmailValid.value : loginEmailValid.value))
+const activeEmailValue = computed(() => {
+	if (isForgot.value) return forgotForm.email
+	return isRegister.value ? regForm.email : loginForm.email
+})
+const activeEmailValid = computed(() => {
+	if (isForgot.value) return forgotEmailValid.value
+	return isRegister.value ? registerEmailValid.value : loginEmailValid.value
+})
 
-const activePasswordField = computed(() => (isRegister.value ? 'reg-password' : 'login-password'))
+const activePasswordField = computed(() => {
+	return isRegister.value ? 'reg-password' : 'login-password'
+})
 const activePasswordModel = computed({
 	get: () => (isRegister.value ? regForm.password : loginForm.password),
 	set: (value: string) => {
@@ -284,61 +490,72 @@ const activePasswordModel = computed({
 const activePasswordVisible = computed(() => (isRegister.value ? showRegisterPassword.value : showLoginPassword.value))
 const activePasswordValue = computed(() => (isRegister.value ? regForm.password : loginForm.password))
 
+// ---- 错误提示 ----
 const activeEmailTip = computed(() => {
 	if (!activeEmailValue.value.trim() || activeEmailValid.value) return ''
 	return '邮箱格式不正确'
 })
-
 const activePasswordTip = computed(() => {
 	if (!activePasswordValue.value) return ''
 	if (/\s/.test(activePasswordValue.value)) return '密码不能包含空格'
 	if (activePasswordValue.value.length < 6) return '密码至少 6 位'
 	return ''
 })
-
 const registerConfirmTip = computed(() => {
 	if (!regForm.confirmPassword || registerPasswordMatched.value) return ''
 	return '两次密码不一致'
 })
-
-const submitText = computed(() => {
-	if (loading.value) return isRegister.value ? '注册中...' : '登录中...'
-	return isRegister.value ? '注册并登录' : '立即登录'
+const forgotConfirmTip = computed(() => {
+	if (!forgotForm.confirmPassword || forgotPasswordMatched.value) return ''
+	return '两次密码不一致'
 })
 
-const canSendCode = computed(() => registerEmailValid.value && countdown.value === 0 && !sendingCode.value)
-
-const clearTimer = () => {
-	if (!countdownTimer) return
-	clearInterval(countdownTimer)
-	countdownTimer = null
-}
-
-const startCountdown = () => {
-	clearTimer()
-	countdown.value = 60
-	countdownTimer = setInterval(() => {
-		countdown.value -= 1
-		if (countdown.value <= 0) {
-			countdown.value = 0
-			clearTimer()
-		}
-	}, 1000)
-}
-
-const clearEmail = () => {
-	if (isRegister.value) regForm.email = ''
-	else {
-		loginForm.email = ''
-		loginServerTip.value = ''
+// ---- 邮箱域名联想 ----
+const updateEmailSuggestions = (email: string) => {
+	const atIndex = email.indexOf('@')
+	if (atIndex === -1) {
+		emailSuggestions.value = []
+		return
 	}
+	const domainPart = email.slice(atIndex + 1).toLowerCase()
+	const matched = EMAIL_DOMAINS.filter(d => d.startsWith(domainPart) && d !== domainPart)
+	emailSuggestions.value = matched.slice(0, 4)
+}
+
+const applyEmailSuggestion = (domain: string) => {
+	const email = activeEmailValue.value
+	const atIndex = email.indexOf('@')
+	if (atIndex === -1) return
+	const newEmail = `${email.slice(0, atIndex + 1)}${domain}`
+	if (isForgot.value) forgotForm.email = newEmail
+	else if (isRegister.value) regForm.email = newEmail
+	else { loginForm.email = newEmail; loginServerTip.value = '' }
+	emailSuggestions.value = []
+}
+
+const onEmailBlur = () => {
+	focusedField.value = ''
+	// 延迟隐藏，确保 tap 事件能在 blur 之后触发
+	emailBlurTimer = setTimeout(() => {
+		emailSuggestions.value = []
+	}, 200)
+}
+
+// ---- 操作函数 ----
+const clearEmail = () => {
+	if (isForgot.value) { forgotForm.email = ''; emailSuggestions.value = []; return }
+	if (isRegister.value) regForm.email = ''
+	else { loginForm.email = ''; loginServerTip.value = '' }
+	emailSuggestions.value = []
 }
 
 const switchMode = (registerMode: boolean) => {
 	if (loading.value) return
 	isRegister.value = registerMode
+	isForgot.value = false
 	focusedField.value = ''
 	loginServerTip.value = ''
+	emailSuggestions.value = []
 }
 
 const toggleActivePassword = () => {
@@ -353,6 +570,10 @@ const requireAgreement = () => {
 }
 
 const afterLoginSuccess = () => {
+	// 记住本次登录邮箱
+	const email = isRegister.value ? normalizeEmail(regForm.email) : normalizeEmail(loginForm.email)
+	uni.setStorageSync(STORAGE_KEY_EMAIL, email)
+
 	uni.showToast({ title: '登录成功', icon: 'success' })
 	setTimeout(() => {
 		const pages = getCurrentPages()
@@ -367,7 +588,6 @@ const doSendCode = async () => {
 		return
 	}
 	if (!canSendCode.value) return
-
 	sendingCode.value = true
 	try {
 		await sendEmailCode(normalizeEmail(regForm.email))
@@ -377,6 +597,24 @@ const doSendCode = async () => {
 		// 已由请求拦截器统一提示
 	} finally {
 		sendingCode.value = false
+	}
+}
+
+const doSendForgotCode = async () => {
+	if (!forgotEmailValid.value) {
+		uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
+		return
+	}
+	if (!canSendForgotCode.value) return
+	sendingForgotCode.value = true
+	try {
+		await sendResetCode(normalizeEmail(forgotForm.email))
+		uni.showToast({ title: '验证码已发送', icon: 'success' })
+		startForgotCountdown()
+	} catch {
+		// 已由请求拦截器统一提示
+	} finally {
+		sendingForgotCode.value = false
 	}
 }
 
@@ -412,13 +650,13 @@ const doLogin = async () => {
 			password: loginForm.password
 		})
 		const token = `${data?.token || ''}`.trim()
-		if (!token || !data?.user) {
-			throw new Error('登录失败，请检查账号和密码')
-		}
+		if (!token || !data?.user) throw new Error('登录失败，请检查账号和密码')
 		userStore.setToken(token)
 		userStore.setUserInfo(data.user)
+		loginFailCount.value = 0
 		afterLoginSuccess()
 	} catch (err: any) {
+		loginFailCount.value += 1
 		const msg = typeof err === 'string' ? err : (err?.message || '')
 		if (/账号不存在|已禁用/i.test(msg)) loginServerTip.value = '账号不存在或已禁用，请检查后重试'
 		else if (/密码/i.test(msg)) loginServerTip.value = '密码错误，请重新输入'
@@ -471,9 +709,7 @@ const doRegister = async () => {
 
 		const data = await emailRegister(payload)
 		const token = `${data?.token || ''}`.trim()
-		if (!token || !data?.user) {
-			throw new Error('注册成功状态异常，请重新登录')
-		}
+		if (!token || !data?.user) throw new Error('注册成功状态异常，请重新登录')
 		userStore.setToken(token)
 		userStore.setUserInfo(data.user)
 		afterLoginSuccess()
@@ -484,24 +720,101 @@ const doRegister = async () => {
 	}
 }
 
-const submit = () => {
-	if (isRegister.value) {
-		doRegister()
+const doResetPassword = async () => {
+	if (loading.value) return
+	if (!forgotEmailValid.value) {
+		uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
 		return
 	}
+	if (!forgotCodeValid.value) {
+		uni.showToast({ title: '请输入 6 位数字验证码', icon: 'none' })
+		return
+	}
+	if (!forgotForm.password) {
+		uni.showToast({ title: '请设置新密码', icon: 'none' })
+		return
+	}
+	if (/\s/.test(forgotForm.password)) {
+		uni.showToast({ title: '密码不能包含空格', icon: 'none' })
+		return
+	}
+	if (forgotForm.password.length < 6) {
+		uni.showToast({ title: '密码至少 6 位', icon: 'none' })
+		return
+	}
+	if (!forgotPasswordMatched.value) {
+		uni.showToast({ title: '两次密码不一致', icon: 'none' })
+		return
+	}
+
+	loading.value = true
+	try {
+		const data = await resetPassword({
+			email: normalizeEmail(forgotForm.email),
+			code: forgotForm.code.trim(),
+			password: forgotForm.password
+		})
+		const token = `${data?.token || ''}`.trim()
+		if (token && data?.user) {
+			// 后端直接返回了登录态，自动登录
+			userStore.setToken(token)
+			userStore.setUserInfo(data.user)
+			uni.setStorageSync(STORAGE_KEY_EMAIL, normalizeEmail(forgotForm.email))
+			uni.showToast({ title: '重置成功，已自动登录', icon: 'success' })
+			setTimeout(() => {
+				const pages = getCurrentPages()
+				if (pages.length > 1) uni.navigateBack()
+				else uni.switchTab({ url: '/pages/my/my' })
+			}, 500)
+		} else {
+			// 重置成功，跳回登录并预填邮箱
+			uni.showToast({ title: '密码已重置，请重新登录', icon: 'success' })
+			setTimeout(() => {
+				loginForm.email = normalizeEmail(forgotForm.email)
+				loginForm.password = ''
+				exitForgot()
+			}, 800)
+		}
+	} catch {
+		// 已由请求拦截器统一提示
+	} finally {
+		loading.value = false
+	}
+}
+
+const submit = () => {
+	if (isForgot.value) { doResetPassword(); return }
+	if (isRegister.value) { doRegister(); return }
 	doLogin()
 }
 
-const forgotPassword = () => {
-	uni.showToast({ title: '请联系管理员协助重置密码', icon: 'none' })
+const enterForgot = () => {
+	// 预填登录页邮箱
+	if (loginForm.email) forgotForm.email = loginForm.email
+	forgotForm.code = ''
+	forgotForm.password = ''
+	forgotForm.confirmPassword = ''
+	isForgot.value = true
+	loginServerTip.value = ''
+	focusedField.value = ''
+	emailSuggestions.value = []
+}
+
+const exitForgot = () => {
+	if (loading.value) return
+	isForgot.value = false
+	clearForgotTimer()
+	forgotCountdown.value = 0
+	loginServerTip.value = ''
+	emailSuggestions.value = []
 }
 
 const openAgreement = () => {
-	uni.showToast({ title: '用户协议页待接入', icon: 'none' })
+	uni.navigateTo({ url: '/pages/agreement/index' })
 }
 
 const openPrivacy = () => {
-	uni.showToast({ title: '隐私政策页待接入', icon: 'none' })
+	uni.navigateTo({ url: '/pages/privacy/index' })
 }
 
 const openIcp = () => {
@@ -513,8 +826,21 @@ const openIcp = () => {
 	// #endif
 }
 
+onMounted(() => {
+	// 已登录则直接跳过登录页
+	if (userStore.token) {
+		uni.reLaunch({ url: '/pages/index/index' })
+		return
+	}
+	// 恢复上次登录的邮箱
+	const saved = uni.getStorageSync(STORAGE_KEY_EMAIL)
+	if (saved) loginForm.email = saved
+})
+
 onUnmounted(() => {
 	clearTimer()
+	clearForgotTimer()
+	if (emailBlurTimer) clearTimeout(emailBlurTimer)
 })
 </script>
 
@@ -670,21 +996,35 @@ onUnmounted(() => {
 	box-shadow: 0 20rpx 44rpx rgba(9, 14, 40, 0.34);
 }
 
+/* 找回密码返回按钮 */
+.back-row {
+	display: flex;
+	align-items: center;
+	gap: 6rpx;
+	margin-bottom: 16rpx;
+}
+
+.back-text {
+	font-size: 22rpx;
+	color: #83ddff;
+}
+
 .card-title {
 	display: block;
-	margin-bottom: 38rpx;
+	margin-bottom: 8rpx;
 	font-size: 34rpx;
 	line-height: 1.2;
-  text-align: center;
+	text-align: center;
 	font-weight: 700;
 	color: #eff4ff;
 }
 
 .card-subtitle {
 	display: block;
-	margin-bottom: 18rpx;
+	margin-bottom: 20rpx;
 	font-size: 22rpx;
 	color: #b8c7ea;
+	text-align: center;
 }
 
 .segment {
@@ -694,6 +1034,7 @@ onUnmounted(() => {
 	position: relative;
 	display: flex;
 	padding: 6rpx;
+	margin-top: 30rpx;
 	margin-bottom: 20rpx;
 }
 
@@ -811,6 +1152,22 @@ onUnmounted(() => {
 	padding: 2rpx;
 }
 
+.email-suggestions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10rpx;
+	padding: 10rpx 0 4rpx;
+}
+
+.email-sug-item {
+	padding: 6rpx 18rpx;
+	border-radius: 24rpx;
+	background: rgba(126, 218, 255, 0.1);
+	border: 1rpx solid rgba(126, 218, 255, 0.28);
+	font-size: 20rpx;
+	color: #83ddff;
+}
+
 .field-tip {
 	display: block;
 	min-height: 34rpx;
@@ -821,6 +1178,13 @@ onUnmounted(() => {
 
 .field-tip.error {
 	color: #d55e93;
+}
+
+.fail-hint {
+	display: block;
+	padding: 8rpx 2rpx 0;
+	font-size: 20rpx;
+	color: #83ddff;
 }
 
 .agreement {
