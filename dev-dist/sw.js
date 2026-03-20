@@ -82,27 +82,27 @@ define(['./workbox-2ae722a1'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.1bi8ej0neto"
+    "revision": "0.6nc4vo5qd3o"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(/\.(?:png|jpg|jpeg|svg|gif|webp)$/, new workbox.CacheFirst({
+  workbox.registerRoute(/\.(?:png|jpg|jpeg|svg|gif|webp)$/i, new workbox.CacheFirst({
     "cacheName": "image-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,
       maxAgeSeconds: 2592000
     })]
   }), 'GET');
-  workbox.registerRoute(/^https:\/\/fonts\.(googleapis|gstatic)\.com/, new workbox.CacheFirst({
+  workbox.registerRoute(/^https:\/\/fonts\.(googleapis|gstatic)\.com/i, new workbox.CacheFirst({
     "cacheName": "font-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 20,
       maxAgeSeconds: 31536000
     })]
   }), 'GET');
-  workbox.registerRoute(/^https:\/\/picsum\.photos/, new workbox.CacheFirst({
+  workbox.registerRoute(/^https:\/\/picsum\.photos/i, new workbox.CacheFirst({
     "cacheName": "placeholder-image-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 60,
