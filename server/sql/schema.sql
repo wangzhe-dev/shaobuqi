@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `published_skill_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `total_copy_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `avg_success_rate` DECIMAL(5,2) DEFAULT NULL,
+  `follower_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `following_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `last_login_at` DATETIME DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -66,12 +68,14 @@ CREATE TABLE IF NOT EXISTS `skills` (
   `estimated_cost_high` DECIMAL(12,4) DEFAULT NULL,
   `recommended_model_name` VARCHAR(64) DEFAULT NULL,
   `common_model_name` VARCHAR(64) DEFAULT NULL,
+  `is_featured` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否精选（管理员设置）',
   `total_uses` INT UNSIGNED NOT NULL DEFAULT 0,
   `week_uses` INT UNSIGNED NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_skills_creator` (`creator_id`),
+  KEY `idx_skills_featured` (`is_featured`, `status`, `publish_at`),
   KEY `idx_skills_status_publish` (`status`, `publish_at`),
   KEY `idx_skills_scene` (`scene`),
   KEY `idx_skills_category` (`category_id`),
@@ -258,6 +262,18 @@ CREATE TABLE IF NOT EXISTS `skill_feedbacks` (
   CONSTRAINT `fk_skill_feedbacks_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_skill_feedbacks_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_skill_feedbacks_usage` FOREIGN KEY (`usage_record_id`) REFERENCES `skill_usage_records` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `user_follows` (
+  `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `follower_id`  BIGINT UNSIGNED NOT NULL COMMENT '关注者',
+  `followed_id`  BIGINT UNSIGNED NOT NULL COMMENT '被关注者',
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_follows` (`follower_id`, `followed_id`),
+  KEY `idx_user_follows_followed` (`followed_id`, `created_at`),
+  CONSTRAINT `fk_user_follows_follower` FOREIGN KEY (`follower_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_user_follows_followed` FOREIGN KEY (`followed_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `drafts` (

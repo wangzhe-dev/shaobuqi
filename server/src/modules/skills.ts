@@ -1,3 +1,5 @@
+/// <reference path="../types/express.d.ts" />
+
 import { Router } from 'express'
 import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { z } from 'zod'
@@ -119,7 +121,11 @@ type CreatorProfileRow = RowDataPacket & {
   published_skill_count: number
   total_copy_count: number
   avg_success_rate: number | null
+  follower_count: number
+  following_count: number
 }
+
+type FollowRow = RowDataPacket & { cnt: number }
 
 type CategoryRow = RowDataPacket & {
   id: number
@@ -172,8 +178,7 @@ const listQuerySchema = z.object({
   maxAvgTotalTokens: z.coerce.number().int().positive().optional()
 })
 
-const skillImagePayloadSchema = z.union([
-  z.string().trim().min(1).max(500),
+const skillImagePayloadSchema = z.string().trim().min(1).max(500).or(
   z.object({
     imageUrl: z.string().trim().min(1).max(500),
     storageProvider: z.string().trim().max(32).optional().nullable(),
@@ -182,7 +187,7 @@ const skillImagePayloadSchema = z.union([
     mimeType: z.string().trim().max(64).optional().nullable(),
     fileSize: z.coerce.number().int().nonnegative().optional().nullable()
   })
-])
+)
 
 const skillPayloadSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -730,7 +735,7 @@ skillsRouter.get('/meta/tags', async (req, res) => {
 })
 
 // 公开创作者资料（无需登录，不含邮箱/手机等敏感信息）
-skillsRouter.get('/creator/:id', async (req, res) => {
+skillsRouter.get('/creator/:id', optionalAuth, async (req, res) => {
   const userId = Number(req.params.id)
   if (!Number.isInteger(userId) || userId <= 0) {
     sendError(res, '参数错误', 400)
@@ -739,7 +744,8 @@ skillsRouter.get('/creator/:id', async (req, res) => {
 
   const rows = await queryRows<CreatorProfileRow[]>(
     `SELECT id, nickname, bio, display_color, avatar_url,
-            published_skill_count, total_copy_count, avg_success_rate
+            published_skill_count, total_copy_count, avg_success_rate,
+            follower_count, following_count
      FROM users
      WHERE id = ? AND status = 1
      LIMIT 1`,
@@ -752,6 +758,17 @@ skillsRouter.get('/creator/:id', async (req, res) => {
     return
   }
 
+  // 当前登录用户是否已关注
+  let isFollowing = false
+  if (req.auth?.userId && req.auth.userId !== userId) {
+    const followRows = await queryRows<FollowRow[]>(
+      `SELECT COUNT(1) AS cnt FROM user_follows
+       WHERE follower_id = ? AND followed_id = ?`,
+      [req.auth.userId, userId]
+    )
+    isFollowing = (followRows[0]?.cnt ?? 0) > 0
+  }
+
   sendSuccess(res, {
     id: user.id,
     nickname: user.nickname,
@@ -760,8 +777,86 @@ skillsRouter.get('/creator/:id', async (req, res) => {
     avatarUrl: user.avatar_url,
     publishedSkillCount: user.published_skill_count,
     totalCopyCount: user.total_copy_count,
-    avgSuccessRate: user.avg_success_rate
+    avgSuccessRate: user.avg_success_rate,
+    followerCount: user.follower_count,
+    followingCount: user.following_count,
+    isFollowing
   })
+})
+
+// 关注创作者
+skillsRouter.post('/creator/:id/follow', requireAuth, async (req, res) => {
+  const targetId = Number(req.params.id)
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    sendError(res, '参数错误', 400)
+    return
+  }
+
+  const followerId = req.auth!.userId
+  if (followerId === targetId) {
+    sendError(res, '不能关注自己', 400)
+    return
+  }
+
+  const targetRows = await queryRows<RowDataPacket[]>(
+    'SELECT id FROM users WHERE id = ? AND status = 1 LIMIT 1',
+    [targetId]
+  )
+  if (!targetRows[0]) {
+    sendError(res, '用户不存在', 404)
+    return
+  }
+
+  const changed = await withTransaction(async (conn) => {
+    const [result] = await conn.execute<ResultSetHeader>(
+      'INSERT IGNORE INTO user_follows (follower_id, followed_id) VALUES (?, ?)',
+      [followerId, targetId]
+    )
+    if (result.affectedRows === 0) return false
+
+    await conn.execute(
+      'UPDATE users SET follower_count  = follower_count  + 1 WHERE id = ?',
+      [targetId]
+    )
+    await conn.execute(
+      'UPDATE users SET following_count = following_count + 1 WHERE id = ?',
+      [followerId]
+    )
+    return true
+  })
+
+  sendSuccess(res, { targetId, isFollowing: true, changed })
+})
+
+// 取消关注创作者
+skillsRouter.delete('/creator/:id/follow', requireAuth, async (req, res) => {
+  const targetId = Number(req.params.id)
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    sendError(res, '参数错误', 400)
+    return
+  }
+
+  const followerId = req.auth!.userId
+
+  const changed = await withTransaction(async (conn) => {
+    const [result] = await conn.execute<ResultSetHeader>(
+      'DELETE FROM user_follows WHERE follower_id = ? AND followed_id = ? LIMIT 1',
+      [followerId, targetId]
+    )
+    if (result.affectedRows === 0) return false
+
+    await conn.execute(
+      'UPDATE users SET follower_count  = GREATEST(follower_count  - 1, 0) WHERE id = ?',
+      [targetId]
+    )
+    await conn.execute(
+      'UPDATE users SET following_count = GREATEST(following_count - 1, 0) WHERE id = ?',
+      [followerId]
+    )
+    return true
+  })
+
+  sendSuccess(res, { targetId, isFollowing: false, changed })
 })
 
 skillsRouter.get('/', optionalAuth, async (req, res) => {

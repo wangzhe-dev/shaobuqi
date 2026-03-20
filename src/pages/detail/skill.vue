@@ -31,8 +31,13 @@
 					</view>
 					<text class="author-name">{{ skill.author }}</text>
 					<text class="publish-time">{{ skill.publishTime }}</text>
-					<view class="follow-btn" @tap="followAuthor">
-						<text class="follow-btn-text">关注</text>
+					<view
+						v-if="!isOwnSkill"
+						class="follow-btn"
+						:class="{ 'follow-btn--active': isFollowing }"
+						@tap="followAuthor"
+					>
+						<text class="follow-btn-text">{{ isFollowing ? '已关注' : '关注' }}</text>
 					</view>
 				</view>
 
@@ -265,7 +270,7 @@
 </template>
 
 <script setup lang="ts">
-	import { copySkill as copySkillApi, favoriteSkill, getSkillDetail, unfavoriteSkill } from '@/api/skill'
+	import { copySkill as copySkillApi, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
 	import AppImage from '@/components/app-image/index.vue'
 	import { useSysInfoStore, useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
@@ -277,8 +282,11 @@
 	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
 	const isFavorited = ref(false)
+	const isFollowing = ref(false)
 	const showCopyGuide = ref(false)
 	const currentSkillId = ref('')
+	const isOwnSkill = ref(false)
+	const creatorId = ref<number | null>(null)
 
 	const createEmptySkill = () => ({
 		id: '',
@@ -378,6 +386,8 @@
 	const mapApiDetail = (detail: any) => {
 		return {
 			id: `${detail?.id || ''}`,
+			creatorId: detail?.creator?.id ?? null,
+			canEdit: !!detail?.canEdit,
 			title: `${detail?.title || '未命名 Skill'}`,
 			scene: `${detail?.scene || '其他'}`,
 			author: `${detail?.creator?.nickname || '匿名用户'}`,
@@ -471,7 +481,16 @@
 			const detail = await getSkillDetail(id)
 			currentSkillId.value = `${detail?.id || id}`
 			isFavorited.value = !!detail?.isFavorited
+			isOwnSkill.value = !!detail?.canEdit
+			creatorId.value = detail?.creator?.id ?? null
 			skill.value = mapApiDetail(detail)
+
+			// 获取关注状态（只在已登录且非自己的 Skill 时查）
+			if (userStore.token && !detail?.canEdit && detail?.creator?.id) {
+				getCreatorProfile(detail.creator.id).then(profile => {
+					isFollowing.value = !!profile?.isFollowing
+				}).catch(() => {})
+			}
 		} catch {}
 	}
 
@@ -483,6 +502,10 @@
 	}
 
 	onLoad((query: any) => {
+		// 立即同步设好 skillId，保证用户快速点击"写反馈"时 skillId 不为空
+		const rawId = query?.id
+		if (rawId) currentSkillId.value = normalizeSkillId(rawId)
+
 		const isFromPublish = `${query?.fromPublish || ''}` === '1'
 		if (isFromPublish) {
 			const payload = uni.getStorageSync(PUBLISHED_SKILL_PREVIEW_KEY)
@@ -492,7 +515,7 @@
 				uni.showToast({ title: '已加载刚发布内容', icon: 'none' })
 			}
 		}
-		void loadSkillDetail(query?.id || currentSkillId.value)
+		void loadSkillDetail(rawId || currentSkillId.value)
 	})
 
 	const copySkill = () => {
@@ -548,9 +571,22 @@
 		} catch {}
 	}
 
-	const followAuthor = () => {
+	const followAuthor = async () => {
 		if (!requireLogin(userStore.token, '关注作者')) return
-		uni.showToast({ title: '已关注', icon: 'success' })
+		if (isOwnSkill.value || !creatorId.value) return
+		const prev = isFollowing.value
+		isFollowing.value = !prev  // 乐观更新
+		try {
+			if (prev) {
+				await unfollowCreator(creatorId.value)
+				uni.showToast({ title: '已取消关注', icon: 'none' })
+			} else {
+				await followCreator(creatorId.value)
+				uni.showToast({ title: '已关注', icon: 'success' })
+			}
+		} catch {
+			isFollowing.value = prev  // 请求失败回滚
+		}
 	}
 	const shareSkill = () => uni.showToast({ title: '分享功能开发中', icon: 'none' })
 	const reportSkill = () => uni.showToast({ title: '举报功能开发中', icon: 'none' })
@@ -830,12 +866,18 @@
 			.publish-time { font-size: 22rpx; color: rgba(0,0,0,0.40); flex: 1; }
 
 			.follow-btn {
-				background: rgba(228, 92, 26,0.15);
+				background: rgba(228, 92, 26, 0.15);
 				border: 1rpx solid rgba(228, 92, 26, 0.2);
 				padding: 10rpx 24rpx;
 				border-radius: 100rpx;
 
 				.follow-btn-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
+
+				&.follow-btn--active {
+					background: rgba(0, 0, 0, 0.06);
+					border-color: rgba(0, 0, 0, 0.12);
+					.follow-btn-text { color: rgba(0, 0, 0, 0.40); }
+				}
 			}
 		}
 

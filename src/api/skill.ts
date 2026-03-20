@@ -129,7 +129,18 @@ export const getCreatorProfile = (id: string | number) => {
 		publishedSkillCount: number
 		totalCopyCount: number
 		avgSuccessRate: number | null
+		followerCount: number
+		followingCount: number
+		isFollowing: boolean
 	}>(`/skills/creator/${id}`)
+}
+
+export const followCreator = (id: string | number) => {
+	return http.post<{ targetId: number; isFollowing: boolean; changed: boolean }>(`/skills/creator/${id}/follow`)
+}
+
+export const unfollowCreator = (id: string | number) => {
+	return http.delete<{ targetId: number; isFollowing: boolean; changed: boolean }>(`/skills/creator/${id}/follow`)
 }
 
 export const getSkillTags = (params?: { keyword?: string; pageSize?: number }) => {

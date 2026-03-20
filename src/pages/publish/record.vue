@@ -3,9 +3,7 @@
 		<!-- Top nav -->
 		<view class="top-bar">
 			<text class="top-cancel" @tap="goBack">取消</text>
-			<!-- #ifdef H5 -->
-			<text class="top-title">记一笔</text>
-			<!-- #endif -->
+			<text class="top-title">{{ skillId ? '写反馈' : '记一笔' }}</text>
 			<view class="btn-pub" :class="{ on: canPublish }" @tap="publish">
 				<text class="btn-pub-t">发布</text>
 			</view>

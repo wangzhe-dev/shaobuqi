@@ -441,6 +441,11 @@ const modelColor = (modelName: string) => {
   return '#5B5BD6'
 }
 
+const toHttps = (url: string | null | undefined): string => {
+  if (!url) return ''
+  return url.replace(/^http:\/\//i, 'https://')
+}
+
 const mapApiSkill = (item: any) => {
   const copyCountNum = Number(item?.copyCount ?? 0)
   const tokenNum = Number(item?.avgTotalTokens ?? 0)
@@ -471,7 +476,7 @@ const mapApiSkill = (item: any) => {
     lowCost: tokenNum > 0 && tokenNum < 1200,
     highConsume: tokenNum > 8000,
     stable: rateNum >= 90 && feedbackCountNum >= 3,
-    images: item?.coverImage ? [item.coverImage] : [],
+    images: item?.coverImage ? [toHttps(item.coverImage)] : [],
   }
 }
 
