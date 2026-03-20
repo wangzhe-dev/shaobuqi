@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { appFeedbackRouter } from './appFeedback'
 import { authRouter } from './auth'
 import { draftsRouter } from './drafts'
 import { feedRouter } from './feed'
@@ -16,3 +17,4 @@ apiRouter.use('/stats', statsRouter)
 apiRouter.use('/drafts', draftsRouter)
 apiRouter.use('/feed', feedRouter)
 apiRouter.use('/uploads', uploadsRouter)
+apiRouter.use('/app-feedback', appFeedbackRouter)

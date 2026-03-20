@@ -264,6 +264,19 @@ CREATE TABLE IF NOT EXISTS `skill_feedbacks` (
   CONSTRAINT `fk_skill_feedbacks_usage` FOREIGN KEY (`usage_record_id`) REFERENCES `skill_usage_records` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `app_feedbacks` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED DEFAULT NULL,
+  `type` ENUM('suggestion','bug','content','other') NOT NULL DEFAULT 'other',
+  `content` VARCHAR(1000) NOT NULL,
+  `contact` VARCHAR(120) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_app_feedbacks_type_time` (`type`, `created_at`),
+  KEY `idx_app_feedbacks_user_time` (`user_id`, `created_at`),
+  CONSTRAINT `fk_app_feedbacks_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `user_follows` (
   `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `follower_id`  BIGINT UNSIGNED NOT NULL COMMENT '关注者',

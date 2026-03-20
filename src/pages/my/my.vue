@@ -1,751 +1,1097 @@
 <template>
-	<scroll-view class="page" scroll-y :show-scrollbar="false">
+  <scroll-view class="page" scroll-y :show-scrollbar="false">
 
-		<!-- ── Profile ── -->
-		<view class="profile-card" :style="profileCardStyle">
-			<!-- 未登录 -->
-			<view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
-				<view class="avatar-wrap">
-					<view class="avatar avatar-guest">
-						<uni-icons type="person" size="40" color="#C8CBD4" />
-					</view>
-				</view>
-				<view class="pc-info">
-					<text class="pc-name">登录 / 注册</text>
-					<text class="pc-bio">登录后解锁全部功能</text>
-					<view class="pc-tags">
-						<text class="pc-tag pc-tag-cta">立即登录 →</text>
-					</view>
-				</view>
-			</view>
+    <!-- ── Profile ── -->
+    <view class="profile-card" :style="profileCardStyle">
+      <!-- 未登录 -->
+      <view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
+        <view class="avatar-wrap">
+          <view class="avatar avatar-guest">
+            <uni-icons type="person" size="40" color="#C8CBD4" />
+          </view>
+        </view>
+        <view class="pc-info">
+          <text class="pc-name">登录 / 注册</text>
+          <text class="pc-bio">登录后解锁全部功能</text>
+          <view class="pc-tags">
+            <text class="pc-tag pc-tag-cta">立即登录 →</text>
+          </view>
+        </view>
+      </view>
 
-			<!-- 已登录 -->
-			<view v-else class="pc-row">
-				<view class="avatar-wrap">
-					<view class="avatar"><text class="avatar-t">{{ profile.name[0] || '我' }}</text></view>
-					<view class="lv-badge">Lv.4</view>
-				</view>
-				<view class="pc-info">
-					<text class="pc-name">{{ profile.name }}</text>
-					<text class="pc-bio">{{ profile.bio }}</text>
-					<view class="pc-tags">
-						<text v-for="tag in profile.tags" :key="tag" class="pc-tag">{{ tag }}</text>
-					</view>
-				</view>
-				<view class="edit-btn" @tap="editProfile">
-					<uni-icons type="compose" size="17" color="#9CA3AF" />
-				</view>
-			</view>
+      <!-- 已登录 -->
+      <view v-else class="pc-row">
+        <view class="avatar-wrap">
+          <view class="avatar"><text class="avatar-t">{{ profile.name[0] || '我' }}</text></view>
+          <view class="lv-badge">Lv.4</view>
+        </view>
+        <view class="pc-info">
+          <text class="pc-name">{{ profile.name }}</text>
+          <text class="pc-bio">{{ profile.bio }}</text>
+          <view class="pc-tags">
+            <text v-for="tag in profile.tags" :key="tag" class="pc-tag">{{ tag }}</text>
+          </view>
+        </view>
+        <view class="edit-btn" @tap="editProfile">
+          <uni-icons type="compose" size="17" color="#9CA3AF" />
+        </view>
+      </view>
 
-			<view class="stats-bar" :class="{ 'stats-dim': !isLoggedIn }">
-				<view class="stat-item">
-					<text class="sv">{{ isLoggedIn ? profile.publishedSkillCount : '--' }}</text>
-					<text class="sl">发布 Skill</text>
-				</view>
-				<view class="stat-div" />
-				<view class="stat-item">
-					<text class="sv orange">{{ isLoggedIn ? profile.totalCopyCount : '--' }}</text>
-					<text class="sl">被复制</text>
-				</view>
-				<view class="stat-div" />
-				<view class="stat-item">
-					<text class="sv green">{{ isLoggedIn ? profile.avgSuccessRate : '--' }}</text>
-					<text class="sl">平均复现率</text>
-				</view>
-			</view>
-		</view>
+      <view class="stats-bar" :class="{ 'stats-dim': !isLoggedIn }">
+        <view class="stat-item">
+          <text class="sv">{{ isLoggedIn ? profile.publishedSkillCount : '--' }}</text>
+          <text class="sl">发布 Skill</text>
+        </view>
+        <view class="stat-div" />
+        <view class="stat-item">
+          <text class="sv orange">{{ isLoggedIn ? profile.totalCopyCount : '--' }}</text>
+          <text class="sl">被复制</text>
+        </view>
+        <view class="stat-div" />
+        <view class="stat-item">
+          <text class="sv green">{{ isLoggedIn ? profile.avgSuccessRate : '--' }}</text>
+          <text class="sl">平均复现率</text>
+        </view>
+      </view>
+    </view>
 
-		<!-- ── 我的 Skill ── -->
-		<view class="section">
-			<view class="section-hd">
-				<text class="sh-title">我发布的 Skill</text>
-				<text v-if="isLoggedIn" class="sh-more" @tap="toAllSkills">全部 ›</text>
-			</view>
-			<!-- 未登录提示 -->
-			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
-				<view class="gb-inner">
-					<text class="gb-icon">⚡</text>
-					<text class="gb-text">登录后查看你发布的 Skill</text>
-					<view class="gb-btn">去登录</view>
-				</view>
-			</view>
-			<!-- 已登录内容 -->
-			<template v-else>
-				<view class="skill-list">
-					<view v-if="mySkills.length === 0" class="empty-row">
-						<text class="empty-t">还没有发布 Skill</text>
-					</view>
-					<view
-						v-for="skill in mySkills"
-						:key="skill.id"
-						class="skill-card"
-						@tap="toSkill(skill.id)"
-					>
-						<view class="sc-top">
-							<view class="scene-tag">{{ skill.scene }}</view>
-							<text class="sc-time">{{ skill.time }}</text>
-						</view>
-						<text class="sc-title">{{ skill.title }}</text>
-						<view class="sc-stats">
-							<view class="sc-stat">
-								<text class="ss-val orange">{{ skill.copyCount }}</text>
-								<text class="ss-lab">复制</text>
-							</view>
-							<view class="sc-stat">
-								<text class="ss-val">{{ skill.favoriteCount }}</text>
-								<text class="ss-lab">收藏</text>
-							</view>
-							<view class="sc-stat">
-								<text class="ss-val green">{{ skill.successRate }}</text>
-								<text class="ss-lab">复现率</text>
-							</view>
-							<view class="sc-stat">
-								<text class="ss-val blue">{{ skill.feedbackCount }}</text>
-								<text class="ss-lab">反馈</text>
-							</view>
-						</view>
-					</view>
-				</view>
-			</template>
-		</view>
+    <!-- ── 我的 Skill ── -->
+    <view class="section">
+      <view class="section-hd">
+        <text class="sh-title">我发布的 Skill</text>
+        <text v-if="isLoggedIn" class="sh-more" @tap="toAllSkills">全部 ›</text>
+      </view>
+      <!-- 未登录提示 -->
+      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+        <view class="gb-inner">
+          <text class="gb-icon">⚡</text>
+          <text class="gb-text">登录后查看你发布的 Skill</text>
+          <view class="gb-btn">去登录</view>
+        </view>
+      </view>
+      <!-- 已登录内容 -->
+      <template v-else>
+        <view class="skill-list">
+          <view v-if="mySkills.length === 0" class="empty-row">
+            <text class="empty-t">还没有发布 Skill</text>
+          </view>
+          <view v-for="skill in mySkills" :key="skill.id" class="skill-card" @tap="toSkill(skill.id)">
+            <view class="sc-top">
+              <view class="scene-tag">{{ skill.scene }}</view>
+              <text class="sc-time">{{ skill.time }}</text>
+            </view>
+            <text class="sc-title">{{ skill.title }}</text>
+            <view class="sc-stats">
+              <view class="sc-stat">
+                <text class="ss-val orange">{{ skill.copyCount }}</text>
+                <text class="ss-lab">复制</text>
+              </view>
+              <view class="sc-stat">
+                <text class="ss-val">{{ skill.favoriteCount }}</text>
+                <text class="ss-lab">收藏</text>
+              </view>
+              <view class="sc-stat">
+                <text class="ss-val green">{{ skill.successRate }}</text>
+                <text class="ss-lab">复现率</text>
+              </view>
+              <view class="sc-stat">
+                <text class="ss-val blue">{{ skill.feedbackCount }}</text>
+                <text class="ss-lab">反馈</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </template>
+    </view>
 
-		<!-- ── 我的收藏 ── -->
-		<view class="section">
-			<view class="section-hd">
-				<text class="sh-title">我的收藏</text>
-			</view>
-			<!-- 未登录提示 -->
-			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
-				<view class="gb-inner">
-					<text class="gb-icon">🔖</text>
-					<text class="gb-text">登录后查看收藏的 Skill</text>
-					<view class="gb-btn">去登录</view>
-				</view>
-			</view>
-			<!-- 已登录内容 -->
-			<template v-else>
-				<view class="list-card">
-					<view v-if="myFavorites.length === 0" class="empty-row">
-						<text class="empty-t">还没有收藏 Skill</text>
-					</view>
-					<view
-						v-for="favorite in myFavorites"
-						:key="favorite.id"
-						class="line-item"
-						@tap="toSkill(favorite.id)"
-					>
-						<view class="item-main">
-							<text class="item-title">{{ favorite.title }}</text>
-							<text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
-						</view>
-						<text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
-					</view>
-				</view>
-			</template>
-		</view>
+    <!-- ── 我的收藏 ── -->
+    <view class="section">
+      <view class="section-hd">
+        <text class="sh-title">我的收藏</text>
+      </view>
+      <!-- 未登录提示 -->
+      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+        <view class="gb-inner">
+          <text class="gb-icon">🔖</text>
+          <text class="gb-text">登录后查看收藏的 Skill</text>
+          <view class="gb-btn">去登录</view>
+        </view>
+      </view>
+      <!-- 已登录内容 -->
+      <template v-else>
+        <view class="list-card">
+          <view v-if="myFavorites.length === 0" class="empty-row">
+            <text class="empty-t">还没有收藏 Skill</text>
+          </view>
+          <view v-for="favorite in myFavorites" :key="favorite.id" class="line-item" @tap="toSkill(favorite.id)">
+            <view class="item-main">
+              <text class="item-title">{{ favorite.title }}</text>
+              <text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
+            </view>
+            <text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
+          </view>
+        </view>
+      </template>
+    </view>
 
-		<!-- ── 我的复制 ── -->
-		<view class="section">
-			<view class="section-hd">
-				<text class="sh-title">我的复制</text>
-			</view>
-			<!-- 未登录提示 -->
-			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
-				<view class="gb-inner">
-					<text class="gb-icon">📋</text>
-					<text class="gb-text">登录后查看复制记录</text>
-					<view class="gb-btn">去登录</view>
-				</view>
-			</view>
-			<!-- 已登录内容 -->
-			<template v-else>
-				<view class="list-card">
-					<view v-if="myCopies.length === 0" class="empty-row">
-						<text class="empty-t">还没有复制记录</text>
-					</view>
-					<view
-						v-for="copy in myCopies"
-						:key="copy.id"
-						class="line-item"
-					>
-						<view class="item-main">
-							<text class="item-title">{{ copy.title }}</text>
-							<text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
-						</view>
-					</view>
-				</view>
-			</template>
-		</view>
+    <!-- ── 我的复制 ── -->
+    <view class="section">
+      <view class="section-hd">
+        <text class="sh-title">我的复制</text>
+      </view>
+      <!-- 未登录提示 -->
+      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+        <view class="gb-inner">
+          <text class="gb-icon">📋</text>
+          <text class="gb-text">登录后查看复制记录</text>
+          <view class="gb-btn">去登录</view>
+        </view>
+      </view>
+      <!-- 已登录内容 -->
+      <template v-else>
+        <view class="list-card">
+          <view v-if="myCopies.length === 0" class="empty-row">
+            <text class="empty-t">还没有复制记录</text>
+          </view>
+          <view v-for="copy in myCopies" :key="copy.id" class="line-item">
+            <view class="item-main">
+              <text class="item-title">{{ copy.title }}</text>
+              <text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
+            </view>
+          </view>
+        </view>
+      </template>
+    </view>
 
-		<!-- ── 设置 ── -->
-		<view class="section">
-			<view class="settings-card">
-				<view class="settings-row" @tap="clearCache">
-					<view class="settings-icon-box">
-						<uni-icons type="trash" color="#9CA3AF" size="17" />
-					</view>
-					<text class="settings-label">清除缓存</text>
-					<text class="settings-hint">{{ cacheSize }}</text>
-					<uni-icons type="right" size="13" color="#C8CBD4" />
-				</view>
-				<view class="settings-row" @tap="showAbout">
-					<view class="settings-icon-box">
-						<uni-icons type="info-filled" color="#9CA3AF" size="17" />
-					</view>
-					<text class="settings-label">关于烧不起</text>
-					<text class="settings-hint">v1.0.0</text>
-					<uni-icons type="right" size="13" color="#C8CBD4" />
-				</view>
-				<!-- 未登录：展示登录入口 -->
-				<view v-if="!isLoggedIn" class="settings-row last login-row" @tap="goLogin">
-					<view class="settings-icon-box settings-icon-login">
-						<uni-icons type="person" color="#5B5BD6" size="17" />
-					</view>
-					<text class="settings-label login-label">登录 / 注册</text>
-					<uni-icons type="right" size="13" color="#5B5BD6" />
-				</view>
-				<!-- 已登录：退出登录 -->
-				<view v-else class="settings-row last logout-row" @tap="logoutConfirm">
-					<view class="settings-icon-box">
-						<uni-icons type="undo" color="#E45C1A" size="17" />
-					</view>
-					<text class="settings-label logout-label">退出登录</text>
-					<uni-icons type="right" size="13" color="#EABAA7" />
-				</view>
-			</view>
-		</view>
+    <!-- ── 设置 ── -->
+    <view class="section">
+      <view class="settings-card">
+        <view class="settings-row" @tap="clearCache">
+          <view class="settings-icon-box">
+            <uni-icons type="trash" color="#9CA3AF" size="17" />
+          </view>
+          <text class="settings-label">清除缓存</text>
+          <text class="settings-hint">{{ cacheSize }}</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <view class="settings-row" @tap="showAbout">
+          <view class="settings-icon-box">
+            <uni-icons type="info-filled" color="#9CA3AF" size="17" />
+          </view>
+          <text class="settings-label">关于烧不起</text>
+          <text class="settings-hint">v1.0.0</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <view class="settings-row" @tap="toFeedback">
+          <view class="settings-icon-box settings-icon-feedback">
+            <uni-icons type="chat" color="#5B5BD6" size="17" />
+          </view>
+          <text class="settings-label">意见反馈</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <view class="settings-row" @tap="showCoopPopup = true">
+          <view class="settings-icon-box settings-icon-coop">
+            <uni-icons type="heart" color="#FF7A45" size="17" />
+          </view>
+          <text class="settings-label">商务合作</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <!-- 未登录：展示登录入口 -->
+        <view v-if="!isLoggedIn" class="settings-row last login-row" @tap="goLogin">
+          <view class="settings-icon-box settings-icon-login">
+            <uni-icons type="person" color="#5B5BD6" size="17" />
+          </view>
+          <text class="settings-label login-label">登录 / 注册</text>
+          <uni-icons type="right" size="13" color="#5B5BD6" />
+        </view>
+        <!-- 已登录：退出登录 -->
+        <view v-else class="settings-row last logout-row" @tap="logoutConfirm">
+          <view class="settings-icon-box">
+            <uni-icons type="undo" color="#E45C1A" size="17" />
+          </view>
+          <text class="settings-label logout-label">退出登录</text>
+          <uni-icons type="right" size="13" color="#EABAA7" />
+        </view>
+      </view>
+    </view>
 
-		<view class="page-bottom" />
-	</scroll-view>
+    <view class="page-bottom" />
+  </scroll-view>
+
+  <!-- ── 商务合作弹窗 ── -->
+  <view v-if="showCoopPopup" class="popup-mask" @tap="showCoopPopup = false">
+    <view class="popup-sheet" @tap.stop>
+      <view class="popup-handle" />
+      <text class="popup-title">商务合作</text>
+      <text class="popup-subtitle">欢迎与我们合作，点击可一键复制</text>
+
+      <view class="contact-list">
+        <view class="contact-item" @tap="copyContact('1320100598@qq.com', '邮箱')">
+          <view class="contact-icon-box contact-icon-email">
+            <uni-icons class="contact-icon" type="email-filled" size="24" color="#5B5BD6" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-type">邮箱</text>
+            <text class="contact-value">1320100598@qq.com</text>
+          </view>
+          <view class="copy-badge">复制</view>
+        </view>
+
+        <view class="contact-item" @tap="copyContact('13701085362', '手机号')">
+          <view class="contact-icon-box contact-icon-phone">
+            <uni-icons class="contact-icon" type="phone-filled" size="24" color="#2F8A57" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-type">手机</text>
+            <text class="contact-value">13701085362</text>
+          </view>
+          <view class="copy-badge">复制</view>
+        </view>
+
+        <view class="contact-item" @tap="copyContact('wa1320100598', '微信号')">
+          <view class="contact-icon-box contact-icon-wechat">
+            <uni-icons class="contact-icon" type="weixin" size="24" color="#FF7A45" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-type">微信</text>
+            <text class="contact-value">wa1320100598</text>
+          </view>
+          <view class="copy-badge">复制</view>
+        </view>
+      </view>
+
+      <view class="popup-close-btn" @tap="showCoopPopup = false">
+        <text class="popup-close-text">我知道了</text>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
-	import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
-	import { useSysInfoStore, useUserStore } from '@/stores'
-	import { getSafeAreaTop } from '@/utils/safe-area'
-	import { getCurrentInstance } from 'vue'
+import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
+import { useSysInfoStore, useUserStore } from '@/stores'
+import { getSafeAreaTop } from '@/utils/safe-area'
+import { getCurrentInstance } from 'vue'
 
-	const instance = getCurrentInstance()
-	onShow(() => {
-		// #ifdef MP-WEIXIN
-		uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
-		// #endif
-		loadMyData()
-	})
-	const userStore = useUserStore()
-	const isLoggedIn = computed(() => !!userStore.token)
+const instance = getCurrentInstance()
+onShow(() => {
+  // #ifdef MP-WEIXIN
+  uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
+  // #endif
+  loadMyData()
+})
+const userStore = useUserStore()
+const isLoggedIn = computed(() => !!userStore.token)
 
-	const sysInfo = useSysInfoStore()
-	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
-	const profileCardStyle = computed(() => {
-		const style: Record<string, string> = {
-			'--profile-safe-top': `${statusBarHeight.value}px`
-		}
+const sysInfo = useSysInfoStore()
+const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
+const profileCardStyle = computed(() => {
+  const style: Record<string, string> = {
+    '--profile-safe-top': `${statusBarHeight.value}px`
+  }
 
-		// #ifdef H5
-		style['--profile-safe-top-base'] = '16px'
-		// #endif
+  // #ifdef H5
+  style['--profile-safe-top-base'] = '16px'
+  // #endif
 
-		return style
-	})
+  return style
+})
 
-	const goLogin = () => {
-		uni.navigateTo({ url: '/pages/login/index' })
-	}
+const goLogin = () => {
+  uni.navigateTo({ url: '/pages/login/index' })
+}
 
-	const mySkills = ref<Array<{
-		id: string
-		title: string
-		scene: string
-		time: string
-		copyCount: string
-		favoriteCount: string
-		successRate: string
-		feedbackCount: string
-	}>>([])
+const mySkills = ref<Array<{
+  id: string
+  title: string
+  scene: string
+  time: string
+  copyCount: string
+  favoriteCount: string
+  successRate: string
+  feedbackCount: string
+}>>([])
 
-	const myFavorites = ref<Array<{
-		id: string
-		title: string
-		scene: string
-		creator: string
-		favoriteCount: string
-	}>>([])
+const myFavorites = ref<Array<{
+  id: string
+  title: string
+  scene: string
+  creator: string
+  favoriteCount: string
+}>>([])
 
-	const myCopies = ref<Array<{
-		id: string
-		title: string
-		scene: string
-		time: string
-	}>>([])
+const myCopies = ref<Array<{
+  id: string
+  title: string
+  scene: string
+  time: string
+}>>([])
 
-	const profile = reactive({
-		name: '我',
-		bio: '不断验证Skill，不断分享经验',
-		tags: ['Skill'],
-		publishedSkillCount: '0',
-		totalCopyCount: '0',
-		avgSuccessRate: '--'
-	})
+const profile = reactive({
+  name: '我',
+  bio: '不断验证Skill，不断分享经验',
+  tags: ['Skill'],
+  publishedSkillCount: '0',
+  totalCopyCount: '0',
+  avgSuccessRate: '--'
+})
 
-	const formatCount = (value: number | null | undefined) => {
-		const n = Number(value ?? 0)
-		if (!Number.isFinite(n) || n <= 0) return '0'
-		if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
-		return `${Math.round(n)}`
-	}
+const formatCount = (value: number | null | undefined) => {
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n) || n <= 0) return '0'
+  if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
+  return `${Math.round(n)}`
+}
 
-	const formatRate = (value: number | null | undefined) => {
-		if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
-		return `${Number(value).toFixed(0)}%`
-	}
+const formatRate = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
+  return `${Number(value).toFixed(0)}%`
+}
 
-	const formatRelativeTime = (time: string | null | undefined) => {
-		if (!time) return '--'
-		const date = new Date(time)
-		if (Number.isNaN(date.getTime())) return '--'
-		const diff = Date.now() - date.getTime()
-		const day = 24 * 60 * 60 * 1000
-		if (diff < day) return '今天'
-		if (diff < 2 * day) return '1天前'
-		if (diff < 7 * day) return `${Math.floor(diff / day)}天前`
-		return `${Math.floor(diff / (7 * day))}周前`
-	}
+const formatRelativeTime = (time: string | null | undefined) => {
+  if (!time) return '--'
+  const date = new Date(time)
+  if (Number.isNaN(date.getTime())) return '--'
+  const diff = Date.now() - date.getTime()
+  const day = 24 * 60 * 60 * 1000
+  if (diff < day) return '今天'
+  if (diff < 2 * day) return '1天前'
+  if (diff < 7 * day) return `${Math.floor(diff / day)}天前`
+  return `${Math.floor(diff / (7 * day))}周前`
+}
 
-	const loadMyData = async () => {
-		if (!userStore.token) return
+const loadMyData = async () => {
+  if (!userStore.token) return
 
-		try {
-			const me = await getMyProfile()
-			profile.name = me?.nickname || '我'
-			profile.bio = me?.bio || '不断验证Skill，不断分享经验'
-			profile.tags = me?.bio ? ['创作者'] : ['Skill']
-			profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
-			profile.totalCopyCount = formatCount(me?.totalCopyCount)
-			profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
-		} catch {}
+  try {
+    const me = await getMyProfile()
+    profile.name = me?.nickname || '我'
+    profile.bio = me?.bio || '不断验证Skill，不断分享经验'
+    profile.tags = me?.bio ? ['创作者'] : ['Skill']
+    profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
+    profile.totalCopyCount = formatCount(me?.totalCopyCount)
+    profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
+  } catch { }
 
-		try {
-			const skillData = await getMySkills({ page: 1, pageSize: 20, status: 1 })
-			const list = Array.isArray(skillData?.list) ? skillData.list : []
-			mySkills.value = list.map((skill: any) => ({
-				id: `${skill.id}`,
-				title: skill.title,
-				scene: skill.scene || '其他',
-				time: formatRelativeTime(skill.publishAt || skill.updatedAt),
-				copyCount: formatCount(skill.copyCount),
-				favoriteCount: formatCount(skill.favoriteCount),
-				successRate: formatRate(skill.successRate),
-				feedbackCount: formatCount(skill.feedbackCount)
-			}))
-		} catch {}
+  try {
+    const skillData = await getMySkills({ page: 1, pageSize: 20, status: 1 })
+    const list = Array.isArray(skillData?.list) ? skillData.list : []
+    mySkills.value = list.map((skill: any) => ({
+      id: `${skill.id}`,
+      title: skill.title,
+      scene: skill.scene || '其他',
+      time: formatRelativeTime(skill.publishAt || skill.updatedAt),
+      copyCount: formatCount(skill.copyCount),
+      favoriteCount: formatCount(skill.favoriteCount),
+      successRate: formatRate(skill.successRate),
+      feedbackCount: formatCount(skill.feedbackCount)
+    }))
+  } catch { }
 
-		try {
-			const favoriteData = await getMyFavorites({ page: 1, pageSize: 8 })
-			const list = Array.isArray(favoriteData?.list) ? favoriteData.list : []
-			myFavorites.value = list.map((item: any) => ({
-				id: `${item?.skill?.id || ''}`,
-				title: `${item?.skill?.title || '未命名 Skill'}`,
-				scene: `${item?.skill?.scene || '其他'}`,
-				creator: `${item?.skill?.creator?.nickname || '匿名用户'}`,
-				favoriteCount: formatCount(item?.skill?.favoriteCount)
-			}))
-		} catch {}
+  try {
+    const favoriteData = await getMyFavorites({ page: 1, pageSize: 8 })
+    const list = Array.isArray(favoriteData?.list) ? favoriteData.list : []
+    myFavorites.value = list.map((item: any) => ({
+      id: `${item?.skill?.id || ''}`,
+      title: `${item?.skill?.title || '未命名 Skill'}`,
+      scene: `${item?.skill?.scene || '其他'}`,
+      creator: `${item?.skill?.creator?.nickname || '匿名用户'}`,
+      favoriteCount: formatCount(item?.skill?.favoriteCount)
+    }))
+  } catch { }
 
-		try {
-			const copyData = await getMyCopies({ page: 1, pageSize: 8 })
-			const list = Array.isArray(copyData?.list) ? copyData.list : []
-			myCopies.value = list.map((item: any) => ({
-				id: `${item?.id || ''}`,
-				title: `${item?.skill?.title || '已删除 Skill'}`,
-				scene: `${item?.skill?.scene || '其他'}`,
-				time: formatRelativeTime(item?.createdAt)
-			}))
-		} catch {}
-	}
+  try {
+    const copyData = await getMyCopies({ page: 1, pageSize: 8 })
+    const list = Array.isArray(copyData?.list) ? copyData.list : []
+    myCopies.value = list.map((item: any) => ({
+      id: `${item?.id || ''}`,
+      title: `${item?.skill?.title || '已删除 Skill'}`,
+      scene: `${item?.skill?.scene || '其他'}`,
+      time: formatRelativeTime(item?.createdAt)
+    }))
+  } catch { }
+}
 
-	const cacheSize = ref('计算中...')
-	onMounted(() => {
-		uni.getStorageInfo({
-			success: (res) => {
-				const kb = res.currentSize
-				cacheSize.value = kb < 1024 ? `${kb} KB` : `${(kb / 1024).toFixed(1)} MB`
-			},
-			fail: () => { cacheSize.value = '' }
-		})
-	})
+const cacheSize = ref('计算中...')
+onMounted(() => {
+  uni.getStorageInfo({
+    success: (res) => {
+      const kb = res.currentSize
+      cacheSize.value = kb < 1024 ? `${kb} KB` : `${(kb / 1024).toFixed(1)} MB`
+    },
+    fail: () => { cacheSize.value = '' }
+  })
+})
 
-	const toSkill = (id: string) => {
-		if (!id) {
-			uni.showToast({ title: 'Skill 已不存在', icon: 'none' })
-			return
-		}
-		uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
-	}
-	const toAllSkills = () => uni.navigateTo({ url: '/pages/skill/index' })
-	const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
+const toSkill = (id: string) => {
+  if (!id) {
+    uni.showToast({ title: 'Skill 已不存在', icon: 'none' })
+    return
+  }
+  uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+}
+const toAllSkills = () => uni.navigateTo({ url: '/pages/skill/index' })
+const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
+const toFeedback = () => uni.navigateTo({ url: '/pages/feedback/index' })
 
-	const clearCache = () => {
-		uni.showModal({
-			title: '清除缓存',
-			content: '确定要清除本地缓存吗？',
-			confirmColor: '#FF7A45',
-			success: ({ confirm }) => {
-				if (!confirm) return
-				uni.clearStorageSync()
-				cacheSize.value = '0 KB'
-				uni.showToast({ title: '缓存已清除', icon: 'success' })
-			}
-		})
-	}
+const showCoopPopup = ref(false)
+const copyContact = (text: string, label: string) => {
+  showCoopPopup.value = false
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      uni.showToast({ title: `${label}已复制`, icon: 'success' })
+    },
+    fail: () => {
+      uni.showToast({ title: '复制失败，请重试', icon: 'none' })
+    }
+  })
+}
 
-	const showAbout = () => {
-		uni.showModal({
-			title: '烧不起',
-			content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队',
-			showCancel: false,
-			confirmText: '知道了',
-			confirmColor: '#5B5BD6',
-		})
-	}
+const clearCache = () => {
+  uni.showModal({
+    title: '清除缓存',
+    content: '确定要清除本地缓存吗？',
+    confirmColor: '#FF7A45',
+    success: ({ confirm }) => {
+      if (!confirm) return
+      uni.clearStorageSync()
+      cacheSize.value = '0 KB'
+      uni.showToast({ title: '缓存已清除', icon: 'success' })
+    }
+  })
+}
 
-	const logoutConfirm = () => {
-		uni.showModal({
-			title: '退出登录',
-			content: '确定要退出当前账号吗？',
-			confirmText: '退出',
-			confirmColor: '#E45C1A',
-			success: ({ confirm }) => {
-				if (!confirm) return
-				userStore.logout()
-			}
-		})
-	}
+const showAbout = () => {
+  uni.showModal({
+    title: '烧不起',
+    content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队',
+    showCancel: false,
+    confirmText: '知道了',
+    confirmColor: '#5B5BD6',
+  })
+}
+
+const logoutConfirm = () => {
+  uni.showModal({
+    title: '退出登录',
+    content: '确定要退出当前账号吗？',
+    confirmText: '退出',
+    confirmColor: '#E45C1A',
+    success: ({ confirm }) => {
+      if (!confirm) return
+      userStore.logout()
+    }
+  })
+}
 </script>
 
 <style lang="scss" scoped>
 .page {
-	height: 100%;
-	background: #F7F8FA;
+  height: 100%;
+  background: #F7F8FA;
 }
 
 /* ── Profile ── */
 .profile-card {
-	background: #FFFFFF;
-	padding: 0 24rpx;
-	padding-top: calc(var(--profile-safe-top, 0px) + 16rpx);
-	margin-bottom: 16rpx;
+  background: #FFFFFF;
+  padding: 0 24rpx;
+  padding-top: calc(var(--profile-safe-top, 0px) + 16rpx);
+  margin-bottom: 16rpx;
 
-	.pc-row {
-		display: flex;
-		align-items: flex-start;
-		gap: 20rpx;
-		padding-bottom: 24rpx;
-	}
+  .pc-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20rpx;
+    padding-bottom: 24rpx;
+  }
 
-	.pc-guest {
-		align-items: center;
-		cursor: pointer;
-		&:active { opacity: 0.7; }
-	}
+  .pc-guest {
+    align-items: center;
+    cursor: pointer;
 
-	.avatar-wrap {
-		position: relative;
-		flex-shrink: 0;
+    &:active {
+      opacity: 0.7;
+    }
+  }
 
-		.avatar {
-			width: 96rpx;
-			height: 96rpx;
-			border-radius: 50%;
-			background: #5B5BD6;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			box-shadow: 0 6rpx 20rpx rgba(91, 91, 214, 0.28);
+  .avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
 
-			.avatar-t { font-size: 40rpx; color: #fff; font-weight: 800; }
-		}
+    .avatar {
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 50%;
+      background: #5B5BD6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6rpx 20rpx rgba(91, 91, 214, 0.28);
 
-		.avatar-guest {
-			background: #F3F4F6;
-			box-shadow: none;
-			border: 2rpx solid #E5E7EB;
-		}
+      .avatar-t {
+        font-size: 40rpx;
+        color: #fff;
+        font-weight: 800;
+      }
+    }
 
-		.lv-badge {
-			position: absolute;
-			bottom: -4rpx; right: -6rpx;
-			font-size: 17rpx; font-weight: 700;
-			color: #FF7A45;
-			background: #FFF5F0;
-			border: 2rpx solid rgba(255, 122, 69, 0.28);
-			padding: 2rpx 10rpx;
-			border-radius: 100rpx;
-		}
-	}
+    .avatar-guest {
+      background: #F3F4F6;
+      box-shadow: none;
+      border: 2rpx solid #E5E7EB;
+    }
 
-	.pc-info {
-		flex: 1;
-		padding-top: 4rpx;
-		min-width: 0;
+    .lv-badge {
+      position: absolute;
+      bottom: -4rpx;
+      right: -6rpx;
+      font-size: 17rpx;
+      font-weight: 700;
+      color: #FF7A45;
+      background: #FFF5F0;
+      border: 2rpx solid rgba(255, 122, 69, 0.28);
+      padding: 2rpx 10rpx;
+      border-radius: 100rpx;
+    }
+  }
 
-		.pc-name { display: block; font-size: 34rpx; font-weight: 800; color: #1A1A2E; margin-bottom: 8rpx; }
-		.pc-bio  { display: block; font-size: 24rpx; color: #6B7280; line-height: 1.5; margin-bottom: 12rpx; }
+  .pc-info {
+    flex: 1;
+    padding-top: 4rpx;
+    min-width: 0;
 
-		.pc-tags {
-			display: flex; gap: 10rpx;
+    .pc-name {
+      display: block;
+      font-size: 34rpx;
+      font-weight: 800;
+      color: #1A1A2E;
+      margin-bottom: 8rpx;
+    }
 
-			.pc-tag {
-				font-size: 18rpx; color: #5B5BD6; font-weight: 500;
-				background: rgba(91, 91, 214, 0.08);
-				padding: 4rpx 14rpx; border-radius: 8rpx;
-			}
+    .pc-bio {
+      display: block;
+      font-size: 24rpx;
+      color: #6B7280;
+      line-height: 1.5;
+      margin-bottom: 12rpx;
+    }
 
-			.pc-tag-cta {
-				color: #FF7A45;
-				background: rgba(255, 122, 69, 0.1);
-				font-weight: 600;
-			}
-		}
-	}
+    .pc-tags {
+      display: flex;
+      gap: 10rpx;
 
-	.edit-btn {
-		width: 56rpx; height: 56rpx;
-		border-radius: 16rpx;
-		background: rgba(0, 0, 0, 0.04);
-		display: flex; align-items: center; justify-content: center;
-		flex-shrink: 0;
-		&:active { background: rgba(0, 0, 0, 0.08); }
-	}
+      .pc-tag {
+        font-size: 18rpx;
+        color: #5B5BD6;
+        font-weight: 500;
+        background: rgba(91, 91, 214, 0.08);
+        padding: 4rpx 14rpx;
+        border-radius: 8rpx;
+      }
+
+      .pc-tag-cta {
+        color: #FF7A45;
+        background: rgba(255, 122, 69, 0.1);
+        font-weight: 600;
+      }
+    }
+  }
+
+  .edit-btn {
+    width: 56rpx;
+    height: 56rpx;
+    border-radius: 16rpx;
+    background: rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &:active {
+      background: rgba(0, 0, 0, 0.08);
+    }
+  }
 }
 
 /* #ifdef H5 */
 .profile-card {
-	padding-top: calc(var(--profile-safe-top-base, 16px) + constant(safe-area-inset-top));
-	padding-top: calc(var(--profile-safe-top-base, 16px) + env(safe-area-inset-top));
+  padding-top: calc(var(--profile-safe-top-base, 16px) + constant(safe-area-inset-top));
+  padding-top: calc(var(--profile-safe-top-base, 16px) + env(safe-area-inset-top));
 }
+
 /* #endif */
 
 .stats-bar {
-	display: flex; align-items: center;
-	padding: 20rpx 0 24rpx;
-	border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0 24rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.06);
 
-	&.stats-dim {
-		opacity: 0.35;
-		pointer-events: none;
-	}
+  &.stats-dim {
+    opacity: 0.35;
+    pointer-events: none;
+  }
 
-	.stat-item {
-		flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+  .stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6rpx;
 
-		.sv { font-size: 32rpx; font-weight: 900; color: #1A1A2E; }
-		.sv.orange { color: #FF7A45; }
-		.sv.green  { color: #2F8A57; }
-		.sl { font-size: 20rpx; color: #9CA3AF; }
-	}
+    .sv {
+      font-size: 32rpx;
+      font-weight: 900;
+      color: #1A1A2E;
+    }
 
-	.stat-div { width: 1rpx; height: 36rpx; background: rgba(0, 0, 0, 0.06); }
+    .sv.orange {
+      color: #FF7A45;
+    }
+
+    .sv.green {
+      color: #2F8A57;
+    }
+
+    .sl {
+      font-size: 20rpx;
+      color: #9CA3AF;
+    }
+  }
+
+  .stat-div {
+    width: 1rpx;
+    height: 36rpx;
+    background: rgba(0, 0, 0, 0.06);
+  }
 }
 
 /* ── 通用 section ── */
 .section {
-	padding: 0 24rpx 16rpx;
+  padding: 0 24rpx 16rpx;
 }
 
 .section-hd {
-	display: flex; align-items: center; justify-content: space-between;
-	padding: 4rpx 4rpx 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4rpx 4rpx 16rpx;
 
-	.sh-title { font-size: 28rpx; font-weight: 700; color: #1A1A2E; }
-	.sh-more  { font-size: 24rpx; color: #9CA3AF; }
+  .sh-title {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: #1A1A2E;
+  }
+
+  .sh-more {
+    font-size: 24rpx;
+    color: #9CA3AF;
+  }
 }
 
 /* ── 未登录占位块 ── */
 .guest-block {
-	border-radius: 20rpx;
-	background: #FFFFFF;
-	border: 1rpx dashed #DDD6FE;
-	&:active { background: #F8F8FF; }
+  border-radius: 20rpx;
+  background: #FFFFFF;
+  border: 1rpx dashed #DDD6FE;
 
-	.gb-inner {
-		display: flex;
-		align-items: center;
-		gap: 16rpx;
-		padding: 28rpx 24rpx;
-	}
+  &:active {
+    background: #F8F8FF;
+  }
 
-	.gb-icon {
-		font-size: 36rpx;
-		flex-shrink: 0;
-	}
+  .gb-inner {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    padding: 28rpx 24rpx;
+  }
 
-	.gb-text {
-		flex: 1;
-		font-size: 26rpx;
-		color: #9CA3AF;
-	}
+  .gb-icon {
+    font-size: 36rpx;
+    flex-shrink: 0;
+  }
 
-	.gb-btn {
-		font-size: 24rpx;
-		color: #5B5BD6;
-		font-weight: 600;
-		background: rgba(91, 91, 214, 0.08);
-		padding: 8rpx 20rpx;
-		border-radius: 100rpx;
-		flex-shrink: 0;
-	}
+  .gb-text {
+    flex: 1;
+    font-size: 26rpx;
+    color: #9CA3AF;
+  }
+
+  .gb-btn {
+    font-size: 24rpx;
+    color: #5B5BD6;
+    font-weight: 600;
+    background: rgba(91, 91, 214, 0.08);
+    padding: 8rpx 20rpx;
+    border-radius: 100rpx;
+    flex-shrink: 0;
+  }
 }
 
 /* ── Skill 列表 ── */
-.skill-list { display: flex; flex-direction: column; gap: 16rpx; }
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
 
 .skill-card {
-	background: #FFFFFF;
-	border-radius: 24rpx;
-	padding: 24rpx;
-	&:active { background: #F8F8FF; }
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 24rpx;
 
-	.sc-top {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: 12rpx;
+  &:active {
+    background: #F8F8FF;
+  }
 
-		.scene-tag {
-			font-size: 18rpx; color: #5B5BD6; font-weight: 500;
-			background: rgba(91, 91, 214, 0.08);
-			padding: 4rpx 12rpx; border-radius: 6rpx;
-		}
-		.sc-time { font-size: 20rpx; color: #9CA3AF; }
-	}
+  .sc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12rpx;
 
-	.sc-title {
-		display: block;
-		font-size: 28rpx; font-weight: 700; color: #1A1A2E;
-		margin-bottom: 16rpx; line-height: 1.4;
-	}
+    .scene-tag {
+      font-size: 18rpx;
+      color: #5B5BD6;
+      font-weight: 500;
+      background: rgba(91, 91, 214, 0.08);
+      padding: 4rpx 12rpx;
+      border-radius: 6rpx;
+    }
 
-	.sc-stats {
-		display: flex; align-items: center; gap: 10rpx;
+    .sc-time {
+      font-size: 20rpx;
+      color: #9CA3AF;
+    }
+  }
 
-		.sc-stat {
-			flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4rpx;
-			padding: 12rpx 0;
-			background: #F7F8FA; border-radius: 12rpx;
+  .sc-title {
+    display: block;
+    font-size: 28rpx;
+    font-weight: 700;
+    color: #1A1A2E;
+    margin-bottom: 16rpx;
+    line-height: 1.4;
+  }
 
-			.ss-val { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
-			.ss-val.orange { color: #FF7A45; }
-			.ss-val.green  { color: #2F8A57; }
-			.ss-val.blue   { color: #5B5BD6; }
-			.ss-lab { font-size: 18rpx; color: #9CA3AF; }
-		}
-	}
+  .sc-stats {
+    display: flex;
+    align-items: center;
+    gap: 10rpx;
+
+    .sc-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4rpx;
+      padding: 12rpx 0;
+      background: #F7F8FA;
+      border-radius: 12rpx;
+
+      .ss-val {
+        font-size: 26rpx;
+        font-weight: 700;
+        color: #1A1A2E;
+      }
+
+      .ss-val.orange {
+        color: #FF7A45;
+      }
+
+      .ss-val.green {
+        color: #2F8A57;
+      }
+
+      .ss-val.blue {
+        color: #5B5BD6;
+      }
+
+      .ss-lab {
+        font-size: 18rpx;
+        color: #9CA3AF;
+      }
+    }
+  }
 }
 
 .list-card {
-	background: #FFFFFF;
-	border-radius: 24rpx;
-	overflow: hidden;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
 }
 
 .line-item {
-	display: flex;
-	align-items: center;
-	gap: 12rpx;
-	padding: 22rpx 20rpx;
-	border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-	&:last-child { border-bottom: none; }
-	&:active { background: #F8F8FF; }
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 22rpx 20rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    background: #F8F8FF;
+  }
 }
 
 .item-main {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 6rpx;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
 .item-title {
-	font-size: 26rpx;
-	font-weight: 600;
-	color: #1A1A2E;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1A1A2E;
 }
 
 .item-sub {
-	font-size: 22rpx;
-	color: #9CA3AF;
+  font-size: 22rpx;
+  color: #9CA3AF;
 }
 
 .item-meta {
-	font-size: 22rpx;
-	color: #6B7280;
+  font-size: 22rpx;
+  color: #6B7280;
 }
 
 .empty-row {
-	display: flex;
-	justify-content: center;
-	padding: 28rpx 20rpx;
+  display: flex;
+  justify-content: center;
+  padding: 28rpx 20rpx;
 }
 
 .empty-t {
-	font-size: 24rpx;
-	color: #9CA3AF;
+  font-size: 24rpx;
+  color: #9CA3AF;
 }
 
 /* ── 设置 ── */
 .settings-card {
-	background: #FFFFFF;
-	border-radius: 24rpx;
-	overflow: hidden;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
 }
 
 .settings-row {
-	display: flex; align-items: center; gap: 14rpx;
-	padding: 24rpx 20rpx;
-	border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-	&.last  { border-bottom: none; }
-	&:active { background: #F8F8FF; }
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
 
-	.settings-icon-box {
-		width: 52rpx; height: 52rpx;
-		border-radius: 14rpx;
-		background: rgba(0, 0, 0, 0.04);
-		display: flex; align-items: center; justify-content: center;
-		flex-shrink: 0;
-	}
+  &.last {
+    border-bottom: none;
+  }
 
-	.settings-icon-login {
-		background: rgba(91, 91, 214, 0.08);
-	}
+  &:active {
+    background: #F8F8FF;
+  }
 
-	.settings-label {
-		flex: 1;
-		font-size: 28rpx; color: #1A1A2E; font-weight: 500;
-	}
+  .settings-icon-box {
+    width: 52rpx;
+    height: 52rpx;
+    border-radius: 14rpx;
+    background: rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
-	.settings-hint {
-		font-size: 24rpx; color: #9CA3AF;
-		margin-right: 6rpx;
-	}
+  .settings-icon-login {
+    background: rgba(91, 91, 214, 0.08);
+  }
+
+  .settings-label {
+    flex: 1;
+    font-size: 28rpx;
+    color: #1A1A2E;
+    font-weight: 500;
+  }
+
+  .settings-hint {
+    font-size: 24rpx;
+    color: #9CA3AF;
+    margin-right: 6rpx;
+  }
 }
 
 .logout-row {
-	background: rgba(228, 92, 26, 0.04);
+  background: rgba(228, 92, 26, 0.04);
 }
 
 .logout-label {
-	color: #E45C1A !important;
-	font-weight: 600;
+  color: #E45C1A !important;
+  font-weight: 600;
 }
 
 .login-row {
-	background: rgba(91, 91, 214, 0.03);
+  background: rgba(91, 91, 214, 0.03);
 }
 
 .login-label {
-	color: #5B5BD6 !important;
-	font-weight: 600;
+  color: #5B5BD6 !important;
+  font-weight: 600;
 }
 
-.page-bottom { height: calc(80rpx + env(safe-area-inset-bottom)); }
+.page-bottom {
+  height: calc(80rpx + env(safe-area-inset-bottom));
+}
+
+/* ── 新增设置行图标 ── */
+.settings-icon-feedback {
+  background: rgba(91, 91, 214, 0.08) !important;
+}
+
+.settings-icon-coop {
+  background: rgba(255, 122, 69, 0.08) !important;
+}
+
+/* ── 商务合作弹窗 ── */
+.popup-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.popup-sheet {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 0 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.popup-handle {
+  width: 72rpx;
+  height: 8rpx;
+  background: #E5E7EB;
+  border-radius: 100rpx;
+  margin: 20rpx auto 32rpx;
+}
+
+.popup-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #1A1A2E;
+  text-align: center;
+  margin-bottom: 8rpx;
+}
+
+.popup-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #9CA3AF;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  background: #F7F8FA;
+  border-radius: 20rpx;
+
+  &:active {
+    background: #F0F0FD;
+  }
+}
+
+.contact-icon-box {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-icon-email {
+  background: rgba(91, 91, 214, 0.1);
+}
+
+.contact-icon-phone {
+  background: rgba(47, 138, 87, 0.1);
+}
+
+.contact-icon-wechat {
+  background: rgba(255, 122, 69, 0.1);
+}
+
+.contact-icon {
+  line-height: 1;
+}
+
+.contact-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.contact-type {
+  font-size: 22rpx;
+  color: #9CA3AF;
+}
+
+.contact-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+
+.copy-badge {
+  font-size: 22rpx;
+  color: #5B5BD6;
+  font-weight: 600;
+  background: rgba(91, 91, 214, 0.08);
+  padding: 8rpx 20rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
+}
+
+.popup-close-btn {
+  height: 88rpx;
+  background: #F7F8FA;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    background: #EDEEF0;
+  }
+}
+
+.popup-close-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #6B7280;
+}
 </style>

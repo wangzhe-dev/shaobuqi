@@ -97,6 +97,13 @@
 			}
 		},
 		{
+			"path": "pages/feedback/index",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/publish/record",
 			"style": {
 				// #ifdef H5
