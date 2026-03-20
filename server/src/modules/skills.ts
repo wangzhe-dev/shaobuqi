@@ -16,6 +16,7 @@ type SkillListRow = RowDataPacket & {
   brief: string | null
   scene: string | null
   publish_at: string | null
+  is_featured: number
   copy_count: number
   favorite_count: number
   feedback_count: number
@@ -829,6 +830,7 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
       s.brief,
       s.scene,
       s.publish_at,
+      s.is_featured,
       s.copy_count,
       s.favorite_count,
       s.feedback_count,
@@ -877,6 +879,7 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
       summary: row.brief,
       scene: row.scene,
       publishAt: row.publish_at,
+      featured: row.is_featured === 1,
       copyCount: row.copy_count,
       favoriteCount: row.favorite_count,
       feedbackCount: row.feedback_count,

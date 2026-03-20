@@ -449,6 +449,9 @@ const mapApiSkill = (item: any) => {
   const creatorName = `${item?.creator?.nickname || '匿名用户'}`
   const scene = `${item?.scene || '其他'}`
 
+  const feedbackCountNum = Number(item?.feedbackCount ?? 0)
+  const isNew = !!item?.publishAt && (Date.now() - new Date(item.publishAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+
   return {
     id: `${item?.id}`,
     title,
@@ -463,11 +466,11 @@ const mapApiSkill = (item: any) => {
     favoriteCount: formatCount(Number(item?.favoriteCount ?? 0)),
     author: creatorName,
     authorColor: `${item?.creator?.displayColor || '#5B5BD6'}`,
-    featured: copyCountNum >= 5000,
-    isNew: false,
+    featured: item?.featured === true,
+    isNew,
     lowCost: tokenNum > 0 && tokenNum < 1200,
     highConsume: tokenNum > 8000,
-    stable: rateNum >= 90,
+    stable: rateNum >= 90 && feedbackCountNum >= 3,
     images: item?.coverImage ? [item.coverImage] : [],
   }
 }
