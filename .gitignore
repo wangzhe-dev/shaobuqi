@@ -4,3 +4,6 @@ server/.env
 
 dist
 server/dist
+certs/
+*.keystore
+*.jks

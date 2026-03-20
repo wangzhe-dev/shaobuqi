@@ -235,6 +235,7 @@ const showInstallEntry = computed(() => {
 
 const installEntryText = computed(() => {
 	if (isEmbeddedBrowser()) return '浏览器打开'
+	if (isQQBrowser()) return '添加桌面快捷方式'
 	if (isIOS()) return isIOSSafari() ? '添加到主屏幕' : 'Safari 打开'
 	if (isDesktopSafari()) return '添加到桌面'
 	if (hasNativeInstallPrompt.value) return '安装应用'
@@ -387,7 +388,19 @@ const manualGuide = computed<InstallGuide>(() => {
 	if (isOppoBrowser()) return createAndroidGuide('OPPO 浏览器', '"添加到桌面"或"创建快捷方式"')
 	if (isQuarkBrowser()) return createAndroidGuide('夸克浏览器', '"添加到桌面"或"安装应用"')
 	if (isUCBrowser()) return createAndroidGuide('UC 浏览器', '"添加到桌面"或"发送到桌面"')
-	if (isQQBrowser()) return createAndroidGuide('QQ 浏览器', '"添加到桌面"或"添加到主屏幕"')
+	if (isQQBrowser()) {
+		return {
+			icon: 'Q',
+			title: 'QQ 浏览器添加到桌面',
+			desc: 'QQ 浏览器多数场景是“桌面快捷方式”模式，不一定触发标准 PWA 安装弹窗。',
+			steps: [
+				'点击浏览器底部“菜单/三横”或右上角“更多”',
+				'选择“添加到桌面”或“添加快捷方式”',
+				'确认后回到手机桌面，从图标直接打开',
+				'若菜单里没有该项，先升级 QQ 浏览器后重试'
+			]
+		}
+	}
 	if (isBaiduBrowser()) return createAndroidGuide('百度浏览器', '"添加到桌面"或"创建快捷方式"')
 	if (isFirefoxMobile()) return createAndroidGuide('Firefox', '"安装"或"添加到主屏幕"')
 	if (isEdgeMobile()) return createAndroidGuide('Edge', '"安装此站点为应用"或"添加到手机"')

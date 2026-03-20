@@ -163,6 +163,7 @@ import { createFeedPost, updateFeedPostImages } from '@/api/feed'
 import type { FeedReaction } from '@/api/feed'
 import { uploadImageFile } from '@/api/upload'
 import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
 
 const modelOptions = [
 	'Claude Sonnet', 'Claude Opus', 'Claude Haiku',
@@ -288,13 +289,7 @@ const publish = () => {
 		return
 	}
 
-	if (!userStore.token) {
-		uni.showToast({ title: '请先登录', icon: 'none' })
-		setTimeout(() => {
-			uni.navigateTo({ url: '/pages/login/index' })
-		}, 300)
-		return
-	}
+	if (!requireLogin(userStore.token, '发布内容')) return
 
 	const doSubmit = async () => {
 		uni.showLoading({ title: '发布中...' })
