@@ -12,6 +12,37 @@
       @refresherrefresh="onRefresh"
       @scrolltolower="onLoadMore"
     >
+      <view v-if="showSkeleton" class="feed-wrap feed-skeleton-wrap">
+        <view v-for="n in 4" :key="`post-skeleton-${n}`" class="post-card sk-post-card">
+          <view class="pc-hd">
+            <view class="pc-av sk-block sk-av" />
+            <view class="pc-info">
+              <view class="sk-block sk-line sk-w-44" />
+              <view class="sk-block sk-line sk-w-26" />
+            </view>
+          </view>
+          <view class="pc-body">
+            <view class="sk-block sk-line sk-w-96" />
+            <view class="sk-block sk-line sk-w-82" />
+          </view>
+          <view class="sk-img-grid">
+            <view v-for="idx in 3" :key="`post-sk-img-${n}-${idx}`" class="sk-block sk-img" />
+          </view>
+          <view class="pc-meta-row">
+            <view class="sk-block sk-line sk-w-40" />
+            <view class="sk-block sk-pill" />
+          </view>
+          <view class="pc-acts">
+            <view class="sk-block sk-pill sk-w-24" />
+            <view class="pc-act-grp">
+              <view class="sk-block sk-icon" />
+              <view class="sk-block sk-icon" />
+              <view class="sk-block sk-icon" />
+            </view>
+          </view>
+        </view>
+      </view>
+
       <view class="feed-wrap">
         <view v-for="item in posts" :key="item.id" class="post-card" @tap="toPost(item.id)">
 
@@ -237,6 +268,7 @@ const refreshing = ref(false)
 const loading = ref(false)
 const noMore = ref(false)
 const page = ref(1)
+const showSkeleton = computed(() => refreshing.value && posts.value.length === 0)
 
 // ── 数据加载 ──
 const loadPage = async (pageNum: number) => {
@@ -376,6 +408,57 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
   gap: 20rpx;
 }
 
+.feed-skeleton-wrap {
+  .sk-post-card {
+    padding-bottom: 16rpx;
+  }
+}
+
+.sk-block {
+  border-radius: 12rpx;
+  background: linear-gradient(100deg, #eef1f5 20%, #f7f8fa 38%, #eef1f5 56%);
+  background-size: 200% 100%;
+  animation: skShimmer 1.25s linear infinite;
+}
+
+.sk-av {
+  border-radius: 50%;
+}
+
+.sk-line {
+  height: 24rpx;
+}
+
+.sk-w-96 { width: 96%; }
+.sk-w-82 { width: 82%; margin-top: 12rpx; }
+.sk-w-44 { width: 44%; margin-bottom: 12rpx; }
+.sk-w-26 { width: 26%; }
+.sk-w-40 { width: 40%; }
+.sk-w-24 { width: 24%; }
+
+.sk-pill {
+  height: 40rpx;
+  border-radius: 999rpx;
+  width: 120rpx;
+}
+
+.sk-icon {
+  width: 44rpx;
+  height: 30rpx;
+}
+
+.sk-img-grid {
+  display: flex;
+  gap: 4rpx;
+  padding: 16rpx 24rpx 0;
+}
+
+.sk-img {
+  width: calc(33.33% - 3rpx);
+  height: 200rpx;
+  border-radius: 10rpx;
+}
+
 /* ── Post card ── */
 .post-card {
   background: #fff;
@@ -496,6 +579,11 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
 
 .feed-bottom {
   height: calc(160rpx + env(safe-area-inset-bottom));
+}
+
+@keyframes skShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -40% 0; }
 }
 
 /* ── 情绪反应弹层 ── */

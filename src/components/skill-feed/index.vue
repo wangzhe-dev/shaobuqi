@@ -14,18 +14,17 @@
       class="sort-bar"
       scroll-x
       :show-scrollbar="false"
-      :scroll-into-view="activeSortTabId"
+      :scroll-into-view="sortBarScrollIntoView"
       scroll-with-animation
-      @touchstart="onSortGestureStart"
-      @touchend="onSortGestureEnd"
-      @touchcancel="onGestureCancel"
     >
       <view class="sort-row">
         <view
           v-for="tab in sortTabs" :key="tab.key"
-          :id="`sort-tab-${tab.key}`"
+          :id="tab.viewId"
           class="sort-tab" :class="{ active: activeSort === tab.key }"
-          @tap="setSort(tab.key)"
+          @touchstart="onSortTabTouchStart"
+          @touchmove="onSortTabTouchMove"
+          @tap="onSortTabTap(tab.key)"
         >
           <text class="sort-tab-t">{{ tab.label }}</text>
         </view>
@@ -49,7 +48,43 @@
       @refresherrefresh="() => onRefresh(true)"
       @scrolltolower="onLoadMore"
     >
-      <view class="carousel-stage">
+      <view v-if="showSkeleton" class="skill-list skill-skeleton-list">
+        <view v-for="n in 4" :key="`skill-skeleton-${n}`" class="skill-card sk-skill-card">
+          <view class="sc-badge-row">
+            <view class="sk-block sk-chip" />
+            <view class="sk-block sk-chip" />
+            <view class="sc-scene-tag sk-block sk-chip sk-chip-right" />
+          </view>
+
+          <view class="sk-block sk-line sk-w-68" />
+          <view class="sk-block sk-line sk-w-92 mt-12" />
+          <view class="sk-block sk-line sk-w-80 mt-12" />
+
+          <view class="sk-img-row">
+            <view v-for="idx in 3" :key="`skill-sk-img-${n}-${idx}`" class="sk-block sk-img" />
+          </view>
+
+          <view class="sc-tags">
+            <view v-for="idx in 3" :key="`skill-sk-tag-${n}-${idx}`" class="sc-tag sk-block sk-tag" />
+          </view>
+
+          <view class="sc-foot">
+            <view class="sc-author-wrap">
+              <view class="sc-av sk-block" />
+              <view class="sc-author-info">
+                <view class="sk-block sk-line sk-w-30" />
+                <view class="sk-block sk-line sk-w-46 mt-10" />
+              </view>
+            </view>
+            <view class="sc-actions">
+              <view class="sk-block sk-pill sk-pill-sm" />
+              <view class="sk-block sk-pill" />
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view v-else class="carousel-stage">
         <view
           v-for="panel in carouselPanels"
           :key="panel.key"
@@ -164,23 +199,36 @@ const userStore = useUserStore()
 
 const RECOMMEND_TAB_KEY = 'recommend'
 const SCENE_TAB_PREFIX = 'scene:'
+const SORT_TAB_ID_PREFIX = 'sort-tab-'
+
+type SortTab = {
+  key: string
+  label: string
+  viewId: string
+}
 
 const buildSceneTabKey = (scene: string) => `${SCENE_TAB_PREFIX}${scene}`
 const parseSceneFromTabKey = (key: string) => key.startsWith(SCENE_TAB_PREFIX) ? key.slice(SCENE_TAB_PREFIX.length) : ''
-const buildSortTabs = (scenes: string[]) => [
-  { key: RECOMMEND_TAB_KEY, label: '推荐' },
-  ...scenes.map((scene) => ({ key: buildSceneTabKey(scene), label: scene }))
+const buildSortTabs = (scenes: string[]): SortTab[] => [
+  { key: RECOMMEND_TAB_KEY, label: '推荐', viewId: `${SORT_TAB_ID_PREFIX}0` },
+  ...scenes.map((scene, idx) => ({
+    key: buildSceneTabKey(scene),
+    label: scene,
+    viewId: `${SORT_TAB_ID_PREFIX}${idx + 1}`
+  }))
 ]
 
 const sortTabs = ref(buildSortTabs([]))
 
 const activeSort = ref(RECOMMEND_TAB_KEY)
-const activeSortTabId = computed(() => `sort-tab-${activeSort.value}`)
+const sortBarScrollIntoView = ref(`${SORT_TAB_ID_PREFIX}0`)
 
 const SWIPE_X_THRESHOLD = 56
 const SWIPE_Y_LIMIT = 80
 const SWIPE_LOCK_DISTANCE = 10
 const SWIPE_MAX_DURATION = 1200
+const SORT_TAP_MOVE_THRESHOLD = 8
+const SORT_TAP_SUPPRESS_MS = 180
 const EDGE_DAMPING = 0.28
 const CAROUSEL_SWITCH_DURATION = 280
 const CAROUSEL_REBOUND_DURATION = 220
@@ -193,12 +241,23 @@ let touching = false
 let gestureSource: 'sort' | 'list' | '' = ''
 let gestureLock: 'horizontal' | 'vertical' | '' = ''
 let carouselTimer: ReturnType<typeof setTimeout> | null = null
+let sortTabTouchStartX = 0
+let sortTabTouchStartY = 0
+let sortTabDragging = false
+let sortTabSuppressUntil = 0
 
 const screenWidth = ref(Math.max(uni.getSystemInfoSync().windowWidth || 375, 1))
 const dragOffsetX = ref(0)
 const swipeDirection = ref<'left' | 'right' | ''>('')
 const previewSortKey = ref('')
 const isCarouselAnimating = ref(false)
+
+const getSortTabByKey = (key: string) => sortTabs.value.find((tab) => tab.key === key)
+const syncSortBarToKey = (key: string) => {
+  const targetId = getSortTabByKey(key)?.viewId
+  if (!targetId) return
+  sortBarScrollIntoView.value = targetId
+}
 
 const getSortIndex = (key: string) => sortTabs.value.findIndex(tab => tab.key === key)
 
@@ -343,11 +402,33 @@ const onGestureCancel = () => {
   resetGesture()
 }
 
-const onSortGestureStart = (e: any) => { onGestureStart(e, 'sort') }
-const onSortGestureEnd = (e: any) => { onGestureEnd(e, 'sort') }
 const onListGestureStart = (e: any) => { onGestureStart(e, 'list') }
 const onListGestureMove = (e: any) => { onGestureMove(e) }
 const onListGestureEnd = (e: any) => { onGestureEnd(e, 'list') }
+
+const onSortTabTouchStart = (e: any) => {
+  const touch = e?.touches?.[0]
+  if (!touch) return
+  sortTabTouchStartX = touch.clientX
+  sortTabTouchStartY = touch.clientY
+  sortTabDragging = false
+}
+
+const onSortTabTouchMove = (e: any) => {
+  const touch = e?.touches?.[0]
+  if (!touch) return
+  const dx = Math.abs(touch.clientX - sortTabTouchStartX)
+  const dy = Math.abs(touch.clientY - sortTabTouchStartY)
+  if (dx > SORT_TAP_MOVE_THRESHOLD || dy > SORT_TAP_MOVE_THRESHOLD) {
+    sortTabDragging = true
+    sortTabSuppressUntil = Date.now() + SORT_TAP_SUPPRESS_MS
+  }
+}
+
+const onSortTabTap = (key: string) => {
+  if (sortTabDragging || Date.now() < sortTabSuppressUntil) return
+  setSort(key)
+}
 
 const setSort = (key: string) => {
   if (key === activeSort.value) return
@@ -363,6 +444,7 @@ const loading    = ref(false)
 const noMore     = ref(false)
 const page       = ref(1)
 const PAGE_SIZE = 10
+const showSkeleton = computed(() => refreshing.value && skills.value.length === 0)
 
 const formatCount = (value: number | null | undefined) => {
   const n = Number(value ?? 0)
@@ -487,6 +569,7 @@ onMounted(() => {
       if (!sortTabs.value.some(tab => tab.key === activeSort.value)) {
         activeSort.value = RECOMMEND_TAB_KEY
       }
+      syncSortBarToKey(activeSort.value)
     }
   }).catch(() => {})
 })
@@ -508,6 +591,7 @@ const onLoadMore = async () => {
 }
 
 watch(activeSort, () => {
+  syncSortBarToKey(activeSort.value)
   if (refreshing.value) return
   if (loading.value) return
   void onRefresh()
@@ -746,6 +830,47 @@ onUnmounted(() => {
   display: flex; flex-direction: column; gap: 20rpx;
 }
 
+.skill-skeleton-list {
+  .sk-skill-card {
+    .sc-scene-tag {
+      margin-left: auto;
+    }
+  }
+}
+
+.sk-block {
+  border-radius: 12rpx;
+  background: linear-gradient(100deg, #eef1f5 20%, #f7f8fa 38%, #eef1f5 56%);
+  background-size: 200% 100%;
+  animation: skShimmer 1.25s linear infinite;
+}
+
+.sk-line { height: 24rpx; }
+.sk-chip { width: 90rpx; height: 28rpx; border-radius: 8rpx; }
+.sk-chip-right { width: 80rpx; }
+.sk-tag { width: 96rpx; height: 32rpx; border-radius: 8rpx; background: rgba(0,0,0,0.08); }
+.sk-pill { width: 150rpx; height: 56rpx; border-radius: 100rpx; }
+.sk-pill-sm { width: 110rpx; }
+.sk-w-92 { width: 92%; }
+.sk-w-80 { width: 80%; }
+.sk-w-68 { width: 68%; }
+.sk-w-46 { width: 46%; }
+.sk-w-30 { width: 30%; }
+.mt-12 { margin-top: 12rpx; }
+.mt-10 { margin-top: 10rpx; }
+
+.sk-img-row {
+  display: flex;
+  gap: 4rpx;
+  margin-top: 18rpx;
+}
+
+.sk-img {
+  width: calc(33.33% - 3rpx);
+  height: 190rpx;
+  border-radius: 10rpx;
+}
+
 .empty-state {
   display: flex;
   justify-content: center;
@@ -865,4 +990,9 @@ onUnmounted(() => {
 }
 
 .list-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
+
+@keyframes skShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -40% 0; }
+}
 </style>
