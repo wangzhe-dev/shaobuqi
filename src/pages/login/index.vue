@@ -25,7 +25,7 @@
 		<view class="auth-wrap">
 			<view class="auth-card">
 				<text class="card-title">{{ isRegister ? '创建你的账号' : '欢迎回来' }}</text>
-				<text class="card-subtitle">让灵感与效率在同一块液态画布上流动</text>
+				<!-- <text class="card-subtitle">让灵感与效率在同一块液态画布上流动</text> -->
 
 				<view class="segment">
 					<view class="segment-indicator" :style="{ transform: `translateX(${isRegister ? '100%' : '0'})` }" />
@@ -600,9 +600,10 @@ onUnmounted(() => {
 
 .card-title {
 	display: block;
-	margin-bottom: 8rpx;
+	margin-bottom: 38rpx;
 	font-size: 34rpx;
 	line-height: 1.2;
+  text-align: center;
 	font-weight: 700;
 	color: #eff4ff;
 }

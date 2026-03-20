@@ -3,6 +3,8 @@ import uni from '@dcloudio/vite-plugin-uni'
 import AutoImport from 'unplugin-auto-import/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import type { IncomingMessage, ServerResponse } from 'http'
+import { existsSync, readFileSync } from 'fs'
+import { resolve } from 'path'
 
 const apiPrefix = 'h5api'
 
@@ -42,6 +44,22 @@ const sendProxyError = (res: ServerResponse<IncomingMessage>): void => {
   )
 }
 
+const emitDownloadPage = () => ({
+  name: 'emit-download-page',
+  apply: 'build' as const,
+  generateBundle() {
+    const sourcePath = resolve(process.cwd(), 'public/download/index.html')
+    if (!existsSync(sourcePath)) return
+
+    const source = readFileSync(sourcePath, 'utf8')
+    this.emitFile({
+      type: 'asset',
+      fileName: 'download/index.html',
+      source
+    })
+  }
+})
+
 export default defineConfig(({ mode }) => {
   const proxyTarget = resolveProxyTarget(mode)
   const isProd = mode === 'production'
@@ -51,6 +69,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      emitDownloadPage(),
       uni(),
       AutoImport({
         imports: ['vue', 'vue-router', 'uni-app'],
