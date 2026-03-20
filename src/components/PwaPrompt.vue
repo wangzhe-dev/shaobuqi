@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 // #ifdef H5
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 // #endif
@@ -94,17 +94,34 @@ const INSTALL_DISMISS_TTL = 1000 * 60 * 60 * 24
 
 const unifiedInstallNote = 'Android 设备可直接下载并安装烧不起安卓版；iPhone 设备请使用 Safari 打开本页并选择“添加到主屏幕”；若在微信内访问，请先通过“在浏览器打开”后再继续操作。'
 
+let pwaUpdateTimer: ReturnType<typeof window.setInterval> | null = null
+
+const triggerSWUpdateCheck = () => {
+	if (!('serviceWorker' in navigator)) return
+	void navigator.serviceWorker.getRegistration().then((registration) => {
+		if (registration) return registration.update()
+	}).catch((err) => {
+		console.warn('[PWA] 更新检查失败:', err)
+	})
+}
+
+const onVisibilityChange = () => {
+	if (document.visibilityState === 'visible') triggerSWUpdateCheck()
+}
+
 // ── SW 更新检测（使用 workbox-window 避免时序竞争）──
 // #ifdef H5
 const { needRefresh, updateServiceWorker } = useRegisterSW({
+	immediate: true,
 	onRegisteredSW(_swUrl, registration) {
 		if (!registration) return
 		// 主动触发一次检查（移动端浏览器不一定每次打开都检查）
 		registration.update()
 		// 每30分钟检查一次（针对长时间后台挂起后唤醒的情况）
-		setInterval(() => {
+		if (pwaUpdateTimer) window.clearInterval(pwaUpdateTimer)
+		pwaUpdateTimer = window.setInterval(() => {
 			if (!registration.installing && navigator.onLine) registration.update()
-		}, 30 * 60 * 1000)
+		}, 5 * 60 * 1000)
 	},
 })
 // #endif
@@ -337,9 +354,20 @@ function scheduleGuideHint() {
 }
 
 onMounted(() => {
+	document.addEventListener('visibilitychange', onVisibilityChange)
+	triggerSWUpdateCheck()
+
 	if (isInStandaloneMode()) return
 	installPromptDismissed.value = wasDismissed()
 	if (!installPromptDismissed.value) scheduleGuideHint()
+})
+
+onUnmounted(() => {
+	document.removeEventListener('visibilitychange', onVisibilityChange)
+	if (pwaUpdateTimer) {
+		window.clearInterval(pwaUpdateTimer)
+		pwaUpdateTimer = null
+	}
 })
 
 async function handleGuideAction() {

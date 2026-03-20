@@ -203,7 +203,7 @@ const authPageStyle = computed(() => ({
 	'--safe-top': `${statusBarHeight.value}px`
 }))
 
-const QQ_EMAIL_REG = /^[A-Za-z0-9._%+-]+@qq\.com$/i
+const EMAIL_REG = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i
 const CODE_REG = /^\d{6}$/
 const ICP_RECORD = '京ICP备2025111493号-2'
 const liquidCards = [
@@ -235,10 +235,10 @@ const regForm = reactive({ email: '', code: '', nickname: '', password: '', conf
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase()
-const isQqEmail = (value: string) => QQ_EMAIL_REG.test(normalizeEmail(value))
+const isValidEmail = (value: string) => EMAIL_REG.test(normalizeEmail(value))
 
-const loginEmailValid = computed(() => isQqEmail(loginForm.email))
-const registerEmailValid = computed(() => isQqEmail(regForm.email))
+const loginEmailValid = computed(() => isValidEmail(loginForm.email))
+const registerEmailValid = computed(() => isValidEmail(regForm.email))
 const registerCodeValid = computed(() => CODE_REG.test(regForm.code.trim()))
 const registerPasswordMatched = computed(() => regForm.password === regForm.confirmPassword)
 const loginPasswordValid = computed(() => loginForm.password.length >= 6 && !/\s/.test(loginForm.password))

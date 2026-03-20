@@ -10,6 +10,7 @@ const service = new Request()
 const whiteList = [
 	'/auth/wxlogin',
 	'/auth/login/password',
+	'/auth/send-code',
 	'/auth/register'
 ]
 

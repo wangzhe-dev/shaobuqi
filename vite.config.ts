@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
         }
       }),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         injectRegister: 'auto',
         manifestFilename: 'manifest.webmanifest',
         manifest: {
