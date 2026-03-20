@@ -267,6 +267,7 @@
 <script setup lang="ts">
 	import { copySkill as copySkillApi, favoriteSkill, getSkillDetail, unfavoriteSkill } from '@/api/skill'
 	import { useSysInfoStore, useUserStore } from '@/stores'
+	import { requireLogin } from '@/utils/auth-guard'
 
 	const sysInfo = useSysInfoStore()
 	const userStore = useUserStore()
@@ -493,6 +494,7 @@
 	})
 
 	const copySkill = () => {
+		if (!requireLogin(userStore.token, '复制 Skill')) return
 		showCopyGuide.value = true
 		uni.setClipboardData({
 			data: skill.value.fullPrompt || '',
@@ -504,6 +506,7 @@
 	}
 
 	const copyAll = () => {
+		if (!requireLogin(userStore.token, '复制 Skill')) return
 		uni.setClipboardData({
 			data: skill.value.fullPrompt || '',
 			success: () => {
@@ -525,13 +528,7 @@
 	}
 
 	const toggleFavorite = async () => {
-		if (!userStore.token) {
-			uni.showToast({ title: '请先登录', icon: 'none' })
-			setTimeout(() => {
-				uni.navigateTo({ url: '/pages/login/index' })
-			}, 300)
-			return
-		}
+		if (!requireLogin(userStore.token, '收藏 Skill')) return
 		if (!currentSkillId.value) return
 
 		try {
@@ -549,16 +546,21 @@
 		} catch {}
 	}
 
-	const followAuthor = () => uni.showToast({ title: '已关注', icon: 'success' })
+	const followAuthor = () => {
+		if (!requireLogin(userStore.token, '关注作者')) return
+		uni.showToast({ title: '已关注', icon: 'success' })
+	}
 	const shareSkill = () => uni.showToast({ title: '分享功能开发中', icon: 'none' })
 	const reportSkill = () => uni.showToast({ title: '举报功能开发中', icon: 'none' })
 	const writeFeedback = () => {
+		if (!requireLogin(userStore.token, '写反馈')) return
 		const query = currentSkillId.value ? `?skillId=${currentSkillId.value}` : ''
 		uni.navigateTo({ url: `/pages/publish/record${query}` })
 	}
 	const toSkill = (id: string) => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 	const copyQuick = async (s: any) => {
-		if (userStore.token && s?.id) {
+		if (!requireLogin(userStore.token, '复制 Skill')) return
+		if (s?.id) {
 			try {
 				await copySkillApi(s.id, { sourceChannel: 'similar' })
 			} catch {}

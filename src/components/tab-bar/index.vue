@@ -17,7 +17,7 @@
 				<text class="tab-label">{{ item.label }}</text>
 			</view>
 
-			<view class="tab-center" @tap="go(publishTab.path)">
+			<view class="tab-center" @tap="goPublish">
 				<view class="pub-btn" :class="{ active: isPublishActive }">
 					<uni-icons type="plusempty" color="#fff" size="24" />
 				</view>
@@ -45,7 +45,11 @@
 </template>
 
 <script setup lang="ts">
+	import { useUserStore } from '@/stores'
+	import { requireLogin } from '@/utils/auth-guard'
+
 	const props = defineProps<{ current: string }>()
+	const userStore = useUserStore()
 
 	const leftTabs = [
 		{ path: '/pages/index/index', label: '首页', icon: 'home', activeIcon: 'home-filled' },
@@ -63,6 +67,12 @@
 	const go = (path: string) => {
 		if (props.current === path) return
 		uni.switchTab({ url: path })
+	}
+
+	const goPublish = () => {
+		if (!requireLogin(userStore.token, '发布内容')) return
+		if (props.current === publishTab.path) return
+		uni.switchTab({ url: publishTab.path })
 	}
 </script>
 

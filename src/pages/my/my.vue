@@ -3,7 +3,24 @@
 
 		<!-- ── Profile ── -->
 		<view class="profile-card" :style="profileCardStyle">
-			<view class="pc-row">
+			<!-- 未登录 -->
+			<view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
+				<view class="avatar-wrap">
+					<view class="avatar avatar-guest">
+						<uni-icons type="person" size="40" color="#C8CBD4" />
+					</view>
+				</view>
+				<view class="pc-info">
+					<text class="pc-name">登录 / 注册</text>
+					<text class="pc-bio">登录后解锁全部功能</text>
+					<view class="pc-tags">
+						<text class="pc-tag pc-tag-cta">立即登录 →</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 已登录 -->
+			<view v-else class="pc-row">
 				<view class="avatar-wrap">
 					<view class="avatar"><text class="avatar-t">{{ profile.name[0] || '我' }}</text></view>
 					<view class="lv-badge">Lv.4</view>
@@ -20,19 +37,19 @@
 				</view>
 			</view>
 
-			<view class="stats-bar">
+			<view class="stats-bar" :class="{ 'stats-dim': !isLoggedIn }">
 				<view class="stat-item">
-					<text class="sv">{{ profile.publishedSkillCount }}</text>
+					<text class="sv">{{ isLoggedIn ? profile.publishedSkillCount : '--' }}</text>
 					<text class="sl">发布 Skill</text>
 				</view>
 				<view class="stat-div" />
 				<view class="stat-item">
-					<text class="sv orange">{{ profile.totalCopyCount }}</text>
+					<text class="sv orange">{{ isLoggedIn ? profile.totalCopyCount : '--' }}</text>
 					<text class="sl">被复制</text>
 				</view>
 				<view class="stat-div" />
 				<view class="stat-item">
-					<text class="sv green">{{ profile.avgSuccessRate }}</text>
+					<text class="sv green">{{ isLoggedIn ? profile.avgSuccessRate : '--' }}</text>
 					<text class="sl">平均复现率</text>
 				</view>
 			</view>
@@ -42,43 +59,54 @@
 		<view class="section">
 			<view class="section-hd">
 				<text class="sh-title">我发布的 Skill</text>
-				<text class="sh-more" @tap="toAllSkills">全部 ›</text>
+				<text v-if="isLoggedIn" class="sh-more" @tap="toAllSkills">全部 ›</text>
 			</view>
-			<view class="skill-list">
-				<view v-if="mySkills.length === 0" class="empty-row">
-					<text class="empty-t">还没有发布 Skill</text>
-				</view>
-				<view
-					v-for="skill in mySkills"
-					:key="skill.id"
-					class="skill-card"
-					@tap="toSkill(skill.id)"
-				>
-					<view class="sc-top">
-						<view class="scene-tag">{{ skill.scene }}</view>
-						<text class="sc-time">{{ skill.time }}</text>
-					</view>
-					<text class="sc-title">{{ skill.title }}</text>
-					<view class="sc-stats">
-						<view class="sc-stat">
-							<text class="ss-val orange">{{ skill.copyCount }}</text>
-							<text class="ss-lab">复制</text>
-						</view>
-						<view class="sc-stat">
-							<text class="ss-val">{{ skill.favoriteCount }}</text>
-							<text class="ss-lab">收藏</text>
-						</view>
-						<view class="sc-stat">
-							<text class="ss-val green">{{ skill.successRate }}</text>
-							<text class="ss-lab">复现率</text>
-						</view>
-						<view class="sc-stat">
-							<text class="ss-val blue">{{ skill.feedbackCount }}</text>
-							<text class="ss-lab">反馈</text>
-						</view>
-					</view>
+			<!-- 未登录提示 -->
+			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+				<view class="gb-inner">
+					<text class="gb-icon">⚡</text>
+					<text class="gb-text">登录后查看你发布的 Skill</text>
+					<view class="gb-btn">去登录</view>
 				</view>
 			</view>
+			<!-- 已登录内容 -->
+			<template v-else>
+				<view class="skill-list">
+					<view v-if="mySkills.length === 0" class="empty-row">
+						<text class="empty-t">还没有发布 Skill</text>
+					</view>
+					<view
+						v-for="skill in mySkills"
+						:key="skill.id"
+						class="skill-card"
+						@tap="toSkill(skill.id)"
+					>
+						<view class="sc-top">
+							<view class="scene-tag">{{ skill.scene }}</view>
+							<text class="sc-time">{{ skill.time }}</text>
+						</view>
+						<text class="sc-title">{{ skill.title }}</text>
+						<view class="sc-stats">
+							<view class="sc-stat">
+								<text class="ss-val orange">{{ skill.copyCount }}</text>
+								<text class="ss-lab">复制</text>
+							</view>
+							<view class="sc-stat">
+								<text class="ss-val">{{ skill.favoriteCount }}</text>
+								<text class="ss-lab">收藏</text>
+							</view>
+							<view class="sc-stat">
+								<text class="ss-val green">{{ skill.successRate }}</text>
+								<text class="ss-lab">复现率</text>
+							</view>
+							<view class="sc-stat">
+								<text class="ss-val blue">{{ skill.feedbackCount }}</text>
+								<text class="ss-lab">反馈</text>
+							</view>
+						</view>
+					</view>
+				</view>
+			</template>
 		</view>
 
 		<!-- ── 我的收藏 ── -->
@@ -86,23 +114,34 @@
 			<view class="section-hd">
 				<text class="sh-title">我的收藏</text>
 			</view>
-			<view class="list-card">
-				<view v-if="myFavorites.length === 0" class="empty-row">
-					<text class="empty-t">还没有收藏 Skill</text>
-				</view>
-				<view
-					v-for="favorite in myFavorites"
-					:key="favorite.id"
-					class="line-item"
-					@tap="toSkill(favorite.id)"
-				>
-					<view class="item-main">
-						<text class="item-title">{{ favorite.title }}</text>
-						<text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
-					</view>
-					<text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
+			<!-- 未登录提示 -->
+			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+				<view class="gb-inner">
+					<text class="gb-icon">🔖</text>
+					<text class="gb-text">登录后查看收藏的 Skill</text>
+					<view class="gb-btn">去登录</view>
 				</view>
 			</view>
+			<!-- 已登录内容 -->
+			<template v-else>
+				<view class="list-card">
+					<view v-if="myFavorites.length === 0" class="empty-row">
+						<text class="empty-t">还没有收藏 Skill</text>
+					</view>
+					<view
+						v-for="favorite in myFavorites"
+						:key="favorite.id"
+						class="line-item"
+						@tap="toSkill(favorite.id)"
+					>
+						<view class="item-main">
+							<text class="item-title">{{ favorite.title }}</text>
+							<text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
+						</view>
+						<text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
+					</view>
+				</view>
+			</template>
 		</view>
 
 		<!-- ── 我的复制 ── -->
@@ -110,21 +149,32 @@
 			<view class="section-hd">
 				<text class="sh-title">我的复制</text>
 			</view>
-			<view class="list-card">
-				<view v-if="myCopies.length === 0" class="empty-row">
-					<text class="empty-t">还没有复制记录</text>
-				</view>
-				<view
-					v-for="copy in myCopies"
-					:key="copy.id"
-					class="line-item"
-				>
-					<view class="item-main">
-						<text class="item-title">{{ copy.title }}</text>
-						<text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
-					</view>
+			<!-- 未登录提示 -->
+			<view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+				<view class="gb-inner">
+					<text class="gb-icon">📋</text>
+					<text class="gb-text">登录后查看复制记录</text>
+					<view class="gb-btn">去登录</view>
 				</view>
 			</view>
+			<!-- 已登录内容 -->
+			<template v-else>
+				<view class="list-card">
+					<view v-if="myCopies.length === 0" class="empty-row">
+						<text class="empty-t">还没有复制记录</text>
+					</view>
+					<view
+						v-for="copy in myCopies"
+						:key="copy.id"
+						class="line-item"
+					>
+						<view class="item-main">
+							<text class="item-title">{{ copy.title }}</text>
+							<text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
+						</view>
+					</view>
+				</view>
+			</template>
 		</view>
 
 		<!-- ── 设置 ── -->
@@ -146,7 +196,16 @@
 					<text class="settings-hint">v1.0.0</text>
 					<uni-icons type="right" size="13" color="#C8CBD4" />
 				</view>
-				<view class="settings-row last logout-row" @tap="logoutConfirm">
+				<!-- 未登录：展示登录入口 -->
+				<view v-if="!isLoggedIn" class="settings-row last login-row" @tap="goLogin">
+					<view class="settings-icon-box settings-icon-login">
+						<uni-icons type="person" color="#5B5BD6" size="17" />
+					</view>
+					<text class="settings-label login-label">登录 / 注册</text>
+					<uni-icons type="right" size="13" color="#5B5BD6" />
+				</view>
+				<!-- 已登录：退出登录 -->
+				<view v-else class="settings-row last logout-row" @tap="logoutConfirm">
 					<view class="settings-icon-box">
 						<uni-icons type="undo" color="#E45C1A" size="17" />
 					</view>
@@ -173,6 +232,7 @@ import { getCurrentInstance } from 'vue'
 		loadMyData()
 	})
 	const userStore = useUserStore()
+	const isLoggedIn = computed(() => !!userStore.token)
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
@@ -181,6 +241,10 @@ import { getCurrentInstance } from 'vue'
 		return { '--profile-safe-top-base': '16px' }
 		// #endif
 	})
+
+	const goLogin = () => {
+		uni.navigateTo({ url: '/pages/login/index' })
+	}
 
 	const mySkills = ref([
 		{ id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
@@ -337,11 +401,6 @@ import { getCurrentInstance } from 'vue'
 	}
 
 	const logoutConfirm = () => {
-		if (!userStore.token) {
-			uni.showToast({ title: '当前未登录', icon: 'none' })
-			return
-		}
-
 		uni.showModal({
 			title: '退出登录',
 			content: '确定要退出当前账号吗？',
@@ -374,6 +433,12 @@ import { getCurrentInstance } from 'vue'
 		padding-bottom: 24rpx;
 	}
 
+	.pc-guest {
+		align-items: center;
+		cursor: pointer;
+		&:active { opacity: 0.7; }
+	}
+
 	.avatar-wrap {
 		position: relative;
 		flex-shrink: 0;
@@ -389,6 +454,12 @@ import { getCurrentInstance } from 'vue'
 			box-shadow: 0 6rpx 20rpx rgba(91, 91, 214, 0.28);
 
 			.avatar-t { font-size: 40rpx; color: #fff; font-weight: 800; }
+		}
+
+		.avatar-guest {
+			background: #F3F4F6;
+			box-shadow: none;
+			border: 2rpx solid #E5E7EB;
 		}
 
 		.lv-badge {
@@ -419,6 +490,12 @@ import { getCurrentInstance } from 'vue'
 				background: rgba(91, 91, 214, 0.08);
 				padding: 4rpx 14rpx; border-radius: 8rpx;
 			}
+
+			.pc-tag-cta {
+				color: #FF7A45;
+				background: rgba(255, 122, 69, 0.1);
+				font-weight: 600;
+			}
 		}
 	}
 
@@ -444,6 +521,11 @@ import { getCurrentInstance } from 'vue'
 	padding: 20rpx 0 24rpx;
 	border-top: 1rpx solid rgba(0, 0, 0, 0.06);
 
+	&.stats-dim {
+		opacity: 0.35;
+		pointer-events: none;
+	}
+
 	.stat-item {
 		flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6rpx;
 
@@ -467,6 +549,42 @@ import { getCurrentInstance } from 'vue'
 
 	.sh-title { font-size: 28rpx; font-weight: 700; color: #1A1A2E; }
 	.sh-more  { font-size: 24rpx; color: #9CA3AF; }
+}
+
+/* ── 未登录占位块 ── */
+.guest-block {
+	border-radius: 20rpx;
+	background: #FFFFFF;
+	border: 1rpx dashed #DDD6FE;
+	&:active { background: #F8F8FF; }
+
+	.gb-inner {
+		display: flex;
+		align-items: center;
+		gap: 16rpx;
+		padding: 28rpx 24rpx;
+	}
+
+	.gb-icon {
+		font-size: 36rpx;
+		flex-shrink: 0;
+	}
+
+	.gb-text {
+		flex: 1;
+		font-size: 26rpx;
+		color: #9CA3AF;
+	}
+
+	.gb-btn {
+		font-size: 24rpx;
+		color: #5B5BD6;
+		font-weight: 600;
+		background: rgba(91, 91, 214, 0.08);
+		padding: 8rpx 20rpx;
+		border-radius: 100rpx;
+		flex-shrink: 0;
+	}
 }
 
 /* ── Skill 列表 ── */
@@ -586,6 +704,10 @@ import { getCurrentInstance } from 'vue'
 		flex-shrink: 0;
 	}
 
+	.settings-icon-login {
+		background: rgba(91, 91, 214, 0.08);
+	}
+
 	.settings-label {
 		flex: 1;
 		font-size: 28rpx; color: #1A1A2E; font-weight: 500;
@@ -603,6 +725,15 @@ import { getCurrentInstance } from 'vue'
 
 .logout-label {
 	color: #E45C1A !important;
+	font-weight: 600;
+}
+
+.login-row {
+	background: rgba(91, 91, 214, 0.03);
+}
+
+.login-label {
+	color: #5B5BD6 !important;
 	font-weight: 600;
 }
 

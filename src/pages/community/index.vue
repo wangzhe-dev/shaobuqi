@@ -334,6 +334,7 @@
 	import { getCurrentInstance } from 'vue'
 	import { copySkill as copySkillApi, getSkillList, getTrends } from '@/api/skill'
 	import { useUserStore } from '@/stores'
+	import { requireLogin } from '@/utils/auth-guard'
 
 	const instance = getCurrentInstance()
 	const userStore = useUserStore()
@@ -630,7 +631,8 @@
 	}
 
 	const copySkill = async (skill: any) => {
-		if (userStore.token && skill?.id) {
+		if (!requireLogin(userStore.token, '复制 Skill')) return
+		if (skill?.id) {
 			try {
 				await copySkillApi(skill.id, { sourceChannel: 'trend' })
 			} catch {}

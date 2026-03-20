@@ -197,6 +197,7 @@
 <script setup lang="ts">
 import { copySkill as copySkillApi, getSkillList } from '@/api/skill'
 import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
 
 const emit = defineEmits<{ edgeSwipe: [dir: 'left' | 'right'] }>()
 const showFilter  = ref(false)
@@ -552,12 +553,11 @@ watch([activeSort, filterScene, filterToken, filterRate], () => {
 })
 
 const copySkill  = async (skill: any) => {
-  if (userStore.token) {
-    try {
-      await copySkillApi(skill.id, { sourceChannel: 'feed' })
-    } catch {
-      // ignore API record error in UI action
-    }
+  if (!requireLogin(userStore.token, '复制 Skill')) return
+  try {
+    await copySkillApi(skill.id, { sourceChannel: 'feed' })
+  } catch {
+    // ignore API record error in UI action
   }
   uni.showToast({ title: '已复制 Skill', icon: 'success' })
 }

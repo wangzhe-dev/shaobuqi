@@ -167,6 +167,7 @@ import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
 import { createSkill, updateSkill } from '@/api/skill'
 import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
 import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
@@ -444,13 +445,7 @@ const doPublish = async () => {
 		uni.showToast({ title: '请输入标题或内容', icon: 'none' })
 		return
 	}
-	if (!userStore.token) {
-		uni.showToast({ title: '请先登录', icon: 'none' })
-		setTimeout(() => {
-			uni.navigateTo({ url: '/pages/login/index' })
-		}, 300)
-		return
-	}
+	if (!requireLogin(userStore.token, '发布内容')) return
 
 	const now = new Date()
 	const brief = buildBrief(form.text) || form.title.trim()

@@ -246,6 +246,7 @@ import {
 	updateFeedReaction,
 } from '@/api/feed'
 import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
 
 type CommentItem = {
 	id: number
@@ -345,14 +346,8 @@ const post = reactive({
 
 const comments = ref<CommentItem[]>([])
 
-const ensureLogin = () => {
-	if (userStore.token) return true
-	uni.showToast({ title: '请先登录', icon: 'none' })
-	setTimeout(() => {
-		uni.navigateTo({ url: '/pages/login/index' })
-	}, 300)
-	return false
-}
+const ensureLogin = (action = '执行此操作') =>
+	requireLogin(userStore.token, action)
 
 const applyPost = (item: FeedItem) => {
 	post.id = `${item.id}`
@@ -436,7 +431,7 @@ onLoad((query: any) => {
 
 /* ── 互动 ── */
 const setMood = async (key: string) => {
-	if (!ensureLogin()) return
+	if (!ensureLogin('标记心情')) return
 	const prevMood = post.mood
 	const nextMood = prevMood === key ? '' : key
 	post.mood = nextMood
@@ -449,7 +444,7 @@ const setMood = async (key: string) => {
 }
 
 const toggleLike = async () => {
-	if (!ensureLogin()) return
+	if (!ensureLogin('点赞')) return
 
 	const prevLiked = isLiked.value
 	const prevLikes = post.likes
@@ -468,7 +463,7 @@ const toggleLike = async () => {
 }
 
 const toggleResonate = async () => {
-	if (!ensureLogin()) return
+	if (!ensureLogin('共鸣')) return
 
 	const prev = isResonated.value
 	const prevCount = post.resonates
@@ -485,10 +480,13 @@ const toggleResonate = async () => {
 	}
 }
 
-const toggleFollow = () => { isFollowing.value = !isFollowing.value }
+const toggleFollow = () => {
+	if (!ensureLogin('关注作者')) return
+	isFollowing.value = !isFollowing.value
+}
 
 const likeComment = async (c: CommentItem) => {
-	if (!ensureLogin()) return
+	if (!ensureLogin('点赞评论')) return
 
 	const prevLiked = c.liked
 	const prevLikes = c.likes
@@ -513,7 +511,7 @@ const scrollToComments = () => {
 
 /* ── 评论输入面板 ── */
 const openCmtPanel = (target?: CommentItem) => {
-	if (!ensureLogin()) return
+	if (!ensureLogin('发表评论')) return
 	replyTarget.value = target ?? null
 	cmtText.value = ''
 	showCmtPanel.value = true
@@ -528,7 +526,7 @@ const closeCmtPanel = () => {
 const submitComment = async () => {
 	const text = cmtText.value.trim()
 	if (!text || !currentPostId.value) return
-	if (!ensureLogin()) return
+	if (!ensureLogin('发表评论')) return
 
 	const prefix = replyTarget.value ? `回复 @${replyTarget.value.user}：` : ''
 	const payload = {

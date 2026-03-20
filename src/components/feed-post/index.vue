@@ -147,6 +147,7 @@
 import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost, updateFeedReaction } from '@/api/feed'
 import type { FeedItem, FeedReaction } from '@/api/feed'
 import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
 
 const reactions = [
   { key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)',  borderColor: 'rgba(47,138,87,0.22)'  },
@@ -209,15 +210,8 @@ interface PostItem {
 
 const userStore = useUserStore()
 
-const ensureLogin = () => {
-  if (userStore.token) return true
-
-  uni.showToast({ title: '请先登录', icon: 'none' })
-  setTimeout(() => {
-    uni.navigateTo({ url: '/pages/login/index' })
-  }, 300)
-  return false
-}
+const ensureLogin = (action = '执行此操作') =>
+  requireLogin(userStore.token, action)
 
 const mapApiPost = (item: FeedItem): PostItem => ({
   id: item.id,
@@ -289,15 +283,13 @@ onMounted(onRefresh)
 
 // ── 情绪反应 ──
 const rxnTarget = ref<PostItem | null>(null)
-const showReactions = (item: PostItem) => { rxnTarget.value = item }
+const showReactions = (item: PostItem) => {
+  if (!ensureLogin('标记感受')) return
+  rxnTarget.value = item
+}
 const pickReaction = async (key: string) => {
   const target = rxnTarget.value
   if (!target) return
-
-  if (!ensureLogin()) {
-    rxnTarget.value = null
-    return
-  }
 
   const prevReaction = target.myReaction
   const nextReaction = prevReaction === key ? '' : key
@@ -315,7 +307,7 @@ const pickReaction = async (key: string) => {
 
 // ── 互动 ──
 const toggleLike = async (item: PostItem) => {
-  if (!ensureLogin()) return
+  if (!ensureLogin('点赞')) return
 
   const prevLiked = item.liked
   const prevLikes = item.likes
@@ -335,7 +327,7 @@ const toggleLike = async (item: PostItem) => {
 }
 
 const toggleMeoo = async (item: PostItem) => {
-  if (!ensureLogin()) return
+  if (!ensureLogin('我也是')) return
 
   const prevMyMeoo = item.myMeoo
   const prevMeoo = item.meoo
