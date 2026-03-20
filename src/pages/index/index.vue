@@ -23,10 +23,10 @@
     <swiper class="tab-swiper" :current="activeTab" :disable-touch="activeTab === 1" :duration="280"
       @change="onSwiperChange">
       <swiper-item class="tab-pane">
-        <feed-post />
+        <skill-feed @edge-swipe="onSkillEdgeSwipe" />
       </swiper-item>
       <swiper-item class="tab-pane">
-        <skill-feed @edge-swipe="onSkillEdgeSwipe" />
+        <feed-post />
       </swiper-item>
     </swiper>
 
