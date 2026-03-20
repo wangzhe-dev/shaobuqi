@@ -24,6 +24,9 @@
 		<view v-if="showInstallEntry" class="entry-pill" @tap="openInstallEntry">
 			<text class="ep-icon">{{ installEntryIcon }}</text>
 			<text class="ep-text">{{ installEntryText }}</text>
+			<view class="ep-close" @tap.stop="closeInstallEntry">
+				<text class="ep-close-t">×</text>
+			</view>
 		</view>
 
 		<!-- ── 弹框遮罩 ── -->
@@ -87,10 +90,9 @@ interface InstallGuide {
 }
 
 const showManualHint = ref(false)
-const installPromptDismissed = ref(false)
+const dismissTick = ref(0)
 
-const INSTALL_DISMISS_KEY = 'pwa-install-dismissed-at'
-const INSTALL_DISMISS_TTL = 1000 * 60 * 60 * 24
+const GUIDE_DISMISS_PREFIX = 'pwa-guide-dismissed-v2'
 
 const unifiedInstallNote = 'Android 设备可直接下载并安装烧不起安卓版；iPhone 设备请使用 Safari 打开本页并选择“添加到主屏幕”；若在微信内访问，请先通过“在浏览器打开”后再继续操作。'
 
@@ -154,10 +156,32 @@ const supportsInstallEntry = (): boolean => {
 	return isWeChat() || isIOS() || isAndroid()
 }
 
+const getGuideDismissKey = (action: GuideAction): string => `${GUIDE_DISMISS_PREFIX}:${action}`
+
+const isGuideDismissed = (action: GuideAction): boolean => {
+	try { return localStorage.getItem(getGuideDismissKey(action)) === '1' } catch { return false }
+}
+
+const setGuideDismissed = (action: GuideAction) => {
+	try { localStorage.setItem(getGuideDismissKey(action), '1') } catch { /* noop */ }
+	dismissTick.value += 1
+}
+
+const clearGuideDismissed = (action: GuideAction) => {
+	try { localStorage.removeItem(getGuideDismissKey(action)) } catch { /* noop */ }
+	dismissTick.value += 1
+}
+
+const currentGuideDismissed = computed(() => {
+	void dismissTick.value
+	return isGuideDismissed(manualGuide.value.action)
+})
+
 const showInstallEntry = computed(() => {
 	return supportsInstallEntry() &&
 		!isInStandaloneMode() &&
-		!showManualHint.value
+		!showManualHint.value &&
+		!currentGuideDismissed.value
 })
 
 const installEntryText = computed(() => {
@@ -319,35 +343,10 @@ const manualGuide = computed<InstallGuide>(() => {
 	}
 })
 
-const wasDismissed = (): boolean => {
-	try {
-		const raw = localStorage.getItem(INSTALL_DISMISS_KEY)
-		if (!raw) return false
-
-		const dismissedAt = Number(raw)
-		if (!Number.isFinite(dismissedAt)) {
-			localStorage.removeItem(INSTALL_DISMISS_KEY)
-			return false
-		}
-
-		return Date.now() - dismissedAt < INSTALL_DISMISS_TTL
-	} catch {
-		return false
-	}
-}
-
-const persistDismissState = () => {
-	try { localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now())) } catch { /* noop */ }
-}
-
-const clearDismissState = () => {
-	try { localStorage.removeItem(INSTALL_DISMISS_KEY) } catch { /* noop */ }
-}
-
 function scheduleGuideHint() {
 	if (!supportsInstallEntry()) return
 	window.setTimeout(() => {
-		if (!isInStandaloneMode() && !wasDismissed()) {
+		if (!isInStandaloneMode() && !isGuideDismissed(manualGuide.value.action)) {
 			showManualHint.value = true
 		}
 	}, 1400)
@@ -358,8 +357,7 @@ onMounted(() => {
 	triggerSWUpdateCheck()
 
 	if (isInStandaloneMode()) return
-	installPromptDismissed.value = wasDismissed()
-	if (!installPromptDismissed.value) scheduleGuideHint()
+	if (!isGuideDismissed(manualGuide.value.action)) scheduleGuideHint()
 })
 
 onUnmounted(() => {
@@ -374,6 +372,7 @@ async function handleGuideAction() {
 	switch (manualGuide.value.action) {
 		case 'download-android':
 			triggerAndroidApkDownload()
+			dismissInstall()
 			return
 		case 'open-browser': {
 			const copied = await copyCurrentUrl()
@@ -382,27 +381,33 @@ async function handleGuideAction() {
 			} else {
 				showGuideToast('请点击右上角菜单，选择“在浏览器打开”')
 			}
+			dismissInstall()
 			return
 		}
 		case 'ios-open-safari':
 			showGuideToast('请在当前浏览器菜单选择“在 Safari 中打开”')
+			dismissInstall()
 			return
 		case 'ios-add-home':
 			showGuideToast('请点击分享按钮，选择“添加到主屏幕”')
+			dismissInstall()
 			return
 	}
 }
 
 function dismissInstall() {
 	showManualHint.value = false
-	installPromptDismissed.value = true
-	persistDismissState()
+	setGuideDismissed(manualGuide.value.action)
 }
 
 function openInstallEntry() {
-	clearDismissState()
-	installPromptDismissed.value = false
+	clearGuideDismissed(manualGuide.value.action)
 	showManualHint.value = true
+}
+
+function closeInstallEntry() {
+	showManualHint.value = false
+	setGuideDismissed(manualGuide.value.action)
 }
 
 function updateSW() {
@@ -480,6 +485,21 @@ function dismissUpdate() {
 
 	.ep-icon { font-size: 26rpx; line-height: 1; }
 	.ep-text { font-size: 24rpx; font-weight: 700; color: #fff; }
+	.ep-close {
+		width: 34rpx;
+		height: 34rpx;
+		border-radius: 50%;
+		background: rgba(255,255,255,0.2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-left: 2rpx;
+	}
+	.ep-close-t {
+		font-size: 24rpx;
+		line-height: 1;
+		color: rgba(255,255,255,0.95);
+	}
 }
 
 /* ── 弹框遮罩 ── */
