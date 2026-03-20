@@ -128,9 +128,10 @@
 
 <script setup lang="ts">
 	import { useSysInfoStore } from '@/stores'
+	import { getSafeAreaTop } from '@/utils/safe-area'
 
 	const sysInfo = useSysInfoStore()
-	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
 
 	const TABS = [
 		{ key: 'skills', label: 'Skill' },

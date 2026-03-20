@@ -16,8 +16,8 @@ if (process.env.NODE_ENV === 'development') {
 	console.log('当前环境地址----------', requestUrl)
 } else {
 	// 生产环境
-	requestUrl = 'https://app.xxx.com/prod-api'
-	imgUrl = 'https://app.xxx.com/ync-file/static/ydp/v1'
+	requestUrl = 'https://www.shaobuqi.com/h5api'
+	imgUrl = 'https://www.shaobuqi.com'
 }
 
 // 默认登录页路径

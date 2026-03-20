@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :style="pageStyle">
 
     <!-- ── Header ── -->
     <view class="header">
@@ -44,9 +44,17 @@
 <script setup lang="ts">
 import FeedPost from '@/components/feed-post/index.vue'
 import SkillFeed from '@/components/skill-feed/index.vue'
+import { useSysInfoStore } from '@/stores'
+import { getSafeAreaTop } from '@/utils/safe-area'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
+const sysInfo = useSysInfoStore()
+const safeTop = computed(() => getSafeAreaTop(sysInfo.systemInfo))
+const pageStyle = computed(() => ({
+  '--safe-top': `${safeTop.value}px`
+}))
+
 onShow(() => {
   // #ifdef MP-WEIXIN
   ;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 0 })
@@ -78,6 +86,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-top: var(--safe-top, 0px);
   background: #F7F8FA;
   border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;

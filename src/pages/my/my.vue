@@ -221,8 +221,9 @@
 
 <script setup lang="ts">
 	import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
-import { useSysInfoStore, useUserStore } from '@/stores'
-import { getCurrentInstance } from 'vue'
+	import { useSysInfoStore, useUserStore } from '@/stores'
+	import { getSafeAreaTop } from '@/utils/safe-area'
+	import { getCurrentInstance } from 'vue'
 
 	const instance = getCurrentInstance()
 	onShow(() => {
@@ -235,11 +236,17 @@ import { getCurrentInstance } from 'vue'
 	const isLoggedIn = computed(() => !!userStore.token)
 
 	const sysInfo = useSysInfoStore()
-	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
 	const profileCardStyle = computed(() => {
+		const style: Record<string, string> = {
+			'--profile-safe-top': `${statusBarHeight.value}px`
+		}
+
 		// #ifdef H5
-		return { '--profile-safe-top-base': '16px' }
+		style['--profile-safe-top-base'] = '16px'
 		// #endif
+
+		return style
 	})
 
 	const goLogin = () => {
@@ -424,6 +431,7 @@ import { getCurrentInstance } from 'vue'
 .profile-card {
 	background: #FFFFFF;
 	padding: 0 24rpx;
+	padding-top: calc(var(--profile-safe-top, 0px) + 16rpx);
 	margin-bottom: 16rpx;
 
 	.pc-row {

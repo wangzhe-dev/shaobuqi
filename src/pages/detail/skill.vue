@@ -268,10 +268,11 @@
 	import { copySkill as copySkillApi, favoriteSkill, getSkillDetail, unfavoriteSkill } from '@/api/skill'
 	import { useSysInfoStore, useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
+	import { getSafeAreaTop } from '@/utils/safe-area'
 
 	const sysInfo = useSysInfoStore()
 	const userStore = useUserStore()
-	const statusBarHeight = computed(() => (sysInfo.systemInfo as any).statusBarHeight || 44)
+	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
 	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
 	const isFavorited = ref(false)
