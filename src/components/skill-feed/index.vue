@@ -42,15 +42,15 @@
       class="list-scroll"
       scroll-y
       :show-scrollbar="false"
-      refresher-enabled
+      :refresher-enabled="refresherEnabled"
       refresher-default-style="black"
-      :refresher-triggered="refreshing"
+      :refresher-triggered="pullTriggered"
       lower-threshold="100"
       @touchstart="onListGestureStart"
       @touchmove="onListGestureMove"
       @touchend="onListGestureEnd"
       @touchcancel="onGestureCancel"
-      @refresherrefresh="onRefresh"
+      @refresherrefresh="() => onRefresh(true)"
       @scrolltolower="onLoadMore"
     >
       <view class="carousel-stage">
@@ -254,12 +254,16 @@ const clearCarouselTimer = () => {
   carouselTimer = null
 }
 
+const refresherEnabled = ref(true)
+const pullTriggered    = ref(false)
+
 const resetGesture = () => {
   gestureSource = ''
   gestureLock = ''
   touchStartX = 0
   touchStartY = 0
   touchStartAt = 0
+  refresherEnabled.value = true
 }
 
 const resetCarouselState = () => {
@@ -330,6 +334,7 @@ const onGestureMove = (e: any) => {
   if (!gestureLock) {
     if (absX < SWIPE_LOCK_DISTANCE && absY < SWIPE_LOCK_DISTANCE) return
     gestureLock = absX > absY ? 'horizontal' : 'vertical'
+    if (gestureLock === 'horizontal') refresherEnabled.value = false
   }
 
   if (gestureLock !== 'horizontal' || absY > SWIPE_Y_LIMIT) return
@@ -512,9 +517,10 @@ const injectPublishedSkill = () => {
   skills.value.unshift(published)
 }
 
-const onRefresh = async () => {
+const onRefresh = async (isPull = false) => {
   resetCarouselState()
   refreshing.value = true
+  if (isPull) pullTriggered.value = true
 
   try {
     await loadSkillsFromApi(true)
@@ -525,6 +531,7 @@ const onRefresh = async () => {
   }
 
   refreshing.value = false
+  pullTriggered.value = false
 }
 
 onMounted(() => {

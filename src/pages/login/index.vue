@@ -579,7 +579,7 @@ const afterLoginSuccess = () => {
 	setTimeout(() => {
 		const pages = getCurrentPages()
 		if (pages.length > 1) uni.navigateBack()
-		else uni.switchTab({ url: '/pages/my/my' })
+		else uni.switchTab({ url: '/pages/index/index' })
 	}, 500)
 }
 
@@ -765,7 +765,7 @@ const doResetPassword = async () => {
 			setTimeout(() => {
 				const pages = getCurrentPages()
 				if (pages.length > 1) uni.navigateBack()
-				else uni.switchTab({ url: '/pages/my/my' })
+				else uni.switchTab({ url: '/pages/index/index' })
 			}, 500)
 		} else {
 			// 重置成功，跳回登录并预填邮箱
