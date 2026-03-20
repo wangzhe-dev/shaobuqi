@@ -75,15 +75,15 @@
 				</scroll-view>
 			</view>
 
-			<!-- Tags input -->
+			<!-- Usage scenes input -->
 			<view id="section-tags" class="meta-section tags-section">
 				<view class="meta-row">
-					<text class="meta-label">标签</text>
+					<text class="meta-label">使用场景</text>
 					<text class="meta-sub">{{ form.tags.length }}/5</text>
 				</view>
 				<view class="tags-wrap">
 					<view v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
-						<text class="tag-t">#{{ tag }}</text>
+						<text class="tag-t">{{ tag }}</text>
 						<text class="tag-rm" @tap.stop="removeTag(i)">×</text>
 					</view>
 					<input
@@ -91,7 +91,7 @@
 						class="tag-inp"
 						v-model="tagInput"
 						:focus="tagInputFocus"
-						placeholder="添加标签，回车确认"
+						placeholder="添加使用场景，回车确认"
 						placeholder-class="tag-ph"
 						maxlength="12"
 						@confirm="addTag"
@@ -147,7 +147,7 @@
 				<view class="bi" @tap="insertDivider">
 					<uni-icons type="bars" size="22" color="#3C3C3C" />
 				</view>
-				<!-- # → 滚动并聚焦到标签输入框，统一入口 -->
+				<!-- # → 滚动并聚焦到使用场景输入框，统一入口 -->
 				<view class="bi" @tap="focusTagInput">
 					<text class="bi-hash">#</text>
 				</view>
@@ -264,7 +264,7 @@ const pickVideo = () => {
 
 const removeMedia = (i: number) => mediaList.value.splice(i, 1)
 
-/* ── tags ── */
+/* ── usage scenes(tags) ── */
 const addTag = () => {
 	const v = tagInput.value.trim().replace(/^#/, '')
 	if (v && !form.tags.includes(v) && form.tags.length < 5) form.tags.push(v)
@@ -273,7 +273,7 @@ const addTag = () => {
 
 const removeTag = (i: number) => form.tags.splice(i, 1)
 
-// # 按钮：滚动到标签区并聚焦输入框，避免和编辑器内插入文本的逻辑重叠
+// # 按钮：滚动到使用场景区并聚焦输入框，避免和编辑器内插入文本的逻辑重叠
 const focusTagInput = () => {
 	scrollToId.value = ''
 	nextTick(() => {
@@ -306,6 +306,7 @@ const buildSkillPayload = (id: string, brief: string, scene: string, now: Date, 
 	id,
 	title: form.title.trim() || '无标题',
 	scene,
+	tags: form.tags.length ? [...form.tags] : [scene],
 	author: '我',
 	authorColor: '#5B5BD6',
 	publishTime: formatDate(now),
@@ -314,7 +315,6 @@ const buildSkillPayload = (id: string, brief: string, scene: string, now: Date, 
 	successRate: '--',
 	feedbackCount: '0',
 	brief,
-	useScenes: form.tags.length ? form.tags : [scene],
 	avgInputToken: '--',
 	avgOutputToken: '--',
 	avgTotalToken: '--',
@@ -397,7 +397,7 @@ const buildFeedItem = (id: string, brief: string, scene: string) => ({
 	title: form.title.trim() || '无标题',
 	summary: brief,
 	scene,
-	tags: form.tags.slice(0, 3),
+	tags: (form.tags.length ? form.tags : [scene]).slice(0, 3),
 	avgToken: '--',
 	model: '--',
 	modelColor: '#5B5BD6',
@@ -452,6 +452,7 @@ const doPublish = async () => {
 	const now = new Date()
 	const brief = buildBrief(form.text) || form.title.trim()
 	const scene = form.scene || '其他'
+	const sceneTags = form.tags.length ? [...form.tags] : [scene]
 
 	uni.showLoading({ title: '发布中...' })
 	try {
@@ -460,10 +461,9 @@ const doPublish = async () => {
 			brief,
 			scene,
 			status: 1,
-			tags: form.tags,
+			tags: sceneTags,
 			fullPrompt: form.text.trim(),
 			fullPromptHtml: form.html.trim(),
-			useScenes: form.tags.length ? form.tags : [scene],
 			steps: ['复制内容', '粘贴到 AI 工具', '按需调整']
 		})
 

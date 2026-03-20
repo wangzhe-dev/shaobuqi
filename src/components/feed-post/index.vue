@@ -30,9 +30,6 @@
               </view>
               <text class="pc-time">{{ item.time }}</text>
             </view>
-            <view class="pc-more" @tap.stop="showMore(item)">
-              <uni-icons type="more-filled" size="18" color="#D1D5DB" />
-            </view>
           </view>
 
           <!-- 正文 -->
@@ -149,6 +146,7 @@ import type { FeedItem, FeedReaction } from '@/api/feed'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { shareFeedPost } from '@/utils/share-post'
 
 const reactions = [
   { key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)',  borderColor: 'rgba(47,138,87,0.22)'  },
@@ -347,22 +345,12 @@ const toggleMeoo = async (item: PostItem) => {
   }
 }
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
-const sharePost  = (_item: PostItem) => uni.showShareMenu({ withShareTicket: true })
-
-const showMore = (item: PostItem) => {
-  uni.showActionSheet({
-    itemList: ['不感兴趣', '举报', '复制链接'],
-    success: ({ tapIndex }) => {
-      if (tapIndex === 0) {
-        const idx = posts.value.findIndex(p => p.id === item.id)
-        if (idx !== -1) posts.value.splice(idx, 1)
-        uni.showToast({ title: '已屏蔽', icon: 'none' })
-      } else if (tapIndex === 1) {
-        uni.showToast({ title: '举报已提交', icon: 'none' })
-      } else {
-        uni.setClipboardData({ data: `https://shaobuqi.app/post/${item.id}` })
-      }
-    },
+const sharePost  = async (item: PostItem) => {
+  await shareFeedPost({
+    id: item.id,
+    author: item.author,
+    content: item.content,
+    imageUrl: item.images?.[0] || null,
   })
 }
 
@@ -421,7 +409,6 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
     }
     .pc-time { font-size: 20rpx; color: #9CA3AF; }
   }
-  .pc-more { padding: 8rpx; }
 }
 
 .pc-body {

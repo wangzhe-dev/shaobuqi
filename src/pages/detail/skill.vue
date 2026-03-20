@@ -78,8 +78,8 @@
         </view>
       </view>
 
-      <!-- 使用场景 -->
-      <view class="scene-block">
+      <!-- 使用场景（当前统一使用 tags 字段） -->
+      <view v-if="skill.useScenes.length" class="scene-block">
         <text class="sb-title">使用场景</text>
         <view class="scene-chip-list">
           <view v-for="scene in skill.useScenes" :key="scene" class="scene-chip">
@@ -145,13 +145,13 @@
 				</view>
 			</view>
 
-			<!-- 6. 复现反馈区（结构化，非普通评论区） -->
+			<!-- 6. 评论区 -->
 			<view class="section-card">
 				<view class="section-header">
 					<uni-icons class="section-badge" type="chatbubble-filled" size="18" color="#5E738A" />
-					<text class="section-title">复现反馈</text>
+					<text class="section-title">评论</text>
 					<view class="write-feedback-btn" @tap="writeFeedback">
-						<text class="write-fb-text">写反馈</text>
+						<text class="write-fb-text">写评论</text>
 					</view>
 				</view>
 
@@ -170,8 +170,8 @@
 							</view>
 						</view>
 
-						<!-- 使用数据 -->
-						<view class="fb-token-row">
+						<!-- 使用数据（有数据时才显示） -->
+						<view v-if="fb.showUsage || fb.model !== '--' || fb.inputToken !== '--' || fb.outputToken !== '--' || fb.totalToken !== '--'" class="fb-token-row">
 							<view class="fbt-item">
 								<text class="fbt-label">模型</text>
 								<text class="fbt-val model">{{ fb.model }}</text>
@@ -191,6 +191,9 @@
 						</view>
 
 						<text class="fb-comment">{{ fb.comment }}</text>
+					</view>
+					<view v-if="!skill.feedbacks.length" class="feedback-empty">
+						<text class="feedback-empty-text">还没有评论，来抢沙发吧</text>
 					</view>
 				</view>
 			</view>
@@ -242,6 +245,28 @@
 			</view>
 		</view>
 
+		<!-- 评论输入浮层 -->
+		<view v-if="showFeedbackPanel" class="feedback-overlay" @tap.self="closeFeedbackPanel">
+			<view class="feedback-panel">
+				<textarea
+					class="feedback-ta"
+					v-model="feedbackText"
+					:focus="showFeedbackPanel"
+					placeholder="说说你的体验、踩坑或改进建议..."
+					placeholder-class="feedback-ta-ph"
+					:maxlength="300"
+					auto-height
+					:adjust-position="true"
+				/>
+				<view class="feedback-panel-foot">
+					<text class="feedback-char">{{ feedbackText.length }}/300</text>
+					<view class="feedback-send" :class="{ on: canSubmitFeedback && !feedbackSubmitting }" @tap="submitFeedback">
+						<text class="feedback-send-t">{{ feedbackSubmitting ? '发送中...' : '发送' }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+
 		<!-- 复制成功引导弹层 -->
 		<view v-if="showCopyGuide" class="copy-guide-overlay" @tap="showCopyGuide = false">
 			<view class="copy-guide-sheet" @tap.stop>
@@ -270,10 +295,11 @@
 </template>
 
 <script setup lang="ts">
-	import { copySkill as copySkillApi, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
+	import { copySkill as copySkillApi, createSkillFeedback, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
 	import AppImage from '@/components/app-image/index.vue'
 	import { useSysInfoStore, useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
+	import { normalizeImageUrl } from '@/utils/image-url'
 	import { getSafeAreaTop } from '@/utils/safe-area'
 
 	const sysInfo = useSysInfoStore()
@@ -287,6 +313,9 @@
 	const currentSkillId = ref('')
 	const isOwnSkill = ref(false)
 	const creatorId = ref<number | null>(null)
+	const showFeedbackPanel = ref(false)
+	const feedbackText = ref('')
+	const feedbackSubmitting = ref(false)
 
 	const createEmptySkill = () => ({
 		id: '',
@@ -300,6 +329,7 @@
 		successRate: '--',
 		feedbackCount: '0',
 		brief: '',
+		tags: [] as string[],
 		useScenes: [] as string[],
 		images: [] as string[],
 		avgInputToken: '--',
@@ -383,7 +413,52 @@
 		return { success: '成功', normal: '一般', fail: '翻车' }[status] || status
 	}
 
+	const normalizeTagList = (raw: unknown): string[] => {
+		if (!Array.isArray(raw)) return []
+		return raw.map((item) => `${item || ''}`.trim()).filter(Boolean)
+	}
+
+	const normalizeImageList = (raw: unknown): string[] => {
+		if (!Array.isArray(raw)) return []
+		return raw
+			.map((item) => normalizeImageUrl(`${item || ''}`))
+			.filter(Boolean)
+	}
+
+	const normalizeVariables = (raw: unknown): Array<{ name: string; desc?: string | null }> => {
+		if (!Array.isArray(raw)) return []
+		return raw
+			.map((item) => {
+				if (typeof item === 'string') {
+					const name = item.trim()
+					return name ? { name } : null
+				}
+				if (item && typeof item === 'object') {
+					const rec = item as { name?: unknown; desc?: unknown }
+					const name = `${rec.name || ''}`.trim()
+					if (!name) return null
+					const descRaw = rec.desc
+					const desc = descRaw === null || descRaw === undefined ? null : `${descRaw}`
+					return { name, desc }
+				}
+				return null
+			})
+			.filter((item): item is { name: string; desc?: string | null } => !!item)
+	}
+
+	const hasFeedbackUsage = (fb: any) => {
+		const hasModel = !!`${fb?.modelName || ''}`.trim()
+		const hasInput = Number(fb?.inputTokens ?? 0) > 0
+		const hasOutput = Number(fb?.outputTokens ?? 0) > 0
+		const hasTotal = Number(fb?.totalTokens ?? 0) > 0
+		return hasModel || hasInput || hasOutput || hasTotal
+	}
+
+	const canSubmitFeedback = computed(() => feedbackText.value.trim().length > 0)
+
 	const mapApiDetail = (detail: any) => {
+		const detailTags = normalizeTagList(detail?.tags)
+		const detailUseScenes = detailTags
 		return {
 			id: `${detail?.id || ''}`,
 			creatorId: detail?.creator?.id ?? null,
@@ -398,12 +473,11 @@
 			successRate: formatRate(detail?.stats?.successRate),
 			feedbackCount: formatCount(detail?.stats?.feedbackCount),
 			brief: `${detail?.brief || ''}`,
-			useScenes: Array.isArray(detail?.content?.useScenes) && detail.content.useScenes.length
-				? detail.content.useScenes
-				: (Array.isArray(detail?.tags) ? detail.tags : []),
+			tags: detailTags,
+			useScenes: detailUseScenes,
 			images: Array.isArray(detail?.images?.cover) && detail.images.cover.length
-				? detail.images.cover
-				: (detail?.coverImage ? [detail.coverImage] : []),
+				? normalizeImageList(detail.images.cover)
+				: (detail?.coverImage ? [normalizeImageUrl(detail.coverImage)] : []),
 			avgInputToken: formatToken(detail?.tokenInfo?.avgInputTokens),
 			avgOutputToken: formatToken(detail?.tokenInfo?.avgOutputTokens),
 			avgTotalToken: formatToken(detail?.tokenInfo?.avgTotalTokens),
@@ -415,9 +489,9 @@
 			weekUses: formatCount(detail?.stats?.weekUses),
 			fullPrompt: `${detail?.content?.fullPrompt || ''}`,
 			fullPromptHtml: `${detail?.content?.fullPromptHtml || ''}`,
-			contentImages: Array.isArray(detail?.images?.content) ? detail.images.content : [],
+			contentImages: normalizeImageList(detail?.images?.content),
 			variableNotes: `${detail?.content?.variableNotes || ''}`,
-			variables: Array.isArray(detail?.content?.variables) ? detail.content.variables : [],
+			variables: normalizeVariables(detail?.content?.variables),
 			steps: Array.isArray(detail?.content?.steps) ? detail.content.steps : [],
 			feedbacks: Array.isArray(detail?.feedbacks)
 				? detail.feedbacks.map((fb: any) => ({
@@ -430,6 +504,7 @@
 					outputToken: formatToken(fb?.outputTokens),
 					totalToken: formatToken(fb?.totalTokens),
 					status: `${fb?.status || 'normal'}`,
+					showUsage: hasFeedbackUsage(fb),
 					comment: `${fb?.comment || ''}`
 				}))
 				: [],
@@ -447,6 +522,9 @@
 
 	const applyPublishedSkill = (payload: any) => {
 		if (!payload || typeof payload !== 'object') return
+		const payloadTags = Array.isArray(payload.tags)
+			? payload.tags
+			: (Array.isArray(payload.useScenes) ? payload.useScenes : skill.value.tags)
 		skill.value = {
 			...createEmptySkill(),
 			...skill.value,
@@ -461,11 +539,12 @@
 			successRate: payload.successRate ?? skill.value.successRate,
 			feedbackCount: payload.feedbackCount ?? skill.value.feedbackCount,
 			brief: payload.brief ?? skill.value.brief,
-			useScenes: Array.isArray(payload.useScenes) ? payload.useScenes : skill.value.useScenes,
-			images: Array.isArray(payload.images) ? payload.images.slice(0, 9) : skill.value.images,
+			tags: payloadTags,
+			useScenes: payloadTags,
+			images: Array.isArray(payload.images) ? normalizeImageList(payload.images).slice(0, 9) : skill.value.images,
 			fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
 			fullPromptHtml: payload.fullPromptHtml ?? skill.value.fullPromptHtml,
-			contentImages: Array.isArray(payload.contentImages) ? payload.contentImages.slice(0, 9) : skill.value.contentImages,
+			contentImages: Array.isArray(payload.contentImages) ? normalizeImageList(payload.contentImages).slice(0, 9) : skill.value.contentImages,
 			variableNotes: payload.variableNotes ?? skill.value.variableNotes,
 			variables: Array.isArray(payload.variables) ? payload.variables : skill.value.variables,
 			steps: Array.isArray(payload.steps) ? payload.steps : skill.value.steps,
@@ -502,7 +581,7 @@
 	}
 
 	onLoad((query: any) => {
-		// 立即同步设好 skillId，保证用户快速点击"写反馈"时 skillId 不为空
+		// 立即同步设好 skillId，保证用户快速点击"写评论"时 skillId 不为空
 		const rawId = query?.id
 		if (rawId) currentSkillId.value = normalizeSkillId(rawId)
 
@@ -590,10 +669,70 @@
 	}
 	const shareSkill = () => uni.showToast({ title: '分享功能开发中', icon: 'none' })
 	const reportSkill = () => uni.showToast({ title: '举报功能开发中', icon: 'none' })
+
+	const closeFeedbackPanel = () => {
+		if (feedbackSubmitting.value) return
+		showFeedbackPanel.value = false
+		feedbackText.value = ''
+	}
+
+	const submitFeedback = async () => {
+		if (feedbackSubmitting.value || !canSubmitFeedback.value || !currentSkillId.value) return
+		if (!requireLogin(userStore.token, '写评论')) return
+
+		feedbackSubmitting.value = true
+		const comment = feedbackText.value.trim()
+
+		try {
+			const result = await createSkillFeedback(currentSkillId.value, {
+				status: 'normal',
+				comment,
+				isPublic: true
+			})
+
+			const currentName = `${userStore.userInfo?.nickname || '我'}`
+			const currentColor = `${userStore.userInfo?.displayColor || '#5B5BD6'}`
+			skill.value.feedbacks.unshift({
+				id: Number(result?.id || Date.now()),
+				userName: currentName,
+				userColor: currentColor,
+				time: '刚刚',
+				model: '--',
+				inputToken: '--',
+				outputToken: '--',
+				totalToken: '--',
+				status: 'normal',
+				showUsage: false,
+				comment
+			})
+
+			if (typeof result?.feedbackCount === 'number') {
+				skill.value.feedbackCount = formatCount(result.feedbackCount)
+			} else {
+				skill.value.feedbackCount = formatCount(parseDisplayCount(skill.value.feedbackCount) + 1)
+			}
+			if (result && Object.prototype.hasOwnProperty.call(result, 'successRate')) {
+				skill.value.successRate = formatRate(result.successRate)
+			}
+
+			showFeedbackPanel.value = false
+			feedbackText.value = ''
+			uni.showToast({ title: '评论成功', icon: 'success' })
+		} catch {
+			uni.showToast({ title: '评论失败', icon: 'none' })
+		}
+
+		feedbackSubmitting.value = false
+	}
+
 	const writeFeedback = () => {
-		if (!requireLogin(userStore.token, '写反馈')) return
-		const query = currentSkillId.value ? `?skillId=${currentSkillId.value}` : ''
-		uni.navigateTo({ url: `/pages/publish/record${query}` })
+		if (!requireLogin(userStore.token, '写评论')) return
+		if (!currentSkillId.value) {
+			uni.showToast({ title: 'Skill 信息加载中', icon: 'none' })
+			return
+		}
+		feedbackText.value = ''
+		showFeedbackPanel.value = true
 	}
 	const toSkill = (id: string) => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 	const copyQuick = async (s: any) => {
@@ -1037,10 +1176,10 @@
 		.write-fb-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
 	}
 
-	.feedback-list {
-		display: flex;
-		flex-direction: column;
-		gap: 20rpx;
+		.feedback-list {
+			display: flex;
+			flex-direction: column;
+			gap: 20rpx;
 
 		.feedback-card {
 			background: rgba(0,0,0,0.03);
@@ -1111,9 +1250,22 @@
 				font-size: 24rpx;
 				color: rgba(0,0,0,0.70);
 				line-height: 1.65;
+				}
 			}
 		}
-	}
+
+		.feedback-empty {
+			padding: 28rpx 20rpx;
+			text-align: center;
+			background: rgba(0, 0, 0, 0.03);
+			border-radius: 16rpx;
+			border: 1rpx dashed rgba(0, 0, 0, 0.10);
+
+			.feedback-empty-text {
+				font-size: 24rpx;
+				color: rgba(0, 0, 0, 0.45);
+			}
+		}
 
 	/* 7. 相似推荐 */
 	.similar-list {
@@ -1236,10 +1388,77 @@
 		}
 	}
 
-	/* 复制成功引导 */
-	.copy-guide-overlay {
-		position: fixed;
-		top: 0;
+		/* 复制成功引导 */
+		.feedback-overlay {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.45);
+			z-index: 210;
+			display: flex;
+			align-items: flex-end;
+		}
+
+		.feedback-panel {
+			width: 100%;
+			background: #FFFFFF;
+			border-radius: 28rpx 28rpx 0 0;
+			padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+			border-top: 1rpx solid rgba(0, 0, 0, 0.08);
+		}
+
+		.feedback-ta {
+			width: 100%;
+			min-height: 180rpx;
+			max-height: 360rpx;
+			padding: 20rpx;
+			box-sizing: border-box;
+			border-radius: 18rpx;
+			font-size: 28rpx;
+			line-height: 1.6;
+			color: rgba(0, 0, 0, 0.85);
+			background: rgba(0, 0, 0, 0.04);
+		}
+
+		.feedback-ta-ph {
+			color: rgba(0, 0, 0, 0.30);
+		}
+
+		.feedback-panel-foot {
+			margin-top: 16rpx;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.feedback-char {
+			font-size: 22rpx;
+			color: rgba(0, 0, 0, 0.35);
+		}
+
+		.feedback-send {
+			padding: 10rpx 24rpx;
+			border-radius: 999rpx;
+			background: rgba(0, 0, 0, 0.10);
+
+			.feedback-send-t {
+				font-size: 24rpx;
+				color: rgba(0, 0, 0, 0.35);
+				font-weight: 600;
+			}
+
+			&.on {
+				background: rgba(228, 92, 26, 0.12);
+				border: 1rpx solid rgba(228, 92, 26, 0.2);
+
+				.feedback-send-t {
+					color: #E45C1A;
+				}
+			}
+		}
+
+		.copy-guide-overlay {
+			position: fixed;
+			top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;

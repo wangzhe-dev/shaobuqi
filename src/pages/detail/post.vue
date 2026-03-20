@@ -26,9 +26,6 @@
 				<view class="follow-btn" :class="{ on: isFollowing }" @tap="toggleFollow">
 					<text class="follow-t">{{ isFollowing ? '已关注' : '+ 关注' }}</text>
 				</view>
-				<view class="more-btn" @tap="showAuthorMore">
-					<uni-icons type="more-filled" size="18" color="#D1D5DB" />
-				</view>
 			</view>
 
 			<!-- 正文 -->
@@ -193,7 +190,7 @@
 					<uni-icons type="hand-up" size="16" :color="isResonated ? '#FF7A45' : 'rgba(0,0,0,0.40)'" />
 					<text class="meoo-t" :style="isResonated ? { color: '#FF7A45' } : {}">我也是</text>
 				</view>
-				<view class="btm-act" @tap="share">
+				<view class="btm-act" @tap="sharePost">
 					<uni-icons type="redo" size="18" color="rgba(0,0,0,0.40)" />
 				</view>
 			</view>
@@ -247,6 +244,7 @@ import {
 } from '@/api/feed'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { shareFeedPost } from '@/utils/share-post'
 
 type CommentItem = {
 	id: number
@@ -562,24 +560,20 @@ const loadMoreComments = async () => {
 	loadingMore.value = false
 }
 
-/* ── 作者更多菜单 ── */
-const showAuthorMore = () => {
-	uni.showActionSheet({
-		itemList: ['不感兴趣', '复制链接', '举报该内容'],
-		success: ({ tapIndex }) => {
-			if (tapIndex === 0) {
-				uni.showToast({ title: '已屏蔽该内容', icon: 'none' })
-				setTimeout(() => uni.navigateBack(), 800)
-			} else if (tapIndex === 1) {
-				uni.setClipboardData({ data: `https://shaobuqi.app/post/${post.id}` })
-			} else {
-				uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })
-			}
-		},
+const sharePost = async () => {
+	const id = Number.parseInt(`${post.id || currentPostId.value}`, 10)
+	if (!Number.isInteger(id) || id <= 0) {
+		uni.showToast({ title: '动态信息加载中', icon: 'none' })
+		return
+	}
+	await shareFeedPost({
+		id,
+		author: post.author,
+		content: post.content,
+		imageUrl: post.images?.[0] || null,
 	})
 }
 
-const share = () => uni.showShareMenu({ withShareTicket: true })
 const previewImg = (images: string[], current: number) =>
 	uni.previewImage({ urls: images, current: images[current] })
 </script>
@@ -633,8 +627,6 @@ const previewImg = (images: string[], current: number) =>
 	.follow-t { font-size: 24rpx; color: #E45C1A; font-weight: 600; }
 	&.on { border-color: rgba(0,0,0,0.09); .follow-t { color: rgba(0,0,0,0.35); } }
 }
-
-.more-btn { padding: 8rpx; flex-shrink: 0; }
 
 /* ── 正文 ── */
 .body-text {

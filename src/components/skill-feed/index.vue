@@ -1,15 +1,11 @@
 <template>
   <view class="root">
 
-    <!-- 搜索 + 筛选 -->
+    <!-- 搜索 -->
     <view class="top-bar">
       <view class="search-wrap" @tap="toSearch">
         <uni-icons type="search" size="16" color="rgba(0,0,0,0.35)" />
         <text class="search-ph">搜索 Skill / 场景 / 模型</text>
-      </view>
-      <view class="filter-btn" @tap="showFilter = true">
-        <uni-icons type="tune-filled" size="16" color="rgba(0,0,0,0.55)" />
-        <text class="filter-txt">筛选</text>
       </view>
     </view>
 
@@ -103,7 +99,7 @@
                 </view>
               </view>
 
-              <!-- 作者 + 复制 -->
+              <!-- 作者 + 操作 -->
               <view class="sc-foot">
                 <view class="sc-author-wrap">
                   <view class="sc-av" :style="{ background: skill.authorColor }">
@@ -114,8 +110,14 @@
                     <text class="sc-counts">{{ skill.copyCount }} 复制 · {{ skill.favoriteCount }} 收藏</text>
                   </view>
                 </view>
-                <view class="sc-copy-btn" @tap.stop="copySkill(skill)">
-                  <text class="sc-copy-t">复制 Skill</text>
+                <view class="sc-actions">
+                  <view class="sc-share-btn" @tap.stop="shareSkill(skill)">
+                    <uni-icons type="redo" size="13" color="rgba(0,0,0,0.55)" />
+                    <text class="sc-share-t">分享</text>
+                  </view>
+                  <view class="sc-copy-btn" @tap.stop="copySkill(skill)">
+                    <text class="sc-copy-t">复制 Skill</text>
+                  </view>
                 </view>
               </view>
             </view>
@@ -125,7 +127,7 @@
             v-if="panel.skills.length === 0 && (panel.role === 'preview' || (!loading && !refreshing))"
             class="empty-state"
           >
-            <text class="empty-state-t">没有符合当前筛选条件的 Skill</text>
+            <text class="empty-state-t">暂无 Skill</text>
           </view>
         </view>
       </view>
@@ -146,51 +148,6 @@
     </scroll-view>
     </view>
 
-    <!-- 筛选浮层（在 scroll-view 外） -->
-    <view v-if="showFilter" class="overlay" @tap="showFilter = false" />
-    <view v-if="showFilter" class="bottom-sheet">
-      <view class="bs-handle" />
-      <text class="bs-title">筛选</text>
-
-      <text class="bs-section">场景</text>
-      <view class="bs-chip-row">
-        <view
-          v-for="s in scenes" :key="s"
-          class="bs-chip" :class="{ active: filterScene === s }"
-          @tap="filterScene = s"
-        >
-          <text class="bs-chip-t">{{ s }}</text>
-        </view>
-      </view>
-
-      <text class="bs-section">token 区间</text>
-      <view class="bs-chip-row">
-        <view
-          v-for="t in tokenRanges" :key="t"
-          class="bs-chip" :class="{ active: filterToken === t }"
-          @tap="filterToken = t"
-        >
-          <text class="bs-chip-t">{{ t }}</text>
-        </view>
-      </view>
-
-      <text class="bs-section">复现率</text>
-      <view class="bs-chip-row">
-        <view
-          v-for="r in rateRanges" :key="r"
-          class="bs-chip" :class="{ active: filterRate === r }"
-          @tap="filterRate = r"
-        >
-          <text class="bs-chip-t">{{ r }}</text>
-        </view>
-      </view>
-
-      <view class="bs-actions">
-        <view class="bs-reset" @tap="resetFilter"><text class="bs-reset-t">重置</text></view>
-        <view class="bs-confirm" @tap="showFilter = false"><text class="bs-confirm-t">确认筛选</text></view>
-      </view>
-    </view>
-
   </view>
 </template>
 
@@ -199,21 +156,25 @@ import { copySkill as copySkillApi, getSkillCategories, getSkillList } from '@/a
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { normalizeImageUrl } from '@/utils/image-url'
+import { shareSkillItem } from '@/utils/share-skill'
 
 const emit = defineEmits<{ edgeSwipe: [dir: 'left' | 'right'] }>()
-const showFilter  = ref(false)
 const userStore = useUserStore()
 
-const sortTabs = [
-  { key: 'recommend',   label: '推荐' },
-  { key: 'newest',      label: '最新' },
-  { key: 'mostCopy',    label: '复制最多' },
-  { key: 'lowestToken', label: 'token最低' },
-  { key: 'bestValue',   label: '性价比最高' },
-  { key: 'highRate',    label: '复现率最高' },
+const RECOMMEND_TAB_KEY = 'recommend'
+const SCENE_TAB_PREFIX = 'scene:'
+
+const buildSceneTabKey = (scene: string) => `${SCENE_TAB_PREFIX}${scene}`
+const parseSceneFromTabKey = (key: string) => key.startsWith(SCENE_TAB_PREFIX) ? key.slice(SCENE_TAB_PREFIX.length) : ''
+const buildSortTabs = (scenes: string[]) => [
+  { key: RECOMMEND_TAB_KEY, label: '推荐' },
+  ...scenes.map((scene) => ({ key: buildSceneTabKey(scene), label: scene }))
 ]
 
-const activeSort = ref('recommend')
+const sortTabs = ref(buildSortTabs([]))
+
+const activeSort = ref(RECOMMEND_TAB_KEY)
 const activeSortTabId = computed(() => `sort-tab-${activeSort.value}`)
 
 const SWIPE_X_THRESHOLD = 56
@@ -239,14 +200,14 @@ const swipeDirection = ref<'left' | 'right' | ''>('')
 const previewSortKey = ref('')
 const isCarouselAnimating = ref(false)
 
-const getSortIndex = (key: string) => sortTabs.findIndex(tab => tab.key === key)
+const getSortIndex = (key: string) => sortTabs.value.findIndex(tab => tab.key === key)
 
 const getAdjacentSortKey = (key: string, delta: number) => {
   const current = getSortIndex(key)
   if (current < 0) return ''
   const next = current + delta
-  if (next < 0 || next >= sortTabs.length) return ''
-  return sortTabs[next].key
+  if (next < 0 || next >= sortTabs.value.length) return ''
+  return sortTabs.value[next].key
 }
 
 const clearCarouselTimer = () => {
@@ -308,7 +269,6 @@ const updateDragState = (dx: number) => {
 }
 
 const onGestureStart = (e: any, source: 'sort' | 'list') => {
-  if (showFilter.value) return
   const touch = e.touches?.[0]
   if (!touch) return
   touching = true
@@ -322,7 +282,7 @@ const onGestureStart = (e: any, source: 'sort' | 'list') => {
 }
 
 const onGestureMove = (e: any) => {
-  if (!touching || showFilter.value) return
+  if (!touching) return
   const touch = e.touches?.[0]
   if (!touch) return
 
@@ -348,7 +308,7 @@ const onGestureEnd = (e: any, source: 'sort' | 'list') => {
   touching = false
 
   const touch = e.changedTouches?.[0]
-  if (!touch || showFilter.value) {
+  if (!touch) {
     startReboundAnimation()
     resetGesture()
     return
@@ -389,20 +349,11 @@ const onListGestureStart = (e: any) => { onGestureStart(e, 'list') }
 const onListGestureMove = (e: any) => { onGestureMove(e) }
 const onListGestureEnd = (e: any) => { onGestureEnd(e, 'list') }
 
-const filterScene = ref('全部')
-const filterToken = ref('全部')
-const filterRate  = ref('全部')
-
-const scenes      = ref(['全部', '写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商'])
-const tokenRanges = ['全部', '< 1k', '1k~3k', '3k~8k', '> 8k']
-const rateRanges  = ['全部', '> 90%', '> 80%', '> 70%']
-
 const setSort = (key: string) => {
   if (key === activeSort.value) return
   resetCarouselState()
   activeSort.value = key
 }
-const resetFilter = () => { filterScene.value = '全部'; filterToken.value = '全部'; filterRate.value = '全部' }
 
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
 
@@ -441,11 +392,6 @@ const modelColor = (modelName: string) => {
   return '#5B5BD6'
 }
 
-const toHttps = (url: string | null | undefined): string => {
-  if (!url) return ''
-  return url.replace(/^http:\/\//i, 'https://')
-}
-
 const mapApiSkill = (item: any) => {
   const copyCountNum = Number(item?.copyCount ?? 0)
   const tokenNum = Number(item?.avgTotalTokens ?? 0)
@@ -476,23 +422,11 @@ const mapApiSkill = (item: any) => {
     lowCost: tokenNum > 0 && tokenNum < 1200,
     highConsume: tokenNum > 8000,
     stable: rateNum >= 90 && feedbackCountNum >= 3,
-    images: item?.coverImage ? [toHttps(item.coverImage)] : [],
+    images: item?.coverImage ? [normalizeImageUrl(item.coverImage)] : [],
   }
 }
 
-const currentMinSuccessRate = computed(() => {
-  if (filterRate.value === '> 90%') return 90
-  if (filterRate.value === '> 80%') return 80
-  if (filterRate.value === '> 70%') return 70
-  return undefined
-})
-
-const currentMaxAvgTokens = computed(() => {
-  if (filterToken.value === '< 1k') return 1000
-  if (filterToken.value === '1k~3k') return 3000
-  if (filterToken.value === '3k~8k') return 8000
-  return undefined
-})
+const currentSceneFromTab = computed(() => parseSceneFromTabKey(activeSort.value))
 
 const loadSkillsFromApi = async (reset = false) => {
   const targetPage = reset ? 1 : page.value
@@ -500,10 +434,8 @@ const loadSkillsFromApi = async (reset = false) => {
   const data = await getSkillList({
     page: targetPage,
     pageSize: PAGE_SIZE,
-    sort: activeSort.value as any,
-    scene: filterScene.value === '全部' ? undefined : filterScene.value,
-    minSuccessRate: currentMinSuccessRate.value,
-    maxAvgTotalTokens: currentMaxAvgTokens.value
+    sort: RECOMMEND_TAB_KEY as any,
+    scene: currentSceneFromTab.value || undefined
   })
 
   const list = Array.isArray(data?.list) ? data.list.map(mapApiSkill) : []
@@ -546,7 +478,15 @@ onMounted(() => {
   onRefresh()
   getSkillCategories().then(cats => {
     if (Array.isArray(cats) && cats.length > 0) {
-      scenes.value = ['全部', ...cats.map(c => c.name)]
+      const nextScenes = cats
+        .map((c) => `${c?.name || ''}`.trim())
+        .filter(Boolean)
+      if (!nextScenes.length) return
+
+      sortTabs.value = buildSortTabs(nextScenes)
+      if (!sortTabs.value.some(tab => tab.key === activeSort.value)) {
+        activeSort.value = RECOMMEND_TAB_KEY
+      }
     }
   }).catch(() => {})
 })
@@ -567,7 +507,7 @@ const onLoadMore = async () => {
   loading.value = false
 }
 
-watch([activeSort, filterScene, filterToken, filterRate], () => {
+watch(activeSort, () => {
   if (refreshing.value) return
   if (loading.value) return
   void onRefresh()
@@ -581,6 +521,14 @@ const copySkill  = async (skill: any) => {
     // ignore API record error in UI action
   }
   uni.showToast({ title: '已复制 Skill', icon: 'success' })
+}
+const shareSkill = async (skill: any) => {
+  await shareSkillItem({
+    id: skill.id,
+    title: skill.title,
+    summary: skill.summary,
+    imageUrl: Array.isArray(skill.images) ? skill.images[0] : null,
+  })
 }
 const toSkill    = (id: string)  => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 const toSearch   = ()            => uni.navigateTo({ url: '/pages/search/index' })
@@ -600,25 +548,6 @@ const parseRate = (value: string) => parseMetricNumber(value)
 const parseToken = (value: string) => parseMetricNumber(value)
 const parseCount = (value: string) => parseMetricNumber(value)
 const parseSkillId = (id: string) => Number.parseInt(String(id).replace(/[^0-9]/g, ''), 10) || 0
-
-const inTokenRange = (skill: any) => {
-  const token = parseToken(skill.avgToken)
-  if (filterToken.value === '全部') return true
-  if (filterToken.value === '< 1k') return token < 1000
-  if (filterToken.value === '1k~3k') return token >= 1000 && token <= 3000
-  if (filterToken.value === '3k~8k') return token > 3000 && token <= 8000
-  if (filterToken.value === '> 8k') return token > 8000
-  return true
-}
-
-const inRateRange = (skill: any) => {
-  const rate = parseRate(skill.successRate)
-  if (filterRate.value === '全部') return true
-  if (filterRate.value === '> 90%') return rate > 90
-  if (filterRate.value === '> 80%') return rate > 80
-  if (filterRate.value === '> 70%') return rate > 70
-  return true
-}
 
 const byRecommend = (a: any, b: any) => {
   const featured = Number(b.featured) - Number(a.featured)
@@ -667,10 +596,7 @@ const sortSkillList = (list: any[], sortKey: string = activeSort.value) => {
 }
 
 const filteredSkills = computed(() => {
-  return skills.value.filter((skill) => {
-    const sceneOk = filterScene.value === '全部' || skill.scene === filterScene.value
-    return sceneOk && inTokenRange(skill) && inRateRange(skill)
-  })
+  return skills.value
 })
 
 const getDisplaySkillsBySort = (sortKey: string) => sortSkillList(filteredSkills.value, sortKey)
@@ -754,7 +680,6 @@ onUnmounted(() => {
 .top-bar {
   display: flex;
   align-items: center;
-  gap: 16rpx;
   padding: 16rpx 24rpx 12rpx;
   background: #fff;
   border-bottom: 1rpx solid rgba(0,0,0,0.05);
@@ -765,13 +690,6 @@ onUnmounted(() => {
     background: rgba(0,0,0,0.05); border-radius: 36rpx;
     display: flex; align-items: center; gap: 10rpx; padding: 0 24rpx;
     .search-ph { font-size: 24rpx; color: rgba(0,0,0,0.30); }
-  }
-
-  .filter-btn {
-    height: 72rpx; padding: 0 22rpx;
-    background: rgba(0,0,0,0.05); border-radius: 20rpx;
-    display: flex; align-items: center; gap: 6rpx;
-    .filter-txt { font-size: 24rpx; color: rgba(0,0,0,0.65); font-weight: 500; }
   }
 }
 
@@ -891,7 +809,7 @@ onUnmounted(() => {
   .sc-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
 
-    .sc-author-wrap { display: flex; align-items: center; gap: 12rpx; }
+    .sc-author-wrap { display: flex; align-items: center; gap: 12rpx; flex: 1; min-width: 0; }
 
     .sc-av {
       width: 44rpx; height: 44rpx; border-radius: 50%;
@@ -899,9 +817,33 @@ onUnmounted(() => {
       .sc-av-t { font-size: 18rpx; color: #fff; font-weight: 700; }
     }
 
-    .sc-author-info { display: flex; flex-direction: column; gap: 4rpx; }
-    .sc-author-n { font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500; }
-    .sc-counts   { font-size: 18rpx; color: rgba(0,0,0,0.35); }
+    .sc-author-info { display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+    .sc-author-n {
+      font-size: 22rpx; color: rgba(0,0,0,0.60); font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sc-counts {
+      font-size: 18rpx; color: rgba(0,0,0,0.35);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .sc-actions {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+      flex-shrink: 0;
+    }
+
+    .sc-share-btn {
+      background: rgba(0,0,0,0.06);
+      border: 1rpx solid rgba(0,0,0,0.08);
+      padding: 14rpx 24rpx;
+      border-radius: 100rpx;
+      display: flex;
+      align-items: center;
+      gap: 6rpx;
+      .sc-share-t { font-size: 22rpx; color: rgba(0,0,0,0.62); font-weight: 600; }
+    }
 
     .sc-copy-btn {
       background: #E45C1A; padding: 16rpx 32rpx; border-radius: 100rpx;
@@ -923,56 +865,4 @@ onUnmounted(() => {
 }
 
 .list-bottom { height: calc(160rpx + env(safe-area-inset-bottom)); }
-
-/* ── 筛选浮层 ── */
-.overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.55); z-index: 100;
-}
-
-.bottom-sheet {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  background: #fff; border-radius: 40rpx 40rpx 0 0;
-  z-index: 101;
-  padding: 24rpx 28rpx calc(32rpx + env(safe-area-inset-bottom));
-
-  .bs-handle {
-    width: 64rpx; height: 6rpx; border-radius: 3rpx;
-    background: rgba(0,0,0,0.12); margin: 0 auto 28rpx;
-  }
-
-  .bs-title { display: block; font-size: 30rpx; font-weight: 700; color: #1A1A1A; margin-bottom: 20rpx; }
-  .bs-section { display: block; font-size: 22rpx; color: rgba(0,0,0,0.40); margin: 24rpx 0 14rpx; }
-
-  .bs-chip-row {
-    display: flex; flex-wrap: wrap; gap: 12rpx;
-    .bs-chip {
-      height: 60rpx; padding: 0 24rpx;
-      background: rgba(0,0,0,0.06); border-radius: 16rpx;
-      border: 1rpx solid rgba(0,0,0,0.08);
-      display: flex; align-items: center;
-      .bs-chip-t { font-size: 24rpx; color: rgba(0,0,0,0.6); }
-      &.active {
-        background: rgba(228,92,26,0.12); border-color: rgba(228,92,26,0.22);
-        .bs-chip-t { color: #E45C1A; font-weight: 600; }
-      }
-    }
-  }
-
-  .bs-actions {
-    display: flex; gap: 20rpx; margin-top: 36rpx;
-    .bs-reset {
-      flex: 1; height: 88rpx; background: rgba(0,0,0,0.06);
-      border-radius: 24rpx; border: 1rpx solid rgba(0,0,0,0.09);
-      display: flex; align-items: center; justify-content: center;
-      .bs-reset-t { font-size: 28rpx; color: rgba(0,0,0,0.6); font-weight: 600; }
-    }
-    .bs-confirm {
-      flex: 2; height: 88rpx; background: #E45C1A;
-      border-radius: 24rpx; box-shadow: 0 8rpx 24rpx rgba(228,92,26,0.2);
-      display: flex; align-items: center; justify-content: center;
-      .bs-confirm-t { font-size: 28rpx; color: #fff; font-weight: 700; }
-    }
-  }
-}
 </style>

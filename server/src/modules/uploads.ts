@@ -1,4 +1,6 @@
 import { Router, type Request, type Response } from 'express'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import multer from 'multer'
 import type { RowDataPacket } from 'mysql2/promise'
 import { z } from 'zod'
@@ -30,6 +32,15 @@ const uploadImageSchema = z.object({
   draftId: z.coerce.number().int().positive().optional(),
   index: z.coerce.number().int().positive().max(9999).optional()
 })
+
+const imageProxySchema = z.object({
+  url: z.preprocess(
+    (value) => Array.isArray(value) ? value[0] : value,
+    z.string().trim().url().max(2000)
+  )
+})
+
+const IMAGE_PROXY_HOST_ALLOWLIST = new Set(['file.shaobuqi.com'])
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -103,9 +114,81 @@ const ensureDraftOwner = async (draftId: number, userId: number): Promise<'ok' |
 
 export const uploadsRouter = Router()
 
-uploadsRouter.use(requireAuth)
+uploadsRouter.get('/proxy', async (req, res) => {
+  const parsed = imageProxySchema.safeParse(req.query)
+  if (!parsed.success) {
+    sendError(res, parsed.error.issues[0]?.message || '图片地址不合法', 400)
+    return
+  }
 
-uploadsRouter.post('/image', async (req, res) => {
+  let target: URL
+  try {
+    target = new URL(parsed.data.url)
+  } catch {
+    sendError(res, '图片地址不合法', 400)
+    return
+  }
+
+  const protocol = target.protocol.toLowerCase()
+  const hostname = target.hostname.toLowerCase()
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    sendError(res, '仅支持 http/https 图片地址', 400)
+    return
+  }
+  if (!IMAGE_PROXY_HOST_ALLOWLIST.has(hostname)) {
+    sendError(res, '该图片域名不在允许列表', 403)
+    return
+  }
+
+  const abortController = new AbortController()
+  const timer = setTimeout(() => abortController.abort(), 10_000)
+
+  try {
+    const upstream = await fetch(target.toString(), {
+      method: 'GET',
+      redirect: 'follow',
+      signal: abortController.signal,
+      headers: {
+        accept: 'image/*,*/*;q=0.8'
+      }
+    })
+
+    if (!upstream.ok || !upstream.body) {
+      sendError(res, `图片拉取失败(${upstream.status})`, 502)
+      return
+    }
+
+    const contentType = `${upstream.headers.get('content-type') || ''}`.toLowerCase()
+    if (!contentType.startsWith('image/')) {
+      sendError(res, '目标资源不是图片', 400)
+      return
+    }
+
+    const cacheControl = upstream.headers.get('cache-control')
+    const contentLength = upstream.headers.get('content-length')
+    const etag = upstream.headers.get('etag')
+    const lastModified = upstream.headers.get('last-modified')
+
+    res.status(200)
+    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/octet-stream')
+    res.setHeader('Cache-Control', cacheControl || 'public, max-age=3600')
+    if (contentLength) res.setHeader('Content-Length', contentLength)
+    if (etag) res.setHeader('ETag', etag)
+    if (lastModified) res.setHeader('Last-Modified', lastModified)
+
+    await pipeline(Readable.fromWeb(upstream.body as any), res)
+  } catch {
+    if (!res.headersSent) {
+      sendError(res, '图片代理失败', 502)
+    } else {
+      res.destroy()
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+})
+
+uploadsRouter.post('/image', requireAuth, async (req, res) => {
   try {
     await runUploadSingle(req, res)
   } catch (error) {
