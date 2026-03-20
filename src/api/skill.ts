@@ -119,6 +119,19 @@ export const getSkillCategories = () => {
 	return http.get<Array<{ id: number; name: string; sortNo: number }>>('/skills/meta/categories')
 }
 
+export const getCreatorProfile = (id: string | number) => {
+	return http.get<{
+		id: number
+		nickname: string
+		bio: string | null
+		displayColor: string | null
+		avatarUrl: string | null
+		publishedSkillCount: number
+		totalCopyCount: number
+		avgSuccessRate: number | null
+	}>(`/skills/creator/${id}`)
+}
+
 export const getSkillTags = (params?: { keyword?: string; pageSize?: number }) => {
 	return http.get<Array<{ id: number; name: string; useCount: number }>>('/skills/meta/tags', params)
 }

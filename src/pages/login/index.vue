@@ -556,6 +556,7 @@ const switchMode = (registerMode: boolean) => {
 	focusedField.value = ''
 	loginServerTip.value = ''
 	emailSuggestions.value = []
+	loginFailCount.value = 0
 }
 
 const toggleActivePassword = () => {

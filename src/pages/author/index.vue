@@ -129,6 +129,7 @@
 <script setup lang="ts">
 	import { useSysInfoStore } from '@/stores'
 	import { getSafeAreaTop } from '@/utils/safe-area'
+	import { getCreatorProfile, getSkillList, copySkill as copySkillApi } from '@/api/skill'
 
 	const sysInfo = useSysInfoStore()
 	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
@@ -142,46 +143,113 @@
 	const activeTab = ref('skills')
 
 	const author = reactive({
-		name: '林小雨',
-		color: '#D6943A',
-		bio: '专注AI写作提效，分享经过验证的高复现率Skill',
-		tags: ['写作', '自媒体', 'AI效率'],
-		totalCopies: '8.4k',
-		skillCount: '23',
-		avgSuccessRate: '91%',
-		followers: '2.4k'
+		name: '',
+		color: '#5B5BD6',
+		bio: '',
+		tags: [] as string[],
+		totalCopies: '--',
+		skillCount: '--',
+		avgSuccessRate: '--',
+		followers: '0'
 	})
 
-	const authorSkills = ref([
-		{
-			id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
-			avgToken: '3.2k', successRate: '94%', copyCount: '1.2k'
-		},
-		{
-			id: 's2', title: '爆款自媒体选题生成', scene: '自媒体', time: '5天前',
-			avgToken: '1.8k', successRate: '87%', copyCount: '890'
-		},
-		{
-			id: 's3', title: '极简翻译润色器', scene: '写作', time: '2周前',
-			avgToken: '800', successRate: '96%', copyCount: '5.2k'
-		}
-	])
+	const authorSkills = ref<Array<{
+		id: string
+		title: string
+		scene: string
+		time: string
+		avgToken: string
+		successRate: string
+		copyCount: string
+	}>>([])
 
-	const authorFeedbacks = ref([
-		{
-			id: 'f1', skillTitle: '万能长文写作框架',
-			model: 'Claude Sonnet', totalToken: '3.4k',
-			status: 'success', comment: '完全按步骤来，一次成功！输出结构非常清晰。'
-		},
-		{
-			id: 'f2', skillTitle: '极简翻译润色器',
-			model: 'DeepSeek', totalToken: '0.9k',
-			status: 'success', comment: '极低消耗，效果很好，是目前最省的翻译方案之一。'
-		}
-	])
+	// 反馈暂无公开接口，保留空列表
+	const authorFeedbacks = ref<Array<{
+		id: string
+		skillTitle: string
+		model: string
+		totalToken: string
+		status: string
+		comment: string
+	}>>([])
 
-	const copySkill = (_skill: any) => {
-		uni.showToast({ title: '已复制 Skill', icon: 'success' })
+	const formatCount = (value: number | null | undefined) => {
+		const n = Number(value ?? 0)
+		if (!Number.isFinite(n) || n <= 0) return '0'
+		if (n >= 10000) return `${(n / 1000).toFixed(1)}k`
+		return `${Math.round(n)}`
+	}
+
+	const formatToken = (value: number | null | undefined) => {
+		const n = Number(value ?? 0)
+		if (!Number.isFinite(n) || n <= 0) return '--'
+		if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+		return `${Math.round(n)}`
+	}
+
+	const formatRate = (value: number | null | undefined) => {
+		if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
+		return `${Number(value).toFixed(0)}%`
+	}
+
+	const formatRelativeTime = (time: string | null | undefined) => {
+		if (!time) return '--'
+		const date = new Date(time)
+		if (Number.isNaN(date.getTime())) return '--'
+		const diff = Date.now() - date.getTime()
+		const day = 24 * 60 * 60 * 1000
+		if (diff < day) return '今天'
+		if (diff < 2 * day) return '1天前'
+		if (diff < 7 * day) return `${Math.floor(diff / day)}天前`
+		return `${Math.floor(diff / (7 * day))}周前`
+	}
+
+	const loadAuthorData = async (userId: number) => {
+		try {
+			const profile = await getCreatorProfile(userId)
+			author.name = profile.nickname || '未知用户'
+			author.color = profile.displayColor || '#5B5BD6'
+			author.bio = profile.bio || ''
+			author.tags = profile.bio ? ['创作者'] : []
+			author.totalCopies = formatCount(profile.totalCopyCount)
+			author.skillCount = formatCount(profile.publishedSkillCount)
+			author.avgSuccessRate = formatRate(profile.avgSuccessRate)
+		} catch {
+			uni.showToast({ title: '加载用户信息失败', icon: 'none' })
+		}
+
+		try {
+			const data = await getSkillList({ creatorId: userId, page: 1, pageSize: 20 })
+			const list = Array.isArray(data?.list) ? data.list : []
+			authorSkills.value = list.map((item: any) => ({
+				id: `${item.id}`,
+				title: item.title || '未命名 Skill',
+				scene: item.scene || '其他',
+				time: formatRelativeTime(item.publishAt || item.updatedAt),
+				avgToken: formatToken(item.avgTotalTokens),
+				successRate: formatRate(item.successRate),
+				copyCount: formatCount(item.copyCount)
+			}))
+		} catch {
+			uni.showToast({ title: '加载 Skill 列表失败', icon: 'none' })
+		}
+	}
+
+	onLoad((query: any) => {
+		const userId = Number(query?.id)
+		if (!userId || !Number.isInteger(userId) || userId <= 0) {
+			uni.showToast({ title: '用户不存在', icon: 'none' })
+			setTimeout(() => uni.navigateBack(), 1500)
+			return
+		}
+		loadAuthorData(userId)
+	})
+
+	const copySkill = async (skill: any) => {
+		try {
+			await copySkillApi(skill.id)
+			uni.showToast({ title: '已复制 Skill', icon: 'success' })
+		} catch {}
 	}
 
 	const toSkill = (id: string) => {

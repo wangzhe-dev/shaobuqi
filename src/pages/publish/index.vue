@@ -165,14 +165,15 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
 import AppImage from '@/components/app-image/index.vue'
-import { createSkill, updateSkill } from '@/api/skill'
+import { createSkill, getSkillCategories, updateSkill } from '@/api/skill'
 import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
-const SCENE_OPTIONS = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+const FALLBACK_SCENES = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+const SCENE_OPTIONS = ref<string[]>(FALLBACK_SCENES)
 
 type PostForm = {
 	title: string
@@ -496,6 +497,15 @@ const doPublish = async () => {
 		uni.hideLoading()
 	}
 }
+
+onMounted(async () => {
+	try {
+		const cats = await getSkillCategories()
+		if (Array.isArray(cats) && cats.length > 0) {
+			SCENE_OPTIONS.value = cats.map(c => c.name)
+		}
+	} catch {}
+})
 
 onShow(() => {
 	// #ifdef MP-WEIXIN

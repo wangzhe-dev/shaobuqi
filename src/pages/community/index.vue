@@ -402,7 +402,8 @@
 		自媒体: { icon: 'videocam-filled', color: '#7B5B3C' },
 		学习: { icon: 'staff-filled', color: '#2F8A57' },
 		设计: { icon: 'color', color: '#9A6530' },
-		电商: { icon: 'shop-filled', color: '#D6943A' }
+		电商: { icon: 'shop-filled', color: '#D6943A' },
+		运营: { icon: 'chart-filled', color: '#5B5BD6' }
 	}
 
 	const modelFamily = (modelName: string) => {

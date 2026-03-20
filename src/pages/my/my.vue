@@ -253,14 +253,16 @@
 		uni.navigateTo({ url: '/pages/login/index' })
 	}
 
-	const mySkills = ref([
-		{ id: 's1', title: '万能长文写作框架', scene: '写作', time: '2天前',
-		  copyCount: '1.2k', favoriteCount: '312', successRate: '94%', feedbackCount: '43'  },
-		{ id: 's2', title: '爆款自媒体选题生成', scene: '自媒体', time: '5天前',
-		  copyCount: '890',  favoriteCount: '234', successRate: '87%', feedbackCount: '31'  },
-		{ id: 's3', title: '极简翻译润色器',     scene: '写作',   time: '2周前',
-		  copyCount: '5.2k', favoriteCount: '1.8k', successRate: '96%', feedbackCount: '128' },
-	])
+	const mySkills = ref<Array<{
+		id: string
+		title: string
+		scene: string
+		time: string
+		copyCount: string
+		favoriteCount: string
+		successRate: string
+		feedbackCount: string
+	}>>([])
 
 	const myFavorites = ref<Array<{
 		id: string

@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { copySkill as copySkillApi, getSkillList } from '@/api/skill'
+import { copySkill as copySkillApi, getSkillCategories, getSkillList } from '@/api/skill'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
@@ -388,7 +388,7 @@ const filterScene = ref('全部')
 const filterToken = ref('全部')
 const filterRate  = ref('全部')
 
-const scenes      = ['全部', '写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+const scenes      = ref(['全部', '写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商'])
 const tokenRanges = ['全部', '< 1k', '1k~3k', '3k~8k', '> 8k']
 const rateRanges  = ['全部', '> 90%', '> 80%', '> 70%']
 
@@ -529,6 +529,11 @@ const onRefresh = async () => {
 
 onMounted(() => {
   onRefresh()
+  getSkillCategories().then(cats => {
+    if (Array.isArray(cats) && cats.length > 0) {
+      scenes.value = ['全部', ...cats.map(c => c.name)]
+    }
+  }).catch(() => {})
 })
 
 defineExpose({ refreshPublished: injectPublishedSkill })

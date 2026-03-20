@@ -109,6 +109,17 @@ type FavoriteRow = RowDataPacket & {
   skill_id: number
 }
 
+type CreatorProfileRow = RowDataPacket & {
+  id: number
+  nickname: string
+  bio: string | null
+  display_color: string | null
+  avatar_url: string | null
+  published_skill_count: number
+  total_copy_count: number
+  avg_success_rate: number | null
+}
+
 type CategoryRow = RowDataPacket & {
   id: number
   name: string
@@ -715,6 +726,41 @@ skillsRouter.get('/meta/tags', async (req, res) => {
       useCount: row.use_count
     }))
   )
+})
+
+// 公开创作者资料（无需登录，不含邮箱/手机等敏感信息）
+skillsRouter.get('/creator/:id', async (req, res) => {
+  const userId = Number(req.params.id)
+  if (!Number.isInteger(userId) || userId <= 0) {
+    sendError(res, '参数错误', 400)
+    return
+  }
+
+  const rows = await queryRows<CreatorProfileRow[]>(
+    `SELECT id, nickname, bio, display_color, avatar_url,
+            published_skill_count, total_copy_count, avg_success_rate
+     FROM users
+     WHERE id = ? AND status = 1
+     LIMIT 1`,
+    [userId]
+  )
+
+  const user = rows[0]
+  if (!user) {
+    sendError(res, '用户不存在', 404)
+    return
+  }
+
+  sendSuccess(res, {
+    id: user.id,
+    nickname: user.nickname,
+    bio: user.bio,
+    displayColor: user.display_color,
+    avatarUrl: user.avatar_url,
+    publishedSkillCount: user.published_skill_count,
+    totalCopyCount: user.total_copy_count,
+    avgSuccessRate: user.avg_success_rate
+  })
 })
 
 skillsRouter.get('/', optionalAuth, async (req, res) => {

@@ -23,14 +23,26 @@ const registerSchema = z.object({
   nickname: z.string().trim().min(1).max(20).optional()
 })
 
+const resetPasswordSchema = z.object({
+  email: z.string().trim().email({ error: '邮箱格式不正确' }),
+  code: z.string().length(6, '验证码为6位'),
+  password: z.string().min(6, '密码至少6位')
+})
+
 // 内存验证码存储：email -> { code, expiresAt }
 const codeStore = new Map<string, { code: string; expiresAt: number }>()
+
+// 重置密码验证码独立存储，与注册码隔离
+const resetCodeStore = new Map<string, { code: string; expiresAt: number }>()
 
 // 定期清理过期验证码
 setInterval(() => {
   const now = Date.now()
   for (const [email, entry] of codeStore) {
     if (entry.expiresAt < now) codeStore.delete(email)
+  }
+  for (const [email, entry] of resetCodeStore) {
+    if (entry.expiresAt < now) resetCodeStore.delete(email)
   }
 }, 60_000)
 
@@ -174,4 +186,102 @@ authRouter.post('/register', async (req, res) => {
   const newToken = signAccessToken({ userId: newUser.id })
 
   sendSuccess(res, { token: newToken, user: mapUser(newUser) })
+})
+
+// 发送重置密码验证码
+authRouter.post('/send-reset-code', async (req, res) => {
+  const parsed = sendCodeSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, parsed.error.issues[0]?.message || '邮箱格式不正确', 400)
+    return
+  }
+
+  const { email } = parsed.data
+
+  // 必须是已注册且未禁用的账号
+  const users = await queryRows<UserRow[]>(
+    'SELECT id, status FROM users WHERE email = ? LIMIT 1',
+    [email]
+  )
+  if (users.length === 0) {
+    sendError(res, '该邮箱未注册', 400)
+    return
+  }
+  if (users[0].status !== 1) {
+    sendError(res, '账号已禁用，无法重置密码', 403)
+    return
+  }
+
+  // 60 秒内不重复发送
+  const existing = resetCodeStore.get(email)
+  if (existing && existing.expiresAt - 4 * 60_000 > Date.now()) {
+    sendError(res, '发送过于频繁，请稍候再试', 429)
+    return
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  resetCodeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000 })
+
+  try {
+    await sendVerifyCode(email, code)
+    sendSuccess(res, { message: '验证码已发送' })
+  } catch (err) {
+    resetCodeStore.delete(email)
+    console.error('[send-reset-code] 邮件发送失败:', err)
+    sendError(res, '邮件发送失败，请检查邮箱地址', 500)
+  }
+})
+
+// 重置密码
+authRouter.post('/reset-password', async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    sendError(res, parsed.error.issues[0]?.message || '参数不合法', 400)
+    return
+  }
+
+  const { email, code, password } = parsed.data
+
+  // 校验重置验证码
+  const stored = resetCodeStore.get(email)
+  if (!stored || stored.expiresAt < Date.now()) {
+    sendError(res, '验证码已过期，请重新获取', 400)
+    return
+  }
+  if (stored.code !== code) {
+    sendError(res, '验证码错误', 400)
+    return
+  }
+  resetCodeStore.delete(email)
+
+  // 查询用户
+  const users = await queryRows<UserRow[]>(
+    `SELECT id, mobile, email, password_hash, nickname, avatar_url, bio, display_color, status,
+            published_skill_count, total_copy_count, avg_success_rate, last_login_at, created_at, updated_at
+     FROM users WHERE email = ? LIMIT 1`,
+    [email]
+  )
+  const user = users[0]
+  if (!user || user.status !== 1) {
+    sendError(res, '账号不存在或已禁用', 400)
+    return
+  }
+
+  // 更新密码并记录登录时间
+  const passwordHash = await bcrypt.hash(password, 10)
+  await execWrite(
+    'UPDATE users SET password_hash = ?, last_login_at = NOW(), updated_at = NOW() WHERE id = ?',
+    [passwordHash, user.id]
+  )
+
+  // 重新查询以拿到最新字段，直接自动登录
+  const freshUsers = await queryRows<UserRow[]>(
+    `SELECT id, mobile, email, password_hash, nickname, avatar_url, bio, display_color, status,
+            published_skill_count, total_copy_count, avg_success_rate, last_login_at, created_at, updated_at
+     FROM users WHERE id = ? LIMIT 1`,
+    [user.id]
+  )
+
+  const token = signAccessToken({ userId: user.id })
+  sendSuccess(res, { token, user: mapUser(freshUsers[0]) })
 })
