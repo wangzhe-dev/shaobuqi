@@ -27,7 +27,12 @@ if (typeof window !== 'undefined') {
 		window.matchMedia?.('(display-mode: standalone)')?.matches ||
 		(window.navigator as Navigator & { standalone?: boolean }).standalone === true
 
-	// iOS 微信浏览器在普通网页模式下会重复计算底部安全区，导致 tabbar 偏高
+	// iOS 非独立模式浏览器可能出现 tabbar 底部安全区重复叠加，导致导航偏高
+	if (isIOS && !isStandalone) {
+		document.documentElement.classList.add('ios-browser')
+	}
+
+	// 兼容历史 class，保留微信 iOS 浏览器标记
 	if (isWechat && isIOS && !isStandalone) {
 		document.documentElement.classList.add('wechat-ios-browser')
 	}

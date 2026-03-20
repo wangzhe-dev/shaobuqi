@@ -95,10 +95,25 @@ html, body, #app {
 	opacity: 0 !important;
 }
 
-// iOS 微信浏览器在普通网页模式下，uni 默认 safe-area 会导致 tabbar 视觉偏高
+// iOS 普通浏览器模式（含微信内置浏览器）下，uni 默认 safe-area 可能导致 tabbar 偏高
+html.ios-browser,
 html.wechat-ios-browser {
 	.uni-tabbar-bottom .uni-tabbar {
+		height: var(--tab-bar-height, 50px) !important;
+		min-height: var(--tab-bar-height, 50px) !important;
 		padding-bottom: 0 !important;
+	}
+
+	.uni-tabbar-bottom .uni-tabbar .uni-tabbar__bd {
+		height: var(--tab-bar-height, 50px) !important;
+	}
+
+	.uni-tabbar-bottom .uni-tabbar .uni-tabbar__icon {
+		margin-top: 3px !important;
+	}
+
+	.uni-tabbar-bottom .uni-tabbar .uni-tabbar__label {
+		margin-top: 2px !important;
 	}
 
 	.uni-tabbar ~ .uni-placeholder {
@@ -106,15 +121,15 @@ html.wechat-ios-browser {
 	}
 
 	.uni-app--showtabbar uni-page-wrapper {
-		height: calc(100% - var(--tab-bar-height)) !important;
+		height: calc(100% - var(--tab-bar-height, 50px)) !important;
 	}
 
 	.uni-app--showtabbar uni-page-wrapper::after {
-		height: var(--tab-bar-height) !important;
+		height: var(--tab-bar-height, 50px) !important;
 	}
 
 	.uni-app--showtabbar uni-page-head[uni-page-head-type='default'] ~ uni-page-wrapper {
-		height: calc(100% - 44px - var(--tab-bar-height)) !important;
+		height: calc(100% - 44px - var(--tab-bar-height, 50px)) !important;
 	}
 }
 
