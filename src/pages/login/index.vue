@@ -108,7 +108,13 @@
 
 				<view class="field">
 					<text class="field-label">{{ isRegister ? '设置密码' : '登录密码' }}</text>
-					<view class="field-input" :class="{ focused: focusedField === activePasswordField }">
+					<view
+						class="field-input"
+						:class="{
+							focused: focusedField === activePasswordField,
+							invalid: (activePasswordValue && !!activePasswordTip) || (!isRegister && !!loginServerTip)
+						}"
+					>
 						<uni-icons type="locked-filled" size="16" color="#B8C8EB" />
 						<input
 							v-model="activePasswordModel"
@@ -125,6 +131,9 @@
 							<uni-icons :type="activePasswordVisible ? 'eye-slash-filled' : 'eye-filled'" size="18" color="#C4D0EA" />
 						</view>
 					</view>
+					<text v-if="activePasswordTip || (!isRegister && loginServerTip)" class="field-tip error">
+						{{ !isRegister && loginServerTip ? loginServerTip : activePasswordTip }}
+					</text>
 				</view>
 
 				<template v-if="isRegister">
@@ -207,6 +216,7 @@ const loading = ref(false)
 const sendingCode = ref(false)
 const countdown = ref(0)
 const agreed = ref(true)
+const loginServerTip = ref('')
 
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
@@ -224,10 +234,12 @@ const loginEmailValid = computed(() => isQqEmail(loginForm.email))
 const registerEmailValid = computed(() => isQqEmail(regForm.email))
 const registerCodeValid = computed(() => CODE_REG.test(regForm.code.trim()))
 const registerPasswordMatched = computed(() => regForm.password === regForm.confirmPassword)
+const loginPasswordValid = computed(() => loginForm.password.length >= 6 && !/\s/.test(loginForm.password))
+const registerPasswordValid = computed(() => regForm.password.length >= 6 && !/\s/.test(regForm.password))
 
-const canLogin = computed(() => loginEmailValid.value && loginForm.password.length >= 6 && agreed.value && !loading.value)
+const canLogin = computed(() => loginEmailValid.value && loginPasswordValid.value && agreed.value && !loading.value)
 const canRegister = computed(() => {
-	return registerEmailValid.value && registerCodeValid.value && regForm.password.length >= 6 && registerPasswordMatched.value && agreed.value && !loading.value
+	return registerEmailValid.value && registerCodeValid.value && registerPasswordValid.value && registerPasswordMatched.value && agreed.value && !loading.value
 })
 const canSubmit = computed(() => isRegister.value ? canRegister.value : canLogin.value)
 
@@ -242,7 +254,10 @@ const activeEmailModel = computed({
 	get: () => (isRegister.value ? regForm.email : loginForm.email),
 	set: (value: string) => {
 		if (isRegister.value) regForm.email = value
-		else loginForm.email = value
+		else {
+			loginForm.email = value
+			loginServerTip.value = ''
+		}
 	}
 })
 const activeEmailValue = computed(() => (isRegister.value ? regForm.email : loginForm.email))
@@ -253,14 +268,25 @@ const activePasswordModel = computed({
 	get: () => (isRegister.value ? regForm.password : loginForm.password),
 	set: (value: string) => {
 		if (isRegister.value) regForm.password = value
-		else loginForm.password = value
+		else {
+			loginForm.password = value
+			loginServerTip.value = ''
+		}
 	}
 })
 const activePasswordVisible = computed(() => (isRegister.value ? showRegisterPassword.value : showLoginPassword.value))
+const activePasswordValue = computed(() => (isRegister.value ? regForm.password : loginForm.password))
 
 const activeEmailTip = computed(() => {
 	if (!activeEmailValue.value.trim() || activeEmailValid.value) return ''
 	return '邮箱格式不正确'
+})
+
+const activePasswordTip = computed(() => {
+	if (!activePasswordValue.value) return ''
+	if (/\s/.test(activePasswordValue.value)) return '密码不能包含空格'
+	if (activePasswordValue.value.length < 6) return '密码至少 6 位'
+	return ''
 })
 
 const registerConfirmTip = computed(() => {
@@ -295,13 +321,17 @@ const startCountdown = () => {
 
 const clearEmail = () => {
 	if (isRegister.value) regForm.email = ''
-	else loginForm.email = ''
+	else {
+		loginForm.email = ''
+		loginServerTip.value = ''
+	}
 }
 
 const switchMode = (registerMode: boolean) => {
 	if (loading.value) return
 	isRegister.value = registerMode
 	focusedField.value = ''
+	loginServerTip.value = ''
 }
 
 const toggleActivePassword = () => {
@@ -345,8 +375,20 @@ const doSendCode = async () => {
 
 const doLogin = async () => {
 	if (loading.value) return
+	if (!normalizeEmail(loginForm.email)) {
+		uni.showToast({ title: '请输入邮箱地址', icon: 'none' })
+		return
+	}
 	if (!loginEmailValid.value) {
 		uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
+		return
+	}
+	if (!loginForm.password) {
+		uni.showToast({ title: '请输入密码', icon: 'none' })
+		return
+	}
+	if (/\s/.test(loginForm.password)) {
+		uni.showToast({ title: '密码不能包含空格', icon: 'none' })
 		return
 	}
 	if (loginForm.password.length < 6) {
@@ -355,17 +397,24 @@ const doLogin = async () => {
 	}
 	if (!requireAgreement()) return
 
+	loginServerTip.value = ''
 	loading.value = true
 	try {
 		const data = await passwordLogin({
 			identifier: normalizeEmail(loginForm.email),
 			password: loginForm.password
 		})
-		userStore.setToken(data?.token || '')
-		userStore.setUserInfo(data?.user || null)
+		const token = `${data?.token || ''}`.trim()
+		if (!token || !data?.user) {
+			throw new Error('登录失败，请检查账号和密码')
+		}
+		userStore.setToken(token)
+		userStore.setUserInfo(data.user)
 		afterLoginSuccess()
-	} catch {
-		// 已由请求拦截器统一提示
+	} catch (err: any) {
+		const msg = typeof err === 'string' ? err : (err?.message || '')
+		if (/账号不存在|已禁用/i.test(msg)) loginServerTip.value = '账号不存在或已禁用，请检查后重试'
+		else if (/密码/i.test(msg)) loginServerTip.value = '密码错误，请重新输入'
 	} finally {
 		loading.value = false
 	}
@@ -373,12 +422,24 @@ const doLogin = async () => {
 
 const doRegister = async () => {
 	if (loading.value) return
+	if (!normalizeEmail(regForm.email)) {
+		uni.showToast({ title: '请输入邮箱地址', icon: 'none' })
+		return
+	}
 	if (!registerEmailValid.value) {
 		uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
 		return
 	}
 	if (!registerCodeValid.value) {
 		uni.showToast({ title: '请输入 6 位数字验证码', icon: 'none' })
+		return
+	}
+	if (!regForm.password) {
+		uni.showToast({ title: '请输入密码', icon: 'none' })
+		return
+	}
+	if (/\s/.test(regForm.password)) {
+		uni.showToast({ title: '密码不能包含空格', icon: 'none' })
 		return
 	}
 	if (regForm.password.length < 6) {
@@ -402,8 +463,12 @@ const doRegister = async () => {
 		if (nickname) payload.nickname = nickname
 
 		const data = await emailRegister(payload)
-		userStore.setToken(data?.token || '')
-		userStore.setUserInfo(data?.user || null)
+		const token = `${data?.token || ''}`.trim()
+		if (!token || !data?.user) {
+			throw new Error('注册成功状态异常，请重新登录')
+		}
+		userStore.setToken(token)
+		userStore.setUserInfo(data.user)
 		afterLoginSuccess()
 	} catch {
 		// 已由请求拦截器统一提示

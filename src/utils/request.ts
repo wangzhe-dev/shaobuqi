@@ -1,7 +1,7 @@
 // 全局请求拦截器
 import Request from 'luch-request'
 import type { HttpRequestConfig, HttpResponse, HttpError, HttpTask } from 'luch-request'
-import { requestUrl, loginPage, apiPrefix } from '@/config'
+import { requestUrl, apiPrefix } from '@/config'
 import { useUserStore } from '@/stores'
 
 const service = new Request()
@@ -13,10 +13,23 @@ const whiteList = [
 	'/auth/register'
 ]
 
-// 是否正在刷新的标记
-let isRefreshing = false
-// 重试队列，每一项将是一个待执行的函数形式
-let requests = []
+// 登录态弹窗锁，避免并发请求重复弹出
+let authModalLock = false
+
+const isWhiteListRequest = (url?: string): boolean => {
+	if (!url) return false
+	const pureUrl = `${url}`.split('?')[0]
+	return whiteList.some((item) => pureUrl.endsWith(item) || pureUrl.includes(item))
+}
+
+const shouldForceRelogin = (code: number, msg: string, url?: string): boolean => {
+	if (code === 40101) return true
+	if (code !== 401) return false
+	if (isWhiteListRequest(url)) return false
+
+	// 仅登录态失效相关文案触发“重新登录”强提示
+	return /(未登录|登录状态无效|登录已过期|token|长时间未登录)/i.test(msg)
+}
 
 // 设置全局配置
 service.setConfig((config : HttpRequestConfig) => {
@@ -89,59 +102,52 @@ service.interceptors.response.use((response : HttpResponse) => {
 	}
 
 	const code = response.data.code
+	const msg = response.data.msg || '系统错误'
+	const requestUrl = response?.config?.url as string | undefined
 	if (response.statusCode === 200 && (code === 401 || code === 40101)) {
-		if (!isRefreshing) {
-			isRefreshing = true
-
-			if (code === 401) {
-				uni.showModal({
-					title: '平台安全提醒',
-					content: '由于您长时间未登录平台，为保障账号安全，请您重新登录',
-					confirmText: '重新登录',
-					showCancel: false,
-					success: () => {
-						// 清空请求队列
-						requests = []
-						// 还原标记位
-						isRefreshing = false
-
-						useUserStore().logout()
-						uni.navigateTo({ url: loginPage })
-
-						return Promise.reject(response.data.msg || 'token已过期')
-					}
-				})
-			} else if (code === 40101) {
-				const tip = '您的账号已在其他设备登录，您被强制下线。如果这不是您的操作，请立即修改您的密码以确保账号安全'
-				uni.showModal({
-					title: '账号登录提示',
-					content: tip,
-					confirmText: '重新登录',
-					success: (res) => {
-						requests = []
-						isRefreshing = false
-
-						if (res.confirm) {
-							useUserStore().logout()
-							uni.navigateTo({ url: loginPage })
-						}
-
-						return Promise.reject(tip)
-					}
-				})
-			}
-		} else {
-			// 同时并发出现的请求 新的token没回来之前 先用promise 存入等待队列中，等token刷新后直接执行
-			return new Promise((resolve) => {
-				requests.push(() => {
-					resolve(service.request(response.config))
-				})
+		if (!shouldForceRelogin(code, msg, requestUrl)) {
+			uni.showToast({
+				title: msg,
+				icon: 'none'
 			})
+			return Promise.reject(msg)
 		}
+
+		if (authModalLock) return Promise.reject(msg)
+		authModalLock = true
+
+		if (code === 40101) {
+			const tip = '您的账号已在其他设备登录，您被强制下线。如果这不是您的操作，请立即修改您的密码以确保账号安全'
+			uni.showModal({
+				title: '账号登录提示',
+				content: tip,
+				confirmText: '重新登录',
+				success: () => {
+					useUserStore().logout()
+				},
+				complete: () => {
+					authModalLock = false
+				}
+			})
+			return Promise.reject(tip)
+		}
+
+		uni.showModal({
+			title: '平台安全提醒',
+			content: '由于您长时间未登录平台，为保障账号安全，请您重新登录',
+			confirmText: '重新登录',
+			showCancel: false,
+			success: () => {
+				useUserStore().logout()
+			},
+			complete: () => {
+				authModalLock = false
+			}
+		})
+		return Promise.reject(msg || 'token已过期')
 	} else if (response.statusCode === 200) {
 		if (code === 200) return response.data.data
 
-		const msg = response.data.msg || '系统错误'
 		uni.showToast({
 			title: msg,
 			icon: 'none'
