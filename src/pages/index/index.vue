@@ -4,8 +4,11 @@
     <!-- ── Header ── -->
     <view class="header">
       <view class="tab-strip">
-        <view v-for="(t, i) in feedTabs" :key="t" class="tab-item" :class="{ active: activeTab === i }"
-          @tap="switchTab(i)">
+        <view
+          v-for="(t, i) in feedTabs" :key="t"
+          class="tab-item" :class="{ active: activeTab === i }"
+          @tap="switchTab(i)"
+        >
           <text class="tab-text">{{ t }}</text>
         </view>
         <view class="tab-ind-wrap" :style="{ transform: `translateX(${activeTab * 100}%)` }">
@@ -20,13 +23,18 @@
     </view>
 
     <!-- ── 左右滑动内容区 ── -->
-    <swiper class="tab-swiper" :current="activeTab" :disable-touch="activeTab === 1" :duration="280"
-      @change="onSwiperChange">
-      <swiper-item class="tab-pane">
-        <skill-feed @edge-swipe="onSkillEdgeSwipe" />
-      </swiper-item>
+    <swiper
+      class="tab-swiper"
+      :current="activeTab"
+      :disable-touch="activeTab === 1"
+      :duration="280"
+      @change="onSwiperChange"
+    >
       <swiper-item class="tab-pane">
         <feed-post />
+      </swiper-item>
+      <swiper-item class="tab-pane">
+        <skill-feed @edge-swipe="onSkillEdgeSwipe" />
       </swiper-item>
     </swiper>
 
@@ -49,19 +57,19 @@ const pageStyle = computed(() => ({
 
 onShow(() => {
   // #ifdef MP-WEIXIN
-  ; (uni as any).getTabBar(instance?.proxy)?.setData({ selected: 0 })
+  ;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 0 })
   // #endif
 })
 
 const activeTab = ref(0)
-const feedTabs = ['Skill', '消耗']
+const feedTabs  = ['消耗', 'Skill']
 
-const switchTab = (i: number) => { activeTab.value = i }
-const onSwiperChange = (e: any) => { activeTab.value = e.detail.current }
-const toCreateRecord = () => uni.navigateTo({ url: '/pages/publish/record' })
+const switchTab      = (i: number)  => { activeTab.value = i }
+const onSwiperChange = (e: any)     => { activeTab.value = e.detail.current }
+const toCreateRecord = ()           => uni.navigateTo({ url: '/pages/publish/record' })
 const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
-  if (dir === 'left') activeTab.value = Math.min(feedTabs.length - 1, activeTab.value + 1)
-  else activeTab.value = Math.max(0, activeTab.value - 1)
+  if (dir === 'left')  activeTab.value = Math.min(feedTabs.length - 1, activeTab.value + 1)
+  else                 activeTab.value = Math.max(0, activeTab.value - 1)
 }
 </script>
 
@@ -111,8 +119,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
 
   .tab-ind-wrap {
     position: absolute;
-    bottom: 0;
-    left: 0;
+    bottom: 0; left: 0;
     width: 148rpx;
     display: flex;
     justify-content: center;
@@ -129,11 +136,8 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
 
 .hd-search {
   margin-left: auto;
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 64rpx; height: 64rpx;
+  display: flex; align-items: center; justify-content: center;
 }
 
 /* ── FAB ── */
@@ -150,17 +154,13 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   justify-content: center;
   box-shadow: 0 8rpx 28rpx rgba(255, 122, 69, 0.45);
   z-index: 100;
-
-  &:active {
-    opacity: 0.85;
-  }
+  &:active { opacity: 0.85; }
 }
 
 /* ── Swiper ── */
 .tab-swiper {
   flex: 1;
-  height: 0;
-  /* flex:1 + height:0 撑满剩余空间 */
+  height: 0; /* flex:1 + height:0 撑满剩余空间 */
 }
 
 .tab-pane {
