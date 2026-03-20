@@ -369,9 +369,40 @@
         }
       }
 
+      function resolveApkUrl(rawUrl) {
+        try {
+          return new URL(rawUrl, window.location.origin).toString();
+        } catch (error) {
+          return rawUrl;
+        }
+      }
+
+      function buildApkDownloadUrl() {
+        var baseUrl = resolveApkUrl(apkUrl);
+        var joiner = baseUrl.indexOf('?') > -1 ? '&' : '?';
+        return baseUrl + joiner + '_t=' + Date.now();
+      }
+
+      function triggerApkDownload() {
+        var finalUrl = buildApkDownloadUrl();
+        var anchor = document.createElement('a');
+        anchor.href = finalUrl;
+        anchor.setAttribute('download', 'shaobuqi.apk');
+        anchor.setAttribute('rel', 'noopener');
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+
+        // 兜底：部分浏览器会忽略 download 属性
+        window.setTimeout(function () {
+          window.location.assign(finalUrl);
+        }, 500);
+      }
+
       actionBtn.addEventListener('click', function () {
         if (currentScene.action === 'download') {
-          window.location.href = apkUrl;
+          triggerApkDownload();
           return;
         }
 
