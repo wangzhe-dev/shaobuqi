@@ -90,7 +90,7 @@
                 class="sc-imgs"
                 :class="`gi-${skill.images.length >= 3 ? (skill.images.length > 3 ? 'many' : 3) : skill.images.length}`"
               >
-                <image
+                <app-image
                   v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
                   :src="src" class="sc-img" mode="aspectFill"
                   @tap.stop="previewImg(skill.images, i)"
@@ -196,6 +196,7 @@
 
 <script setup lang="ts">
 import { copySkill as copySkillApi, getSkillList } from '@/api/skill'
+import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 
@@ -852,7 +853,6 @@ onUnmounted(() => {
 
   .sc-imgs {
     display: flex; flex-wrap: wrap; margin-bottom: 18rpx;
-    .sc-img { object-fit: cover; }
     &.gi-1 .sc-img { width: 100%; height: 340rpx; border-radius: 16rpx; }
     &.gi-2 { gap: 4rpx;
       .sc-img { width: calc(50% - 2rpx); height: 220rpx; border-radius: 12rpx; }

@@ -43,7 +43,7 @@
 			<!-- Media upload grid -->
 			<view class="media-grid">
 				<view v-for="(src, i) in mediaList" :key="i" class="m-cell">
-					<image :src="src" mode="aspectFill" class="m-img" />
+					<app-image :src="src" mode="aspectFill" class="m-img" />
 					<view class="m-del" @tap.stop="removeMedia(i)">
 						<text class="m-x">×</text>
 					</view>
@@ -164,6 +164,7 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
+import AppImage from '@/components/app-image/index.vue'
 import { createSkill, updateSkill } from '@/api/skill'
 import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
 import { useUserStore } from '@/stores'

@@ -29,7 +29,7 @@
 			<!-- Media grid -->
 			<view class="media-grid">
 				<view v-for="(src, i) in form.images" :key="i" class="m-cell">
-					<image :src="src" mode="aspectFill" class="m-img" />
+					<app-image :src="src" mode="aspectFill" class="m-img" />
 					<view class="m-del" @tap.stop="removeImage(i)">
 						<text class="m-x">×</text>
 					</view>
@@ -158,6 +158,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
+import AppImage from '@/components/app-image/index.vue'
 import { createSkillFeedback } from '@/api/skill'
 import { createFeedPost, updateFeedPostImages } from '@/api/feed'
 import type { FeedReaction } from '@/api/feed'

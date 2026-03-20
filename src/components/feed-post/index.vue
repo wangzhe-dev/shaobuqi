@@ -44,7 +44,7 @@
             class="pc-imgs"
             :class="`gi-${item.images.length >= 3 ? (item.images.length > 3 ? 'many' : 3) : item.images.length}`"
           >
-            <image
+            <app-image
               v-for="(src, i) in item.images.slice(0, 9)" :key="i"
               :src="src" class="pc-img" mode="aspectFill"
               @tap.stop="previewImg(item.images, i)"
@@ -146,6 +146,7 @@
 <script setup lang="ts">
 import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost, updateFeedReaction } from '@/api/feed'
 import type { FeedItem, FeedReaction } from '@/api/feed'
+import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 
@@ -431,7 +432,6 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
 
 .pc-imgs {
   display: flex; flex-wrap: wrap; margin-top: 16rpx;
-  .pc-img { object-fit: cover; }
   &.gi-1 .pc-img { width: 100%; height: 360rpx; }
   &.gi-2 { gap: 4rpx; padding: 0 24rpx;
     .pc-img { width: calc(50% - 2rpx); height: 240rpx; border-radius: 12rpx; }

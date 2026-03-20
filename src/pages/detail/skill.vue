@@ -67,7 +67,7 @@
         <!-- 图片九宫格 -->
         <view v-if="skill.images && skill.images.length" class="skill-imgs"
           :class="`gi-${skill.images.length <= 4 ? skill.images.length : 'many'}`">
-          <image v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
+          <app-image v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
             :src="src" class="skill-img" mode="aspectFill"
             @tap="previewSkillImage(skill.images, i)" />
         </view>
@@ -102,7 +102,7 @@
 					<view v-if="Array.isArray(skill.contentImages) && skill.contentImages.length" class="content-img-block">
 						<text class="content-img-title">内容图片</text>
 						<view class="content-img-grid">
-							<image
+							<app-image
 								v-for="(img, idx) in skill.contentImages"
 								:key="`${img}-${idx}`"
 								class="content-img"
@@ -266,6 +266,7 @@
 
 <script setup lang="ts">
 	import { copySkill as copySkillApi, favoriteSkill, getSkillDetail, unfavoriteSkill } from '@/api/skill'
+	import AppImage from '@/components/app-image/index.vue'
 	import { useSysInfoStore, useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
 	import { getSafeAreaTop } from '@/utils/safe-area'
