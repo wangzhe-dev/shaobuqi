@@ -95,13 +95,16 @@ html, body, #app {
 	opacity: 0 !important;
 }
 
-// iOS 普通浏览器模式（含微信内置浏览器）下，uni 默认 safe-area 可能导致 tabbar 偏高
+// iOS 普通浏览器模式（含微信内置浏览器）tabbar 高度适配
+// 原问题：padding-bottom:0 移除了 home indicator 安全区（34px），
+// 导致图标/文字被 home indicator 遮挡，实际可见区域仅剩约 16px。
+// 修复：保留 env(safe-area-inset-bottom) padding，并同步修正 page-wrapper 高度。
 html.ios-browser,
 html.wechat-ios-browser {
 	.uni-tabbar-bottom .uni-tabbar {
 		height: var(--tab-bar-height, 50px) !important;
 		min-height: var(--tab-bar-height, 50px) !important;
-		padding-bottom: 0 !important;
+		padding-bottom: env(safe-area-inset-bottom) !important;
 	}
 
 	.uni-tabbar-bottom .uni-tabbar .uni-tabbar__bd {
@@ -121,15 +124,15 @@ html.wechat-ios-browser {
 	}
 
 	.uni-app--showtabbar uni-page-wrapper {
-		height: calc(100% - var(--tab-bar-height, 50px)) !important;
+		height: calc(100% - var(--tab-bar-height, 50px) - env(safe-area-inset-bottom)) !important;
 	}
 
 	.uni-app--showtabbar uni-page-wrapper::after {
-		height: var(--tab-bar-height, 50px) !important;
+		height: calc(var(--tab-bar-height, 50px) + env(safe-area-inset-bottom)) !important;
 	}
 
 	.uni-app--showtabbar uni-page-head[uni-page-head-type='default'] ~ uni-page-wrapper {
-		height: calc(100% - 44px - var(--tab-bar-height, 50px)) !important;
+		height: calc(100% - 44px - var(--tab-bar-height, 50px) - env(safe-area-inset-bottom)) !important;
 	}
 }
 

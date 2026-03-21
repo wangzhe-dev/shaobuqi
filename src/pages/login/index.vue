@@ -1,5 +1,5 @@
 <template>
-	<view class="auth-page" :style="authPageStyle">
+	<view class="auth-page">
 		<view class="liquid-bg">
 			<view class="liquid-vignette" />
 			<view class="liquid-ring-outer">
@@ -293,16 +293,10 @@
 
 <script setup lang="ts">
 import { emailRegister, passwordLogin, resetPassword, sendEmailCode, sendResetCode } from '@/api/auth'
-import { useSysInfoStore, useUserStore } from '@/stores'
-import { getSafeAreaTop } from '@/utils/safe-area'
+import { useUserStore } from '@/stores'
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 const userStore = useUserStore()
-const sysInfo = useSysInfoStore()
-const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
-const authPageStyle = computed(() => ({
-	'--safe-top': `${statusBarHeight.value}px`
-}))
 
 const EMAIL_REG = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i
 const CODE_REG = /^\d{6}$/
@@ -981,7 +975,8 @@ onUnmounted(() => {
 	position: relative;
 	z-index: 2;
 	min-height: calc(100vh - 90rpx);
-	padding: calc(var(--safe-top, 0px) + 66rpx) 30rpx 16rpx;
+	padding: calc(constant(safe-area-inset-top) + 66rpx) 30rpx 16rpx;
+	padding: calc(env(safe-area-inset-top) + 66rpx) 30rpx 16rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;

@@ -1,15 +1,15 @@
 <template>
 	<view class="page">
-		<!-- Top nav -->
-		<view class="top-bar">
-			<text class="top-cancel" @tap="goBack">取消</text>
-			<!-- #ifdef H5 -->
-			<text class="top-title">发布</text>
-			<!-- #endif -->
-			<view class="btn-pub" :class="{ on: canPublish }" @tap="doPublish">
-				<text class="btn-pub-t">发布</text>
-			</view>
-		</view>
+		<uni-nav-bar status-bar title="发布">
+			<template #left>
+				<text class="top-cancel" @tap="goBack">取消</text>
+			</template>
+			<template #right>
+				<view class="btn-pub" :class="{ on: canPublish }" @tap="doPublish">
+					<text class="btn-pub-t">发布</text>
+				</view>
+			</template>
+		</uni-nav-bar>
 
 		<scroll-view
 			class="body"
@@ -523,40 +523,10 @@ onShow(() => {
 	font-family: 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 }
 
-/* ── top bar ── */
-.top-bar {
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 20rpx 24rpx 16rpx;
-	flex-shrink: 0;
-}
-
-/* #ifdef H5 */
-.top-bar {
-	padding-top: calc(20rpx + constant(safe-area-inset-top));
-	padding-top: calc(20rpx + env(safe-area-inset-top));
-}
-/* #endif */
-
 .top-cancel {
 	font-size: 30rpx;
 	color: #6B7280;
 	font-weight: 500;
-	position: relative;
-	z-index: 1;
-}
-
-.top-title {
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
-	font-size: 34rpx;
-	color: #111827;
-	font-weight: 700;
-	line-height: 1;
-	pointer-events: none;
 }
 
 .btn-pub {

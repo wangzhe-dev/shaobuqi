@@ -2,7 +2,7 @@
 	<view class="page">
 
 		<!-- 顶部 Hero -->
-		<view class="profile-hero" :style="{ paddingTop: statusBarHeight + 'px' }">
+		<view class="profile-hero">
 			<view class="back-btn" @tap="goBack">
 				<uni-icons class="back-icon" type="left" size="20" color="#FFFFFF" />
 			</view>
@@ -127,12 +127,7 @@
 </template>
 
 <script setup lang="ts">
-	import { useSysInfoStore } from '@/stores'
-	import { getSafeAreaTop } from '@/utils/safe-area'
 	import { getCreatorProfile, getSkillList, copySkill as copySkillApi } from '@/api/skill'
-
-	const sysInfo = useSysInfoStore()
-	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
 
 	const TABS = [
 		{ key: 'skills', label: 'Skill' },
@@ -278,6 +273,8 @@
 	.profile-hero {
 		position: relative;
 		flex-shrink: 0;
+		padding-top: constant(safe-area-inset-top);
+		padding-top: env(safe-area-inset-top);
 
 		.back-btn {
 			position: absolute;

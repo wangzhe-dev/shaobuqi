@@ -1,13 +1,6 @@
 <template>
 	<view class="page">
-		<!-- 导航栏 -->
-		<view class="nav-bar">
-			<view class="nav-back" @tap="goBack">
-				<uni-icons type="left" size="20" color="#1A1A2E" />
-			</view>
-			<text class="nav-title">意见反馈</text>
-			<view class="nav-placeholder" />
-		</view>
+		<uni-nav-bar status-bar left-icon="left" title="意见反馈" @click-left="goBack" />
 
 		<scroll-view class="content" scroll-y :show-scrollbar="false">
 
@@ -146,29 +139,6 @@
 	flex-direction: column;
 }
 
-/* ── 导航栏 ── */
-.nav-bar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 56rpx 24rpx 20rpx;
-	background: #FFFFFF;
-	border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-
-	.nav-back {
-		width: 64rpx; height: 64rpx;
-		display: flex; align-items: center; justify-content: center;
-		border-radius: 18rpx;
-		background: rgba(0, 0, 0, 0.04);
-		&:active { background: rgba(0, 0, 0, 0.08); }
-	}
-
-	.nav-title {
-		font-size: 32rpx; font-weight: 700; color: #1A1A2E;
-	}
-
-	.nav-placeholder { width: 64rpx; }
-}
 
 /* ── 滚动内容 ── */
 .content {

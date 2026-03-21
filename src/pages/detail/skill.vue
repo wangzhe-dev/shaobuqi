@@ -1,23 +1,18 @@
 <template>
 	<view class="page">
 
-		<!-- 自定义导航栏 -->
-		<view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="navbar-inner">
-				<view class="nav-back" @tap="goBack">
-					<uni-icons class="nav-back-icon" type="left" size="20" color="#1A1A1A" />
-				</view>
-				<text class="nav-title">Skill 详情</text>
+		<uni-nav-bar status-bar left-icon="left" title="Skill 详情" @click-left="goBack">
+			<template #right>
 				<view class="nav-actions">
 					<view class="nav-btn" @tap="shareSkill">
-						<uni-icons class="nav-btn-icon" type="paperplane" size="20" color="rgba(0,0,0,0.70)" />
+						<uni-icons type="paperplane" size="20" color="rgba(0,0,0,0.70)" />
 					</view>
 					<view class="nav-btn" @tap="reportSkill">
-						<uni-icons class="nav-btn-icon" type="more-filled" size="20" color="rgba(0,0,0,0.70)" />
+						<uni-icons type="more-filled" size="20" color="rgba(0,0,0,0.70)" />
 					</view>
 				</view>
-			</view>
-		</view>
+			</template>
+		</uni-nav-bar>
 
 		<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
 			<!-- 1. 顶部概览区 -->
@@ -297,14 +292,10 @@
 <script setup lang="ts">
 	import { copySkill as copySkillApi, createSkillFeedback, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
 	import AppImage from '@/components/app-image/index.vue'
-	import { useSysInfoStore, useUserStore } from '@/stores'
+	import { useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
 	import { normalizeImageUrl } from '@/utils/image-url'
-	import { getSafeAreaTop } from '@/utils/safe-area'
-
-	const sysInfo = useSysInfoStore()
 	const userStore = useUserStore()
-	const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
 	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
 	const isFavorited = ref(false)
@@ -771,66 +762,16 @@
 		background: #FFFFFF;
 	}
 
-	/* 自定义导航栏 */
-	.navbar {
-		background: #FFFFFF;
-		flex-shrink: 0;
-		border-bottom: 1rpx solid rgba(0,0,0,0.05);
+	.nav-actions {
+		display: flex;
+		gap: 8rpx;
 
-		.navbar-inner {
-			height: 88rpx;
-			padding: 0 24rpx;
-			display: flex;
-			align-items: center;
-			gap: 16rpx;
-		}
-
-		.nav-back {
+		.nav-btn {
 			width: 64rpx;
 			height: 64rpx;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: rgba(0,0,0,0.06);
-			border-radius: 20rpx;
-			flex-shrink: 0;
-
-			.nav-back-icon {
-				width: 32rpx;
-				height: 32rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-		}
-
-		.nav-title {
-			flex: 1;
-			font-size: 30rpx;
-			font-weight: 700;
-			color: #1A1A1A;
-			text-align: center;
-		}
-
-		.nav-actions {
-			display: flex;
-			gap: 8rpx;
-
-			.nav-btn {
-				width: 64rpx;
-				height: 64rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-
-				.nav-btn-icon {
-					width: 30rpx;
-					height: 30rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-				}
-			}
 		}
 	}
 

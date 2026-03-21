@@ -1,8 +1,14 @@
 <template>
-  <view class="page" :style="pageStyle">
+  <view class="page">
 
     <!-- ── Header ── -->
-    <view class="header">
+    <uni-nav-bar
+      status-bar
+      :border="true"
+      background-color="#F7F8FA"
+      left-width="0"
+      right-width="0"
+    >
       <view class="tab-strip">
         <view
           v-for="(t, i) in feedTabs" :key="t"
@@ -15,7 +21,7 @@
           <view class="tab-ind-bar" />
         </view>
       </view>
-    </view>
+    </uni-nav-bar>
 
     <!-- ── FAB：记一笔（仅消耗记录 Tab 可见）── -->
     <view v-if="activeTab === 0" class="fab" @tap="toCreateRecord">
@@ -44,16 +50,9 @@
 <script setup lang="ts">
 import FeedPost from '@/components/feed-post/index.vue'
 import SkillFeed from '@/components/skill-feed/index.vue'
-import { useSysInfoStore } from '@/stores'
-import { getSafeAreaTop } from '@/utils/safe-area'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
-const sysInfo = useSysInfoStore()
-const safeTop = computed(() => getSafeAreaTop(sysInfo.systemInfo))
-const pageStyle = computed(() => ({
-  '--safe-top': `${safeTop.value}px`
-}))
 
 onShow(() => {
   // #ifdef MP-WEIXIN
@@ -81,27 +80,18 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   flex-direction: column;
 }
 
-/* ── Header ── */
-.header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-top: var(--safe-top, 0px);
-  background: #F7F8FA;
-  border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-}
-
+/* ── Tab Strip（放入 uni-nav-bar 默认 slot）── */
 .tab-strip {
   position: relative;
   display: flex;
+  width: 100%;
   padding-bottom: 2rpx;
 
   .tab-item {
     width: 148rpx;
     display: flex;
     justify-content: center;
-    padding: 24rpx 0 18rpx;
+    padding: 0 0 18rpx;
 
     .tab-text {
       font-size: 28rpx;
@@ -132,12 +122,6 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
       border-radius: 2rpx;
     }
   }
-}
-
-.hd-search {
-  margin-left: auto;
-  width: 64rpx; height: 64rpx;
-  display: flex; align-items: center; justify-content: center;
 }
 
 /* ── FAB ── */

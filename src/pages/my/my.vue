@@ -2,7 +2,7 @@
   <scroll-view class="page" scroll-y :show-scrollbar="false">
 
     <!-- ── Profile ── -->
-    <view class="profile-card" :style="profileCardStyle">
+    <view class="profile-card">
       <!-- 未登录 -->
       <view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
         <view class="avatar-wrap">
@@ -269,8 +269,7 @@
 
 <script setup lang="ts">
 import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
-import { useSysInfoStore, useUserStore } from '@/stores'
-import { getSafeAreaTop } from '@/utils/safe-area'
+import { useUserStore } from '@/stores'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
@@ -283,19 +282,6 @@ onShow(() => {
 const userStore = useUserStore()
 const isLoggedIn = computed(() => !!userStore.token)
 
-const sysInfo = useSysInfoStore()
-const statusBarHeight = computed(() => getSafeAreaTop(sysInfo.systemInfo))
-const profileCardStyle = computed(() => {
-  const style: Record<string, string> = {
-    '--profile-safe-top': `${statusBarHeight.value}px`
-  }
-
-  // #ifdef H5
-  style['--profile-safe-top-base'] = '16px'
-  // #endif
-
-  return style
-})
 
 const goLogin = () => {
   uni.navigateTo({ url: '/pages/login/index' })
@@ -496,7 +482,8 @@ const logoutConfirm = () => {
 .profile-card {
   background: #FFFFFF;
   padding: 0 24rpx;
-  padding-top: calc(var(--profile-safe-top, 0px) + 16rpx);
+  padding-top: calc(constant(safe-area-inset-top) + 16rpx);
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
   margin-bottom: 16rpx;
 
   .pc-row {
@@ -614,11 +601,7 @@ const logoutConfirm = () => {
   }
 }
 
-/* #ifdef H5 */
-.profile-card {
-  padding-top: calc(var(--profile-safe-top-base, 16px) + constant(safe-area-inset-top));
-  padding-top: calc(var(--profile-safe-top-base, 16px) + env(safe-area-inset-top));
-}
+
 
 /* #endif */
 
