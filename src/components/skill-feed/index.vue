@@ -82,7 +82,7 @@
 
                 <text class="sc-title">{{ skill.title }}</text>
                 <view class="sc-prompt-row">
-                  <text class="sc-prompt">{{ skill.brief }}</text>
+                  <text class="sc-prompt">{{ skill.promptPreview }}</text>
                 </view>
 
                 <!-- 图片九宫格 -->
