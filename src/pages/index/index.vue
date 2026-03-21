@@ -1,14 +1,8 @@
 <template>
   <view class="page">
 
-    <!-- ── Header ── -->
-    <uni-nav-bar
-      status-bar
-      :border="true"
-      background-color="#F7F8FA"
-      left-width="0"
-      right-width="0"
-    >
+    <!-- ── Tab Header ── -->
+    <view class="header">
       <view class="tab-strip">
         <view
           v-for="(t, i) in feedTabs" :key="t"
@@ -21,7 +15,7 @@
           <view class="tab-ind-bar" />
         </view>
       </view>
-    </uni-nav-bar>
+    </view>
 
     <!-- ── FAB：记一笔（仅消耗记录 Tab 可见）── -->
     <view v-if="activeTab === 0" class="fab" @tap="toCreateRecord">
@@ -80,18 +74,28 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   flex-direction: column;
 }
 
-/* ── Tab Strip（放入 uni-nav-bar 默认 slot）── */
+/* ── Header ── */
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+  background: #fff;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
 .tab-strip {
   position: relative;
   display: flex;
-  width: 100%;
   padding-bottom: 2rpx;
 
   .tab-item {
     width: 148rpx;
     display: flex;
     justify-content: center;
-    padding: 0 0 18rpx;
+    padding: 24rpx 0 18rpx;
 
     .tab-text {
       font-size: 28rpx;
