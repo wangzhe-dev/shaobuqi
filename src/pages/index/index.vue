@@ -77,7 +77,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
 <style lang="scss" scoped>
 .page {
   height: 100%;
-  background: #F2F3F7;
+  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
 }
@@ -88,7 +88,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   justify-content: center;
   align-items: center;
   padding-top: 0;
-  background: #fff;
+  background: var(--card-bg);
   border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
 }
@@ -121,13 +121,13 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
 
     .tab-text {
       font-size: 28rpx;
-      color: #9CA3AF;
+      color: var(--text-muted);
       font-weight: 500;
       transition: color 0.2s;
     }
 
     &.active .tab-text {
-      color: #1A1A2E;
+      color: var(--text-primary);
       font-weight: 700;
       font-size: 30rpx;
     }
@@ -144,7 +144,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
     .tab-ind-bar {
       width: 36rpx;
       height: 4rpx;
-      background: #FF7A45;
+      background: var(--accent-color);
       border-radius: 2rpx;
     }
   }
@@ -158,7 +158,7 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   width: 96rpx;
   height: 96rpx;
   border-radius: 50%;
-  background: #FF7A45;
+  background: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;

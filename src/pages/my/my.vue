@@ -372,12 +372,12 @@ const logoutConfirm = () => {
 <style lang="scss" scoped>
 .page {
   height: 100%;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
 }
 
 /* ── Profile ── */
 .profile-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   padding: 0 24rpx;
   padding-top: calc(constant(safe-area-inset-top) + 16rpx);
   padding-top: calc(env(safe-area-inset-top) + 16rpx);
@@ -407,11 +407,11 @@ const logoutConfirm = () => {
       width: 96rpx;
       height: 96rpx;
       border-radius: 50%;
-      background: #5B5BD6;
+      background: var(--primary-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6rpx 20rpx rgba(91, 91, 214, 0.28);
+      box-shadow: 0 6rpx 20rpx var(--primary-shadow);
 
       .avatar-t {
         font-size: 40rpx;
@@ -432,9 +432,9 @@ const logoutConfirm = () => {
       right: -6rpx;
       font-size: 17rpx;
       font-weight: 700;
-      color: #FF7A45;
-      background: #FFF5F0;
-      border: 2rpx solid rgba(255, 122, 69, 0.28);
+      color: var(--accent-color);
+      background: var(--accent-bg);
+      border: 2rpx solid var(--accent-border);
       padding: 2rpx 10rpx;
       border-radius: 100rpx;
     }
@@ -449,14 +449,14 @@ const logoutConfirm = () => {
       display: block;
       font-size: 34rpx;
       font-weight: 800;
-      color: #1A1A2E;
+      color: var(--text-primary);
       margin-bottom: 8rpx;
     }
 
     .pc-bio {
       display: block;
       font-size: 24rpx;
-      color: #6B7280;
+      color: var(--text-gray);
       line-height: 1.5;
       margin-bottom: 12rpx;
     }
@@ -467,16 +467,16 @@ const logoutConfirm = () => {
 
       .pc-tag {
         font-size: 18rpx;
-        color: #5B5BD6;
+        color: var(--primary-color);
         font-weight: 500;
-        background: rgba(91, 91, 214, 0.08);
+        background: var(--primary-light);
         padding: 4rpx 14rpx;
         border-radius: 8rpx;
       }
 
       .pc-tag-cta {
-        color: #FF7A45;
-        background: rgba(255, 122, 69, 0.1);
+        color: var(--accent-color);
+        background: var(--accent-light);
         font-weight: 600;
       }
     }
@@ -526,20 +526,20 @@ const logoutConfirm = () => {
     .sv {
       font-size: 32rpx;
       font-weight: 900;
-      color: #1A1A2E;
+      color: var(--text-primary);
     }
 
     .sv.orange {
-      color: #FF7A45;
+      color: var(--accent-color);
     }
 
     .sv.green {
-      color: #2F8A57;
+      color: var(--green-color);
     }
 
     .sl {
       font-size: 20rpx;
-      color: #9CA3AF;
+      color: var(--text-muted);
     }
   }
 
@@ -560,11 +560,11 @@ const logoutConfirm = () => {
 /* ── 未登录占位块 ── */
 .guest-block {
   border-radius: 20rpx;
-  background: #FFFFFF;
-  border: 1rpx dashed #DDD6FE;
+  background: var(--card-bg);
+  border: 1rpx dashed var(--primary-border);
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 
   .gb-inner {
@@ -582,14 +582,14 @@ const logoutConfirm = () => {
   .gb-text {
     flex: 1;
     font-size: 26rpx;
-    color: #9CA3AF;
+    color: var(--text-muted);
   }
 
   .gb-btn {
     font-size: 24rpx;
-    color: #5B5BD6;
+    color: var(--primary-color);
     font-weight: 600;
-    background: rgba(91, 91, 214, 0.08);
+    background: var(--primary-light);
     padding: 8rpx 20rpx;
     border-radius: 100rpx;
     flex-shrink: 0;
@@ -597,7 +597,7 @@ const logoutConfirm = () => {
 }
 
 .data-entry-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 24rpx;
   overflow: hidden;
 }
@@ -614,7 +614,7 @@ const logoutConfirm = () => {
   }
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 }
 
@@ -633,7 +633,7 @@ const logoutConfirm = () => {
 }
 
 .dei-icon-favorite {
-  background: rgba(91, 91, 214, 0.12);
+  background: var(--primary-light-12);
 }
 
 .dei-icon-like {
@@ -641,7 +641,7 @@ const logoutConfirm = () => {
 }
 
 .dei-icon-copy {
-  background: rgba(11, 139, 140, 0.12);
+  background: var(--teal-light);
 }
 
 .dei-main {
@@ -654,18 +654,18 @@ const logoutConfirm = () => {
 
 .dei-title {
   font-size: 28rpx;
-  color: #1A1A2E;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .dei-sub {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .dei-count {
   font-size: 26rpx;
-  color: #6B7280;
+  color: var(--text-gray);
   font-weight: 700;
   margin-right: 6rpx;
 }
@@ -678,12 +678,12 @@ const logoutConfirm = () => {
 }
 
 .skill-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 24rpx;
   padding: 24rpx;
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 
   .sc-top {
@@ -694,16 +694,16 @@ const logoutConfirm = () => {
 
     .scene-tag {
       font-size: 18rpx;
-      color: #5B5BD6;
+      color: var(--primary-color);
       font-weight: 500;
-      background: rgba(91, 91, 214, 0.08);
+      background: var(--primary-light);
       padding: 4rpx 12rpx;
       border-radius: 6rpx;
     }
 
     .sc-time {
       font-size: 20rpx;
-      color: #9CA3AF;
+      color: var(--text-muted);
     }
   }
 
@@ -711,7 +711,7 @@ const logoutConfirm = () => {
     display: block;
     font-size: 28rpx;
     font-weight: 700;
-    color: #1A1A2E;
+    color: var(--text-primary);
     margin-bottom: 16rpx;
     line-height: 1.4;
   }
@@ -728,37 +728,37 @@ const logoutConfirm = () => {
       align-items: center;
       gap: 4rpx;
       padding: 12rpx 0;
-      background: #F7F8FA;
+      background: var(--bg-secondary);
       border-radius: 12rpx;
 
       .ss-val {
         font-size: 26rpx;
         font-weight: 700;
-        color: #1A1A2E;
+        color: var(--text-primary);
       }
 
       .ss-val.orange {
-        color: #FF7A45;
+        color: var(--accent-color);
       }
 
       .ss-val.green {
-        color: #2F8A57;
+        color: var(--green-color);
       }
 
       .ss-val.blue {
-        color: #5B5BD6;
+        color: var(--primary-color);
       }
 
       .ss-lab {
         font-size: 18rpx;
-        color: #9CA3AF;
+        color: var(--text-muted);
       }
     }
   }
 }
 
 .list-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 24rpx;
   overflow: hidden;
 }
@@ -775,7 +775,7 @@ const logoutConfirm = () => {
   }
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 }
 
@@ -790,17 +790,17 @@ const logoutConfirm = () => {
 .item-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #1A1A2E;
+  color: var(--text-primary);
 }
 
 .item-sub {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .item-meta {
   font-size: 22rpx;
-  color: #6B7280;
+  color: var(--text-gray);
 }
 
 .empty-row {
@@ -811,12 +811,12 @@ const logoutConfirm = () => {
 
 .empty-t {
   font-size: 24rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 /* ── 设置 ── */
 .settings-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 24rpx;
   overflow: hidden;
 }
@@ -833,7 +833,7 @@ const logoutConfirm = () => {
   }
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 
   .settings-icon-box {
@@ -848,19 +848,19 @@ const logoutConfirm = () => {
   }
 
   .settings-icon-login {
-    background: rgba(91, 91, 214, 0.08);
+    background: var(--primary-light);
   }
 
   .settings-label {
     flex: 1;
     font-size: 28rpx;
-    color: #1A1A2E;
+    color: var(--text-primary);
     font-weight: 500;
   }
 
   .settings-hint {
     font-size: 24rpx;
-    color: #9CA3AF;
+    color: var(--text-muted);
     margin-right: 6rpx;
   }
 }
@@ -870,7 +870,7 @@ const logoutConfirm = () => {
 }
 
 .logout-label {
-  color: #E45C1A !important;
+  color: var(--orange-color) !important;
   font-weight: 600;
 }
 
@@ -879,7 +879,7 @@ const logoutConfirm = () => {
 }
 
 .login-label {
-  color: #5B5BD6 !important;
+  color: var(--primary-color) !important;
   font-weight: 600;
 }
 
@@ -889,11 +889,11 @@ const logoutConfirm = () => {
 
 /* ── 新增设置行图标 ── */
 .settings-icon-feedback {
-  background: rgba(91, 91, 214, 0.08) !important;
+  background: var(--primary-light) !important;
 }
 
 .settings-icon-coop {
-  background: rgba(255, 122, 69, 0.08) !important;
+  background: var(--accent-light) !important;
 }
 
 /* ── 商务合作弹窗 ── */
@@ -911,7 +911,7 @@ const logoutConfirm = () => {
 
 .popup-sheet {
   width: 100%;
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 32rpx 32rpx 0 0;
   padding: 0 32rpx calc(40rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
@@ -929,7 +929,7 @@ const logoutConfirm = () => {
   display: block;
   font-size: 34rpx;
   font-weight: 800;
-  color: #1A1A2E;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 8rpx;
 }
@@ -937,7 +937,7 @@ const logoutConfirm = () => {
 .popup-subtitle {
   display: block;
   font-size: 24rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-align: center;
   margin-bottom: 32rpx;
 }
@@ -954,11 +954,11 @@ const logoutConfirm = () => {
   align-items: center;
   gap: 20rpx;
   padding: 24rpx;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
   border-radius: 20rpx;
 
   &:active {
-    background: #F0F0FD;
+    background: var(--primary-bg);
   }
 }
 
@@ -973,7 +973,7 @@ const logoutConfirm = () => {
 }
 
 .contact-icon-email {
-  background: rgba(91, 91, 214, 0.1);
+  background: var(--primary-light-10);
 }
 
 .contact-icon-phone {
@@ -981,7 +981,7 @@ const logoutConfirm = () => {
 }
 
 .contact-icon-wechat {
-  background: rgba(255, 122, 69, 0.1);
+  background: var(--accent-light);
 }
 
 .contact-icon {
@@ -998,20 +998,20 @@ const logoutConfirm = () => {
 
 .contact-type {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .contact-value {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1A1A2E;
+  color: var(--text-primary);
 }
 
 .copy-badge {
   font-size: 22rpx;
-  color: #5B5BD6;
+  color: var(--primary-color);
   font-weight: 600;
-  background: rgba(91, 91, 214, 0.08);
+  background: var(--primary-light);
   padding: 8rpx 20rpx;
   border-radius: 100rpx;
   flex-shrink: 0;
@@ -1019,7 +1019,7 @@ const logoutConfirm = () => {
 
 .popup-close-btn {
   height: 88rpx;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
   border-radius: 22rpx;
   display: flex;
   align-items: center;
@@ -1033,6 +1033,6 @@ const logoutConfirm = () => {
 .popup-close-text {
   font-size: 28rpx;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--text-gray);
 }
 </style>

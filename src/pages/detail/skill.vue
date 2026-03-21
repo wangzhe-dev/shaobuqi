@@ -708,7 +708,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #FFFFFF;
+		background: var(--card-bg);
 	}
 
 
@@ -717,7 +717,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 	/* 通用 section 卡 */
 	.section-card {
 		margin: 20rpx 24rpx 0;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-radius: 28rpx;
 		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
@@ -745,7 +745,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		height: 52rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		background: rgba(228, 92, 26, 0.1);
+		background: var(--accent-light);
 		border: 1rpx solid rgba(228, 92, 26, 0.16);
 		display: flex;
 		align-items: center;
@@ -763,7 +763,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 
 		.copy-all-text {
 			font-size: 20rpx;
-			color: #E45C1A;
+			color: var(--orange-color);
 			font-weight: 600;
 		}
 	}
@@ -771,7 +771,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 	/* 2. 简介与场景 */
 		.skill-intro {
 			margin: 20rpx 24rpx 0;
-			background: #FFFFFF;
+			background: var(--card-bg);
 			border: 1rpx solid rgba(228, 92, 26, 0.14);
 			border-radius: 24rpx;
 			padding: 24rpx;
@@ -814,7 +814,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 
 	.scene-block {
 		margin: 12rpx 24rpx 0;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border: 1rpx solid rgba(228, 92, 26, 0.1);
 		border-radius: 24rpx;
 		padding: 24rpx 24rpx 20rpx;
@@ -839,7 +839,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: rgba(228, 92, 26, 0.08);
+			background: var(--accent-light);
 			border: 1rpx solid rgba(228, 92, 26, 0.18);
 			border-radius: 999rpx;
 
@@ -855,7 +855,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 	/* 1. 顶部概览区 */
 		.overview-section {
 			margin: 20rpx 24rpx 0;
-			background: #FFFFFF;
+			background: var(--card-bg);
 			border-radius: 28rpx;
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 28rpx;
@@ -897,7 +897,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 				padding: 10rpx 24rpx;
 				border-radius: 100rpx;
 
-				.follow-btn-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
+				.follow-btn-text { font-size: 22rpx; color: var(--orange-color); font-weight: 600; }
 
 				&.follow-btn--active {
 					background: rgba(0, 0, 0, 0.06);
@@ -922,7 +922,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 				gap: 6rpx;
 
 				.ov-stat-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
-				.ov-stat-val.green { color: #2F8A57; }
+				.ov-stat-val.green { color: var(--green-color); }
 				.ov-stat-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
@@ -990,7 +990,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		padding: 8rpx 20rpx;
 		border-radius: 100rpx;
 
-		.write-fb-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
+		.write-fb-text { font-size: 22rpx; color: var(--orange-color); font-weight: 600; }
 	}
 
 		.feedback-list {
@@ -1033,7 +1033,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 					padding: 6rpx 14rpx;
 					border-radius: 100rpx;
 
-					&.status-success { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+					&.status-success { color: var(--green-color); background: rgba(47, 138, 87,0.12); }
 					&.status-normal { color: #5E738A; background: rgba(94, 115, 138,0.12); }
 					&.status-fail { color: #C84634; background: rgba(200, 70, 52,0.12); }
 
@@ -1058,7 +1058,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 
 					.fbt-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 					.fbt-val { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.70); }
-					.fbt-val.orange { color: #E45C1A; }
+					.fbt-val.orange { color: var(--orange-color); }
 					.fbt-val.model { font-size: 20rpx; color: #C7A06A; }
 				}
 			}
@@ -1125,9 +1125,9 @@ import { normalizeImageUrl } from '@/utils/image-url'
 					}
 
 					.si-token { font-size: 22rpx; }
-					.orange { color: #E45C1A; }
+					.orange { color: var(--orange-color); }
 					.si-rate { font-size: 22rpx; }
-					.green { color: #2F8A57; }
+					.green { color: var(--green-color); }
 				}
 			}
 
@@ -1138,7 +1138,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 				border-radius: 100rpx;
 				flex-shrink: 0;
 
-				.si-copy-text { font-size: 22rpx; color: #E45C1A; font-weight: 600; }
+				.si-copy-text { font-size: 22rpx; color: var(--orange-color); font-weight: 600; }
 			}
 		}
 	}
@@ -1193,7 +1193,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		right: 0;
 		bottom: 0;
 		padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
-		background: #FFFFFF;
+		background: var(--card-bg);
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
 		border-top: 1rpx solid rgba(0,0,0,0.07);
@@ -1226,7 +1226,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		.bb-copy-btn {
 			flex: 1;
 			height: 88rpx;
-			background: #E45C1A;
+			background: var(--orange-color);
 			border-radius: 24rpx;
 			display: flex;
 			align-items: center;
@@ -1258,7 +1258,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 
 		.feedback-panel {
 			width: 100%;
-			background: #FFFFFF;
+			background: var(--card-bg);
 			border-radius: 28rpx 28rpx 0 0;
 			padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
 			border-top: 1rpx solid rgba(0, 0, 0, 0.08);
@@ -1309,7 +1309,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 				border: 1rpx solid rgba(228, 92, 26, 0.2);
 
 				.feedback-send-t {
-					color: #E45C1A;
+					color: var(--orange-color);
 				}
 			}
 		}

@@ -431,7 +431,7 @@ defineExpose({ refresh: onRefresh })
 .root {
   height: 100%;
   position: relative;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
 }
 
 .scroll {
@@ -498,7 +498,7 @@ defineExpose({ refresh: onRefresh })
 
 /* ── Post card ── */
 .post-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20rpx;
   overflow: hidden;
 }
@@ -520,14 +520,14 @@ defineExpose({ refresh: onRefresh })
   .pc-info {
     flex: 1;
     .pc-name-row { display: flex; align-items: center; gap: 10rpx; margin-bottom: 6rpx; }
-    .pc-name { font-size: 30rpx; font-weight: 700; color: #1A1A2E; }
+    .pc-name { font-size: 30rpx; font-weight: 700; color: var(--text-primary); }
     .pc-model {
       display: flex; align-items: center; gap: 6rpx;
       background: rgba(47,138,87,0.08); border-radius: 100rpx; padding: 3rpx 10rpx;
-      .pc-dot { width: 8rpx; height: 8rpx; border-radius: 50%; background: #2F8A57; }
-      .pc-model-t { font-size: 18rpx; color: #2F8A57; font-weight: 500; }
+      .pc-dot { width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--green-color); }
+      .pc-model-t { font-size: 18rpx; color: var(--green-color); font-weight: 500; }
     }
-    .pc-time { font-size: 20rpx; color: #9CA3AF; }
+    .pc-time { font-size: 20rpx; color: var(--text-muted); }
   }
 }
 
@@ -541,14 +541,14 @@ defineExpose({ refresh: onRefresh })
   margin: 14rpx 24rpx 0;
   padding: 12rpx 16rpx;
   border-radius: 14rpx;
-  background: rgba(91, 91, 214, 0.06);
+  background: rgba(91, 91, 214, 0.06); /* ~primary-light-06, no exact var */
   display: flex;
   align-items: center;
   gap: 10rpx;
 
   .pc-skill-label {
     font-size: 20rpx;
-    color: #5B5BD6;
+    color: var(--primary-color);
     font-weight: 700;
     flex-shrink: 0;
   }
@@ -584,7 +584,7 @@ defineExpose({ refresh: onRefresh })
 
   .pc-spend {
     display: flex; align-items: baseline; gap: 8rpx;
-    .pc-cost { font-size: 32rpx; font-weight: 800; color: #E45C1A; font-variant-numeric: tabular-nums; }
+    .pc-cost { font-size: 32rpx; font-weight: 800; color: var(--orange-color); font-variant-numeric: tabular-nums; }
     .pc-cost-sep { font-size: 22rpx; color: #D1D5DB; }
     .pc-tok { font-size: 22rpx; color: #9CA3AF; }
   }
@@ -593,7 +593,7 @@ defineExpose({ refresh: onRefresh })
     display: flex; align-items: center; gap: 6rpx;
     background: rgba(0,0,0,0.04); border-radius: 100rpx; padding: 8rpx 16rpx;
     .pc-rxn-icon { flex-shrink: 0; }
-    .pc-rxn-t { font-size: 22rpx; color: #9CA3AF; font-weight: 500; }
+    .pc-rxn-t { font-size: 22rpx; color: var(--text-muted); font-weight: 500; }
     &.rxn-active .pc-rxn-t { font-weight: 600; }
     &.rxn-editable { border: 1rpx solid rgba(0,0,0,0.08); }
   }
@@ -608,14 +608,14 @@ defineExpose({ refresh: onRefresh })
   .pc-meoo {
     display: flex; align-items: center; gap: 6rpx;
     background: rgba(0,0,0,0.04); border-radius: 100rpx; padding: 10rpx 20rpx;
-    .pc-meoo-t { font-size: 22rpx; color: #6B7280; font-weight: 600; }
-    .pc-meoo-n { font-size: 22rpx; color: #9CA3AF; }
-    &.meoo-on { background: rgba(255,122,69,0.08); }
+    .pc-meoo-t { font-size: 22rpx; color: var(--text-gray); font-weight: 600; }
+    .pc-meoo-n { font-size: 22rpx; color: var(--text-muted); }
+    &.meoo-on { background: var(--accent-light); }
   }
   .pc-act-grp { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 4rpx; }
   .pc-act {
     display: flex; align-items: center; gap: 6rpx; padding: 10rpx 14rpx;
-    .pc-act-n { font-size: 24rpx; color: #9CA3AF; }
+    .pc-act-n { font-size: 24rpx; color: var(--text-muted); }
   }
 }
 
@@ -627,8 +627,8 @@ defineExpose({ refresh: onRefresh })
   padding: 120rpx 40rpx;
   gap: 16rpx;
 
-  .empty-txt { font-size: 30rpx; color: #6B7280; font-weight: 600; }
-  .empty-sub { font-size: 24rpx; color: #9CA3AF; }
+  .empty-txt { font-size: 30rpx; color: var(--text-gray); font-weight: 600; }
+  .empty-sub { font-size: 24rpx; color: var(--text-muted); }
 }
 
 /* ── 加载状态 ── */
@@ -637,7 +637,7 @@ defineExpose({ refresh: onRefresh })
   justify-content: center;
   padding: 20rpx 0 12rpx;
 
-  .load-txt { font-size: 24rpx; color: #9CA3AF; }
+  .load-txt { font-size: 24rpx; color: var(--text-muted); }
 
   .no-more {
     display: flex; align-items: center; gap: 20rpx;
@@ -673,13 +673,13 @@ defineExpose({ refresh: onRefresh })
   z-index: 999;
 
   .rxn-sheet {
-    width: 100%; background: #fff;
+    width: 100%; background: var(--card-bg);
     border-radius: 28rpx 28rpx 0 0;
     padding: 32rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
 
     .rxn-sheet-title {
       display: block; font-size: 26rpx; font-weight: 700;
-      color: #6B7280; text-align: center; margin-bottom: 28rpx;
+      color: var(--text-gray); text-align: center; margin-bottom: 28rpx;
     }
 
     .rxn-options {
@@ -690,7 +690,7 @@ defineExpose({ refresh: onRefresh })
         gap: 10rpx; background: rgba(0,0,0,0.04);
         border: 2rpx solid transparent; border-radius: 20rpx; padding: 20rpx 0;
         .rxn-opt-icon { line-height: 1; }
-        .rxn-opt-t { font-size: 22rpx; color: #6B7280; font-weight: 600; }
+        .rxn-opt-t { font-size: 22rpx; color: var(--text-gray); font-weight: 600; }
         &.rxn-opt-on { border-color: currentColor; }
       }
     }

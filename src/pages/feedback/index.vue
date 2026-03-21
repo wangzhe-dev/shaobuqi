@@ -134,7 +134,7 @@
 <style lang="scss" scoped>
 .page {
 	min-height: 100vh;
-	background: #F7F8FA;
+	background: var(--bg-secondary);
 	display: flex;
 	flex-direction: column;
 }
@@ -153,11 +153,11 @@
 
 .section-label {
 	display: block;
-	font-size: 26rpx; font-weight: 600; color: #1A1A2E;
+	font-size: 26rpx; font-weight: 600; color: var(--text-primary);
 	margin-bottom: 16rpx;
 
-	.required { color: #E45C1A; }
-	.optional { font-size: 22rpx; color: #9CA3AF; font-weight: 400; }
+	.required { color: var(--orange-color); }
+	.optional { font-size: 22rpx; color: var(--text-muted); font-weight: 400; }
 }
 
 /* ── 类型标签 ── */
@@ -171,7 +171,7 @@
 	width: calc((100% - 16rpx) / 2);
 	padding: 18rpx 22rpx;
 	border-radius: 20rpx;
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border: 1.5rpx solid #E5E7EB;
 	display: flex;
 	align-items: center;
@@ -180,8 +180,8 @@
 	transition: all 0.15s;
 
 	&.active {
-		background: rgba(91, 91, 214, 0.08);
-		border-color: #5B5BD6;
+		background: var(--primary-light);
+		border-color: var(--primary-color);
 	}
 }
 
@@ -197,17 +197,17 @@
 
 .type-tag-text {
 	font-size: 26rpx;
-	color: #6B7280;
+	color: var(--text-gray);
 }
 
 .type-tag.active .type-tag-text {
-	color: #5B5BD6;
+	color: var(--primary-color);
 	font-weight: 600;
 }
 
 /* ── 文本框 ── */
 .textarea-wrap {
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border-radius: 20rpx;
 	padding: 24rpx;
 	position: relative;
@@ -218,12 +218,12 @@
 	width: 100%;
 	height: 280rpx;
 	font-size: 28rpx;
-	color: #1A1A2E;
+	color: var(--text-primary);
 	line-height: 1.7;
 }
 
 .textarea-placeholder {
-	color: #C8CBD4;
+	color: var(--text-placeholder);
 	font-size: 28rpx;
 }
 
@@ -231,15 +231,15 @@
 	display: block;
 	text-align: right;
 	font-size: 22rpx;
-	color: #C8CBD4;
+	color: var(--text-placeholder);
 	margin-top: 12rpx;
 
-	&.warn { color: #FF7A45; }
+	&.warn { color: var(--accent-color); }
 }
 
 /* ── 联系方式输入 ── */
 .input-wrap {
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border-radius: 20rpx;
 	padding: 0 24rpx;
 	border: 1.5rpx solid #E5E7EB;
@@ -249,11 +249,11 @@
 	height: 88rpx;
 	width: 100%;
 	font-size: 28rpx;
-	color: #1A1A2E;
+	color: var(--text-primary);
 }
 
 .input-placeholder {
-	color: #C8CBD4;
+	color: var(--text-placeholder);
 	font-size: 28rpx;
 }
 
@@ -264,20 +264,20 @@
 
 .submit-btn {
 	height: 96rpx;
-	background: #5B5BD6;
+	background: var(--primary-color);
 	border-radius: 28rpx;
 	display: flex; align-items: center; justify-content: center;
 	box-shadow: 0 8rpx 24rpx rgba(91, 91, 214, 0.32);
 	&:active { opacity: 0.85; }
 
 	&.disabled {
-		background: #C8CBD4;
+		background: var(--text-placeholder);
 		box-shadow: none;
 	}
 }
 
 .submit-text {
-	font-size: 30rpx; font-weight: 700; color: #FFFFFF;
+	font-size: 30rpx; font-weight: 700; color: var(--card-bg);
 }
 
 .page-bottom { height: calc(60rpx + env(safe-area-inset-bottom)); }

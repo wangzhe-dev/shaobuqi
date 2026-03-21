@@ -141,6 +141,8 @@
 
 <script setup lang="ts">
 import { getMyCopies, getMyFavorites, getMyLikes, getMySkills } from '@/api/me'
+import type { MyCopyItem as ApiCopyItem, MyFavoriteItem as ApiFavoriteItem, MyLikeItem as ApiLikeItem } from '@/api/me'
+import type { SkillListItem } from '@/api/skill'
 import { useUserStore } from '@/stores'
 
 type PublishItem = {
@@ -331,15 +333,15 @@ const loadTabData = async (key: TabKey, reset = false) => {
     if (key === 'publish') {
       const res = await getMySkills({ page: targetPage, pageSize: PAGE_SIZE, status: 1 })
       const list = Array.isArray(res?.list)
-        ? res.list.map((item: any) => ({
-            id: `${item?.id || ''}`,
-            title: `${item?.title || '未命名 Skill'}`,
-            scene: `${item?.scene || '其他'}`,
-            publishAt: formatDate(item?.publishAt || item?.updatedAt),
-            copyCount: formatCount(item?.copyCount),
-            favoriteCount: formatCount(item?.favoriteCount),
-            successRate: formatRate(item?.successRate),
-            feedbackCount: formatCount(item?.feedbackCount)
+        ? res.list.map((item: SkillListItem) => ({
+            id: `${item.id}`,
+            title: `${item.title || '未命名 Skill'}`,
+            scene: `${item.scene || '其他'}`,
+            publishAt: formatDate(item.publishAt),
+            copyCount: formatCount(item.copyCount),
+            favoriteCount: formatCount(item.favoriteCount),
+            successRate: formatRate(item.successRate),
+            feedbackCount: formatCount(item.feedbackCount)
           }))
         : []
 
@@ -355,14 +357,14 @@ const loadTabData = async (key: TabKey, reset = false) => {
     if (key === 'favorite') {
       const res = await getMyFavorites({ page: targetPage, pageSize: PAGE_SIZE })
       const list = Array.isArray(res?.list)
-        ? res.list.map((item: any) => ({
-            favoriteId: `${item?.favoriteId || ''}`,
-            skillId: `${item?.skill?.id || ''}`,
-            title: `${item?.skill?.title || '未命名 Skill'}`,
-            scene: `${item?.skill?.scene || '其他'}`,
-            creator: `${item?.skill?.creator?.nickname || '匿名用户'}`,
-            favoriteCount: formatCount(item?.skill?.favoriteCount),
-            favoredAt: formatDate(item?.favoredAt)
+        ? res.list.map((item: ApiFavoriteItem) => ({
+            favoriteId: `${item.favoriteId}`,
+            skillId: `${item.skill.id}`,
+            title: `${item.skill.title || '未命名 Skill'}`,
+            scene: `${item.skill.scene || '其他'}`,
+            creator: `${item.skill.creator.nickname || '匿名用户'}`,
+            favoriteCount: formatCount(item.skill.favoriteCount),
+            favoredAt: formatDate(item.favoredAt)
           }))
         : []
 
@@ -378,16 +380,16 @@ const loadTabData = async (key: TabKey, reset = false) => {
     if (key === 'like') {
       const res = await getMyLikes({ page: targetPage, pageSize: PAGE_SIZE })
       const list = Array.isArray(res?.list)
-        ? res.list.map((item: any) => ({
-            likeId: `${item?.likeId || ''}`,
-            postId: `${item?.post?.id || ''}`,
-            text: normalizeText(item?.post?.text),
-            modelName: `${item?.post?.modelName || '未知模型'}`,
-            author: `${item?.post?.author?.nickname || '匿名用户'}`,
-            skillTitle: `${item?.post?.skill?.title || ''}`,
-            likedAt: formatDate(item?.likedAt),
-            likeCount: formatCount(item?.post?.likeCount),
-            commentCount: formatCount(item?.post?.commentCount)
+        ? res.list.map((item: ApiLikeItem) => ({
+            likeId: `${item.likeId}`,
+            postId: `${item.post.id}`,
+            text: normalizeText(item.post.text),
+            modelName: `${item.post.modelName || '未知模型'}`,
+            author: `${item.post.author.nickname || '匿名用户'}`,
+            skillTitle: `${item.post.skill?.title || ''}`,
+            likedAt: formatDate(item.likedAt),
+            likeCount: formatCount(item.post.likeCount),
+            commentCount: formatCount(item.post.commentCount)
           }))
         : []
 
@@ -402,13 +404,13 @@ const loadTabData = async (key: TabKey, reset = false) => {
 
     const res = await getMyCopies({ page: targetPage, pageSize: PAGE_SIZE })
     const list = Array.isArray(res?.list)
-      ? res.list.map((item: any) => ({
-          id: `${item?.id || ''}`,
-          createdAt: formatDate(item?.createdAt),
-          sourceChannel: `${item?.sourceChannel || '未知来源'}`,
-          skillId: `${item?.skill?.id || ''}`,
-          title: `${item?.skill?.title || 'Skill 已删除'}`,
-          scene: `${item?.skill?.scene || '其他'}`
+      ? res.list.map((item: ApiCopyItem) => ({
+          id: `${item.id}`,
+          createdAt: formatDate(item.createdAt),
+          sourceChannel: `${item.sourceChannel || '未知来源'}`,
+          skillId: `${item.skill?.id || ''}`,
+          title: `${item.skill?.title || 'Skill 已删除'}`,
+          scene: `${item.skill?.scene || '其他'}`
         }))
       : []
 
@@ -488,7 +490,7 @@ watch(isLoggedIn, (val) => {
 <style lang="scss" scoped>
 .page {
   height: 100%;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
 }
 
 .guest-wrap {
@@ -496,9 +498,9 @@ watch(isLoggedIn, (val) => {
 }
 
 .guest-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 24rpx;
-  border: 1rpx dashed #DDD6FE;
+  border: 1rpx dashed var(--primary-border);
   padding: 40rpx 28rpx;
   display: flex;
   flex-direction: column;
@@ -506,26 +508,26 @@ watch(isLoggedIn, (val) => {
   gap: 12rpx;
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 }
 
 .guest-title {
   font-size: 30rpx;
-  color: #1A1A2E;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .guest-sub {
   font-size: 24rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .guest-btn {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #5B5BD6;
-  background: rgba(91, 91, 214, 0.1);
+  color: var(--primary-color);
+  background: var(--primary-light-10);
   padding: 10rpx 24rpx;
   border-radius: 999rpx;
   font-weight: 600;
@@ -533,7 +535,7 @@ watch(isLoggedIn, (val) => {
 
 .tabs-wrap {
   padding: 18rpx 24rpx 12rpx;
-  background: #FFFFFF;
+  background: var(--card-bg);
 }
 
 .list-scroll {
@@ -546,7 +548,7 @@ watch(isLoggedIn, (val) => {
 
 .tab-tip-text {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .card-list {
@@ -557,12 +559,12 @@ watch(isLoggedIn, (val) => {
 }
 
 .record-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 20rpx;
   padding: 22rpx 20rpx;
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 }
 
@@ -575,27 +577,27 @@ watch(isLoggedIn, (val) => {
 
 .record-tag {
   font-size: 20rpx;
-  color: #5B5BD6;
-  background: rgba(91, 91, 214, 0.1);
+  color: var(--primary-color);
+  background: var(--primary-light-10);
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
   font-weight: 600;
 }
 
 .like-tag {
-  color: #2F8A57;
+  color: var(--green-color);
   background: rgba(47, 138, 87, 0.12);
 }
 
 .record-time {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .record-title {
   display: block;
   font-size: 28rpx;
-  color: #1A1A2E;
+  color: var(--text-primary);
   font-weight: 700;
   line-height: 1.45;
 }
@@ -604,7 +606,7 @@ watch(isLoggedIn, (val) => {
   display: block;
   margin-top: 10rpx;
   font-size: 24rpx;
-  color: #4B5563;
+  color: var(--text-gray);
   line-height: 1.6;
 }
 
@@ -622,34 +624,34 @@ watch(isLoggedIn, (val) => {
   gap: 4rpx;
   padding: 10rpx 0;
   border-radius: 10rpx;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
 }
 
 .metric-val {
   font-size: 24rpx;
-  color: #1A1A2E;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .metric-val.orange {
-  color: #E45C1A;
+  color: var(--orange-color);
 }
 
 .metric-val.green {
-  color: #2F8A57;
+  color: var(--green-color);
 }
 
 .metric-val.blue {
-  color: #5B5BD6;
+  color: var(--primary-color);
 }
 
 .metric-lab {
   font-size: 18rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .line-card {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border-radius: 16rpx;
   padding: 20rpx;
   display: flex;
@@ -657,7 +659,7 @@ watch(isLoggedIn, (val) => {
   gap: 12rpx;
 
   &:active {
-    background: #F8F8FF;
+    background: var(--primary-bg);
   }
 }
 
@@ -672,17 +674,17 @@ watch(isLoggedIn, (val) => {
 .line-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #1A1A2E;
+  color: var(--text-primary);
 }
 
 .line-sub {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .line-meta {
   font-size: 22rpx;
-  color: #6B7280;
+  color: var(--text-gray);
 }
 
 .line-bottom {
@@ -697,7 +699,7 @@ watch(isLoggedIn, (val) => {
   margin: 24rpx;
   padding: 44rpx 24rpx;
   border-radius: 20rpx;
-  background: #FFFFFF;
+  background: var(--card-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -707,12 +709,12 @@ watch(isLoggedIn, (val) => {
 .empty-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #1A1A2E;
+  color: var(--text-primary);
 }
 
 .empty-sub {
   font-size: 22rpx;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 .load-more-wrap {

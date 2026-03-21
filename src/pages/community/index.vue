@@ -688,7 +688,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #FFFFFF;
+		background: var(--card-bg);
 	}
 
 	.main-scroll { flex: 1; overflow: hidden; }
@@ -704,7 +704,7 @@
 	/* 通用模块 */
 	.trend-module {
 		margin: 0 24rpx 28rpx;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-radius: 28rpx;
 		border: 1rpx solid rgba(0,0,0,0.07);
 		padding: 28rpx;
@@ -748,7 +748,7 @@
 				background: rgba(228, 92, 26,0.15);
 				border: 1rpx solid rgba(228, 92, 26, 0.18);
 
-				.burn-tab-text { color: #E45C1A; font-weight: 600; }
+				.burn-tab-text { color: var(--orange-color); font-weight: 600; }
 			}
 		}
 	}
@@ -782,7 +782,7 @@
 
 				&.rank-1 { background: #D6943A; .bri-rank-text { color: #fff; } }
 				&.rank-2 { background: rgba(0,0,0,0.10); .bri-rank-text { color: rgba(255,255,255,0.8); } }
-				&.rank-3 { background: #E45C1A; .bri-rank-text { color: #fff; } }
+				&.rank-3 { background: var(--orange-color); .bri-rank-text { color: #fff; } }
 			}
 
 			.bri-scene-icon {
@@ -807,11 +807,11 @@
 				align-items: flex-end;
 				gap: 2rpx;
 
-				.bri-token-val { font-size: 24rpx; font-weight: 700; color: #E45C1A; }
+				.bri-token-val { font-size: 24rpx; font-weight: 700; color: var(--orange-color); }
 				.bri-token-unit { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 			}
 
-			.bri-token-val.orange { font-size: 24rpx; font-weight: 700; color: #E45C1A; }
+			.bri-token-val.orange { font-size: 24rpx; font-weight: 700; color: var(--orange-color); }
 		}
 	}
 
@@ -852,7 +852,7 @@
 						padding: 3rpx 12rpx;
 						border-radius: 6rpx;
 
-						&.badge-green { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+						&.badge-green { color: var(--green-color); background: rgba(47, 138, 87,0.12); }
 						&.badge-blue { color: #5E738A; background: rgba(94, 115, 138,0.12); }
 					}
 				}
@@ -886,8 +886,8 @@
 					}
 
 					.vim-val { font-size: 24rpx; font-weight: 700; color: #1A1A1A; }
-					.vim-val.orange { color: #E45C1A; }
-					.vim-val.green { color: #2F8A57; }
+					.vim-val.orange { color: var(--orange-color); }
+					.vim-val.green { color: var(--green-color); }
 					.vim-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
 				}
 			}
@@ -895,7 +895,7 @@
 			.vi-copy-btn {
 				width: 100%;
 				height: 72rpx;
-				background: #E45C1A;
+				background: var(--orange-color);
 				border-radius: 16rpx;
 				display: flex;
 				align-items: center;
@@ -982,7 +982,7 @@
 
 				.mc-total-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 				.mc-total-val { font-size: 26rpx; font-weight: 700; }
-				.orange { color: #E45C1A; }
+				.orange { color: var(--orange-color); }
 			}
 		}
 	}
@@ -1029,7 +1029,7 @@
 
 					.st-bar {
 						height: 100%;
-						background: #E45C1A;
+						background: var(--orange-color);
 						border-radius: 4rpx;
 					}
 				}
@@ -1042,7 +1042,7 @@
 				gap: 2rpx;
 				flex-shrink: 0;
 
-				.st-growth-val { font-size: 24rpx; font-weight: 700; color: #2F8A57; }
+				.st-growth-val { font-size: 24rpx; font-weight: 700; color: var(--green-color); }
 				.st-growth-label { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 			}
 		}
@@ -1065,7 +1065,7 @@
 
 			.mi-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			.mi-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
-			.mi-val.orange { color: #E45C1A; }
+			.mi-val.orange { color: var(--orange-color); }
 			.mi-sub { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 		}
 	}
@@ -1107,8 +1107,8 @@
 		gap: 12rpx;
 		padding: 8rpx 24rpx 16rpx;
 
-		.fsl-title { font-size: 30rpx; font-weight: 800; color: #1A1A2E; }
-		.fsl-sub { font-size: 22rpx; color: #9CA3AF; }
+		.fsl-title { font-size: 30rpx; font-weight: 800; color: var(--text-primary); }
+		.fsl-sub { font-size: 22rpx; color: var(--text-muted); }
 	}
 
 	/* 社区动态 feed */
@@ -1122,7 +1122,7 @@
 
 	/* 消耗记录 card */
 	.post-card {
-		background: #fff;
+		background: var(--card-bg);
 		border-radius: 28rpx;
 		border: 1rpx solid rgba(0,0,0,0.06);
 		padding: 28rpx;
@@ -1149,7 +1149,7 @@
 			.pc-info {
 				flex: 1;
 
-				.pc-name { display: block; font-size: 30rpx; font-weight: 700; color: #1A1A2E; margin-bottom: 8rpx; }
+				.pc-name { display: block; font-size: 30rpx; font-weight: 700; color: var(--text-primary); margin-bottom: 8rpx; }
 
 				.pc-meta-row {
 					display: flex;
@@ -1169,14 +1169,14 @@
 							width: 12rpx;
 							height: 12rpx;
 							border-radius: 50%;
-							background: #2F8A57;
+							background: var(--green-color);
 							flex-shrink: 0;
 						}
 
-						.pc-model-text { font-size: 20rpx; color: #2F8A57; font-weight: 500; }
+						.pc-model-text { font-size: 20rpx; color: var(--green-color); font-weight: 500; }
 					}
 
-					.pc-time { font-size: 20rpx; color: #9CA3AF; }
+					.pc-time { font-size: 20rpx; color: var(--text-muted); }
 				}
 			}
 
@@ -1185,7 +1185,7 @@
 				gap: 5rpx;
 				padding: 8rpx;
 
-				.pc-more-dot { font-size: 20rpx; color: #9CA3AF; line-height: 1; }
+				.pc-more-dot { font-size: 20rpx; color: var(--text-muted); line-height: 1; }
 			}
 		}
 
@@ -1205,13 +1205,13 @@
 				padding: 20rpx 16rpx;
 				gap: 6rpx;
 
-				.pcb-label { font-size: 20rpx; color: #9CA3AF; }
+				.pcb-label { font-size: 20rpx; color: var(--text-muted); }
 			}
 
 			.pcb-left .pcb-cost-val {
 				font-size: 40rpx;
 				font-weight: 900;
-				color: #E45C1A;
+				color: var(--orange-color);
 				letter-spacing: -1rpx;
 				font-variant-numeric: tabular-nums;
 			}
@@ -1219,7 +1219,7 @@
 			.pcb-right .pcb-token-val {
 				font-size: 36rpx;
 				font-weight: 900;
-				color: #FF7A45;
+				color: var(--accent-color);
 				letter-spacing: -1rpx;
 				font-variant-numeric: tabular-nums;
 			}
@@ -1257,13 +1257,13 @@
 				padding: 12rpx 0;
 
 				.pr-emoji { font-size: 24rpx; }
-				.pr-text { font-size: 20rpx; color: #6B7280; font-weight: 500; }
+				.pr-text { font-size: 20rpx; color: var(--text-gray); font-weight: 500; }
 
 				&.selected {
 					background: rgba(255,122,69,0.12);
 					border-color: rgba(255,122,69,0.25);
 
-					.pr-text { color: #FF7A45; }
+					.pr-text { color: var(--accent-color); }
 				}
 			}
 		}
@@ -1281,7 +1281,7 @@
 				padding-right: 20rpx;
 
 				.pa-heart { font-size: 28rpx; }
-				.pa-val { font-size: 24rpx; color: #9CA3AF; }
+				.pa-val { font-size: 24rpx; color: var(--text-muted); }
 
 				&.meoo {
 					flex: 1;
@@ -1293,7 +1293,7 @@
 					gap: 6rpx;
 
 					.pa-meoo-emoji { font-size: 24rpx; }
-					.pa-meoo-text { font-size: 22rpx; color: #6B7280; font-weight: 500; }
+					.pa-meoo-text { font-size: 22rpx; color: var(--text-gray); font-weight: 500; }
 					.pa-val { font-size: 22rpx; }
 				}
 			}

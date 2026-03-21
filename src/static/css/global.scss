@@ -18,6 +18,31 @@ page {
 	--text-secondary: rgba(26, 26, 26, 0.68);
 	--text-tertiary: rgba(26, 26, 26, 0.45);
 
+	/* 主品牌色：紫蓝 */
+	--primary-color: #5B5BD6;
+	--primary-light: rgba(91, 91, 214, 0.08);
+	--primary-light-10: rgba(91, 91, 214, 0.1);
+	--primary-light-12: rgba(91, 91, 214, 0.12);
+	--primary-border: #DDD6FE;
+	--primary-bg: #F0F0FD;
+	--primary-shadow: rgba(91, 91, 214, 0.28);
+
+	/* 强调色：暖橙（角标/等级/徽章） */
+	--accent-color: #FF7A45;
+	--accent-light: rgba(255, 122, 69, 0.1);
+	--accent-border: rgba(255, 122, 69, 0.28);
+	--accent-bg: #FFF5F0;
+
+	/* 文字色 */
+	--text-primary: #1A1A2E;
+	--text-gray: #6B7280;
+	--text-muted: #9CA3AF;
+	--text-placeholder: #C8CBD4;
+
+	/* 功能色 */
+	--teal-color: #0B8B8C;
+	--teal-light: rgba(11, 139, 140, 0.12);
+
 	/* 品牌语义色 */
 	--orange-color: #E45C1A;
 	--orange-gradient: linear-gradient(135deg, #EF6C2D 0%, #D94B0E 100%);

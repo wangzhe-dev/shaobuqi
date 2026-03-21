@@ -312,7 +312,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #FFFFFF;
+		background: var(--card-bg);
 	}
 
 	/* 顶部 Hero */
@@ -374,7 +374,7 @@
 			}
 
 			.follow-btn {
-				background: #E45C1A;
+				background: var(--orange-color);
 				border-radius: 100rpx;
 				padding: 18rpx 40rpx;
 				box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.18);
@@ -402,7 +402,7 @@
 		/* 用户信息 */
 		.user-info {
 		padding: 4rpx 28rpx 20rpx;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-bottom: 1rpx solid rgba(0,0,0,0.06);
 
 		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 10rpx; }
@@ -429,7 +429,7 @@
 	.stats-row {
 		display: flex;
 		align-items: center;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-bottom: 1rpx solid rgba(0,0,0,0.06);
 		padding: 20rpx 0;
 		margin-bottom: 0;
@@ -442,8 +442,8 @@
 			gap: 4rpx;
 
 			.stat-n { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
-			.stat-n.orange { color: #E45C1A; }
-			.stat-n.green { color: #2F8A57; }
+			.stat-n.orange { color: var(--orange-color); }
+			.stat-n.green { color: var(--green-color); }
 			.stat-l { font-size: 20rpx; color: rgba(0,0,0,0.40); }
 		}
 
@@ -457,7 +457,7 @@
 	/* 内容 Tab */
 	.content-tabs {
 		display: flex;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
@@ -471,7 +471,7 @@
 			.ct-tab-text { font-size: 26rpx; color: rgba(0,0,0,0.40); font-weight: 500; }
 
 			&.active {
-				.ct-tab-text { color: #E45C1A; font-weight: 700; }
+				.ct-tab-text { color: var(--orange-color); font-weight: 700; }
 
 				&::after {
 					content: '';
@@ -481,7 +481,7 @@
 					transform: translateX(-50%);
 					width: 40rpx;
 					height: 4rpx;
-					background: #E45C1A;
+					background: var(--orange-color);
 					border-radius: 999rpx;
 				}
 			}
@@ -492,7 +492,7 @@
 	.content-scroll {
 		flex: 1;
 		overflow: hidden;
-		background: #FFFFFF;
+		background: var(--card-bg);
 
 		.scroll-bottom { height: 40rpx; }
 	}
@@ -505,7 +505,7 @@
 		gap: 16rpx;
 
 		.skill-card {
-			background: #FFFFFF;
+			background: var(--card-bg);
 			border-radius: 24rpx;
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
@@ -549,16 +549,16 @@
 				}
 
 				.sc-token { font-size: 22rpx; font-weight: 600; }
-				.orange { color: #E45C1A; }
+				.orange { color: var(--orange-color); }
 				.sc-rate { font-size: 22rpx; font-weight: 600; }
-				.green { color: #2F8A57; }
+				.green { color: var(--green-color); }
 				.sc-copies { font-size: 22rpx; color: rgba(0,0,0,0.40); }
 			}
 
 			.sc-copy-btn {
 				width: 100%;
 				height: 72rpx;
-				background: #E45C1A;
+				background: var(--orange-color);
 				border-radius: 16rpx;
 				display: flex;
 				align-items: center;
@@ -578,7 +578,7 @@
 		gap: 16rpx;
 
 		.fb-card {
-			background: #FFFFFF;
+			background: var(--card-bg);
 			border-radius: 24rpx;
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
@@ -596,7 +596,7 @@
 					padding: 4rpx 14rpx;
 					border-radius: 100rpx;
 
-					&.status-success { color: #2F8A57; background: rgba(47, 138, 87,0.12); }
+					&.status-success { color: var(--green-color); background: rgba(47, 138, 87,0.12); }
 					&.status-normal { color: #5E738A; background: rgba(94, 115, 138,0.12); }
 
 					.fb-status-text { font-weight: 600; }
@@ -616,7 +616,7 @@
 					gap: 4rpx;
 				}
 				.fb-token { font-size: 22rpx; font-weight: 600; }
-				.orange { color: #E45C1A; }
+				.orange { color: var(--orange-color); }
 			}
 
 			.fb-comment { font-size: 24rpx; color: rgba(0,0,0,0.60); line-height: 1.6; }

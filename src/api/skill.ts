@@ -189,12 +189,50 @@ export const updateSkill = (id: string | number, data: Partial<CreateSkillPayloa
 	return http.put<{ id: number }>(`/skills/${id}`, data)
 }
 
+export interface SkillFavoriteActionResponse {
+	skillId: number
+	isFavorited: boolean
+	favoriteCount: number
+}
+
+export interface SkillCopyResponse {
+	id: number
+}
+
+export interface SkillFeedbackItem {
+	id: number
+	status: 'success' | 'normal' | 'fail'
+	comment: string
+	modelName: string | null
+	inputTokens: number | null
+	outputTokens: number | null
+	totalTokens: number | null
+	costAmount: number | null
+	createdAt: string
+	user: {
+		id: number
+		nickname: string
+		avatarUrl: string | null
+		displayColor: string | null
+	}
+}
+
+export interface SkillFeedbackListResponse {
+	list: SkillFeedbackItem[]
+	pagination: {
+		page: number
+		pageSize: number
+		total: number
+		totalPages: number
+	}
+}
+
 export const favoriteSkill = (id: string | number) => {
-	return http.post<any>(`/skills/${id}/favorite`)
+	return http.post<SkillFavoriteActionResponse>(`/skills/${id}/favorite`)
 }
 
 export const unfavoriteSkill = (id: string | number) => {
-	return http.delete<any>(`/skills/${id}/favorite`)
+	return http.delete<SkillFavoriteActionResponse>(`/skills/${id}/favorite`)
 }
 
 export const copySkill = (
@@ -216,7 +254,7 @@ export const copySkill = (
 		}
 	}
 ) => {
-	return http.post<any>(`/skills/${id}/copies`, data || {})
+	return http.post<SkillCopyResponse>(`/skills/${id}/copies`, data || {})
 }
 
 export const createSkillFeedback = (
@@ -233,11 +271,11 @@ export const createSkillFeedback = (
 		isPublic?: boolean
 	}
 ) => {
-	return http.post<any>(`/skills/${id}/feedbacks`, data)
+	return http.post<SkillFeedbackItem>(`/skills/${id}/feedbacks`, data)
 }
 
 export const getSkillFeedbacks = (id: string | number, params?: { page?: number; pageSize?: number }) => {
-	return http.get<any>(`/skills/${id}/feedbacks`, params)
+	return http.get<SkillFeedbackListResponse>(`/skills/${id}/feedbacks`, params)
 }
 
 export const getSkillCategories = () => {
@@ -272,6 +310,13 @@ export const getSkillTags = (params?: { keyword?: string; pageSize?: number }) =
 	return http.get<Array<{ id: number; name: string; useCount: number }>>('/skills/meta/tags', params)
 }
 
+export interface TrendsResponse {
+	dates: string[]
+	totalTokens: number[]
+	totalCost: number[]
+	postCount: number[]
+}
+
 export const getTrends = (params?: { days?: number }) => {
-	return http.get<any>('/stats/trends', params)
+	return http.get<TrendsResponse>('/stats/trends', params)
 }

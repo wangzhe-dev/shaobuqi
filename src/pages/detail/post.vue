@@ -651,7 +651,7 @@ const toSkill = (id: number) => {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	background: #FFFFFF;
+	background: var(--card-bg);
 	font-family: 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 	overflow: hidden;
 	position: relative;
@@ -677,7 +677,7 @@ const toSkill = (id: number) => {
 
 .name-row { display: flex; align-items: center; gap: 10rpx; }
 
-.author-name { font-size: 30rpx; font-weight: 700; color: #1A1A2E; }
+.author-name { font-size: 30rpx; font-weight: 700; color: var(--text-primary); }
 
 .model-tag {
 	display: flex; align-items: center; gap: 6rpx;
@@ -687,12 +687,12 @@ const toSkill = (id: number) => {
 	.model-n { font-size: 18rpx; font-weight: 600; }
 }
 
-.post-time { font-size: 22rpx; color: #9CA3AF; }
+.post-time { font-size: 22rpx; color: var(--text-muted); }
 
 .follow-btn {
 	border: 2rpx solid rgba(228,92,26,0.45);
 	border-radius: 100rpx; padding: 12rpx 28rpx; flex-shrink: 0;
-	.follow-t { font-size: 24rpx; color: #E45C1A; font-weight: 600; }
+	.follow-t { font-size: 24rpx; color: var(--orange-color); font-weight: 600; }
 	&.on { border-color: rgba(0,0,0,0.09); .follow-t { color: rgba(0,0,0,0.35); } }
 }
 
@@ -707,14 +707,14 @@ const toSkill = (id: number) => {
 	margin: 0 28rpx 20rpx;
 	padding: 14rpx 18rpx;
 	border-radius: 14rpx;
-	background: rgba(91, 91, 214, 0.06);
+	background: rgba(91, 91, 214, 0.06); /* ~primary-light-06 */
 	display: flex;
 	align-items: center;
 	gap: 10rpx;
 
 	.ls-label {
 		font-size: 20rpx;
-		color: #5B5BD6;
+		color: var(--primary-color);
 		font-weight: 700;
 		flex-shrink: 0;
 	}
@@ -772,7 +772,7 @@ const toSkill = (id: number) => {
 
 .consume-time {
 	font-size: 20rpx;
-	color: #9CA3AF;
+	color: var(--text-muted);
 }
 
 .consume-model-row {
@@ -834,7 +834,7 @@ const toSkill = (id: number) => {
 	line-height: 1.2;
 	font-variant-numeric: tabular-nums;
 
-	&.cost { color: #E45C1A; }
+	&.cost { color: var(--orange-color); }
 	&.token { color: #D6943A; }
 }
 
@@ -872,7 +872,7 @@ const toSkill = (id: number) => {
 
 .consume-reaction-text {
 	font-size: 22rpx;
-	color: #9CA3AF;
+	color: var(--text-muted);
 	font-weight: 700;
 }
 
@@ -903,7 +903,7 @@ const toSkill = (id: number) => {
 	font-size: 22rpx;
 	line-height: 1.1;
 	font-weight: 700;
-	color: #1A1A2E;
+	color: var(--text-primary);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -914,7 +914,7 @@ const toSkill = (id: number) => {
 .comments { padding: 24rpx 28rpx; }
 
 .cmt-title {
-	display: block; font-size: 28rpx; font-weight: 700; color: #1A1A2E;
+	display: block; font-size: 28rpx; font-weight: 700; color: var(--text-primary);
 	margin-bottom: 24rpx; padding-bottom: 16rpx;
 	border-bottom: 1rpx solid rgba(0,0,0,0.05);
 }
@@ -931,8 +931,8 @@ const toSkill = (id: number) => {
 
 .cmt-hd {
 	display: flex; align-items: center; gap: 10rpx; flex-wrap: wrap; margin-bottom: 8rpx;
-	.cmt-name { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
-	.cmt-time { font-size: 20rpx; color: #9CA3AF; margin-left: auto; }
+	.cmt-name { font-size: 26rpx; font-weight: 700; color: var(--text-primary); }
+	.cmt-time { font-size: 20rpx; color: var(--text-muted); margin-left: auto; }
 }
 
 .cmt-txt {
@@ -950,12 +950,12 @@ const toSkill = (id: number) => {
 
 .load-more {
 	text-align: center; padding: 12rpx 0 4rpx;
-	.load-more-t { font-size: 24rpx; color: #E45C1A; }
+	.load-more-t { font-size: 24rpx; color: var(--orange-color); }
 }
 
 .load-state {
 	text-align: center; padding: 12rpx 0;
-	.load-state-t { font-size: 24rpx; color: #9CA3AF; }
+	.load-state-t { font-size: 24rpx; color: var(--text-muted); }
 }
 
 .load-end {
@@ -1014,7 +1014,7 @@ const toSkill = (id: number) => {
 .btm-bar {
 	position: fixed; left: 0; right: 0; bottom: 0;
 	z-index: 100;
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border-top: 1rpx solid rgba(0,0,0,0.07);
 	padding: 16rpx 20rpx calc(16rpx + env(safe-area-inset-bottom));
 	display: flex; align-items: center; gap: 12rpx;
@@ -1038,8 +1038,8 @@ const toSkill = (id: number) => {
 	border: 1rpx solid rgba(0,0,0,0.08); padding: 10rpx 18rpx;
 	.meoo-t { font-size: 22rpx; color: rgba(0,0,0,0.50); font-weight: 600; }
 	&.on {
-		background: rgba(255,122,69,0.08); border-color: rgba(255,122,69,0.25);
-		.meoo-t { color: #FF7A45; }
+		background: var(--accent-light); border-color: rgba(255,122,69,0.25);
+		.meoo-t { color: var(--accent-color); }
 	}
 }
 
@@ -1053,7 +1053,7 @@ const toSkill = (id: number) => {
 }
 
 .cmt-panel {
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border-radius: 28rpx 28rpx 0 0;
 	padding: 24rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
 }
@@ -1062,13 +1062,13 @@ const toSkill = (id: number) => {
 	display: flex; align-items: center; justify-content: space-between;
 	background: rgba(91,91,214,0.06); border-radius: 12rpx;
 	padding: 12rpx 16rpx; margin-bottom: 16rpx;
-	.reply-hint-t { font-size: 24rpx; color: #5B5BD6; font-weight: 600; }
+	.reply-hint-t { font-size: 24rpx; color: var(--primary-color); font-weight: 600; }
 	.reply-hint-x { font-size: 32rpx; color: rgba(0,0,0,0.30); line-height: 1; padding: 0 4rpx; }
 }
 
 .cmt-ta {
 	width: 100%; min-height: 120rpx; max-height: 240rpx;
-	font-size: 28rpx; color: #1A1A2E; line-height: 1.6;
+	font-size: 28rpx; color: var(--text-primary); line-height: 1.6;
 	background: transparent;
 	box-sizing: border-box;
 }
@@ -1082,7 +1082,7 @@ const toSkill = (id: number) => {
 	border-top: 1rpx solid rgba(0,0,0,0.06);
 }
 
-.cmt-char { font-size: 22rpx; color: #9CA3AF; }
+.cmt-char { font-size: 22rpx; color: var(--text-muted); }
 
 .cmt-send {
 	height: 64rpx; padding: 0 32rpx; border-radius: 100rpx;
@@ -1090,8 +1090,8 @@ const toSkill = (id: number) => {
 	display: flex; align-items: center; justify-content: center;
 	.cmt-send-t { font-size: 26rpx; font-weight: 700; color: rgba(91,91,214,0.40); }
 	&.on {
-		background: #5B5BD6;
-		.cmt-send-t { color: #FFFFFF; }
+		background: var(--primary-color);
+		.cmt-send-t { color: var(--card-bg); }
 	}
 }
 </style>

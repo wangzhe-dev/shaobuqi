@@ -523,7 +523,7 @@ onBeforeUnmount(() => {
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: #FFFFFF;
+		background: var(--card-bg);
 	}
 
 	/* 搜索栏 */
@@ -532,7 +532,7 @@ onBeforeUnmount(() => {
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 24rpx;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-bottom: 1rpx solid rgba(0,0,0,0.05);
 		flex-shrink: 0;
 
@@ -580,7 +580,7 @@ onBeforeUnmount(() => {
 
 		.cancel-btn {
 			font-size: 28rpx;
-			color: #E45C1A;
+			color: var(--orange-color);
 			flex-shrink: 0;
 		}
 	}
@@ -667,7 +667,7 @@ onBeforeUnmount(() => {
 				display: flex;
 				align-items: center;
 				gap: 8rpx;
-				background: #FFFFFF;
+				background: var(--card-bg);
 				border-radius: 40rpx;
 				padding: 12rpx 20rpx;
 				border: 1rpx solid rgba(0,0,0,0.07);
@@ -693,13 +693,13 @@ onBeforeUnmount(() => {
 			gap: 12rpx;
 
 			.label-tag {
-				background: rgba(228, 92, 26, 0.1);
+				background: var(--accent-light);
 				border-radius: 40rpx;
 				padding: 12rpx 24rpx;
 
 				.label-tag-text {
 					font-size: 24rpx;
-					color: #E45C1A;
+					color: var(--orange-color);
 					font-weight: 500;
 				}
 			}
@@ -715,7 +715,7 @@ onBeforeUnmount(() => {
 
 		.result-tabs {
 			display: flex;
-			background: #FFFFFF;
+			background: var(--card-bg);
 			padding: 0 20rpx;
 			border-bottom: 1rpx solid rgba(0,0,0,0.05);
 			flex-shrink: 0;
@@ -748,7 +748,7 @@ onBeforeUnmount(() => {
 					width: 32rpx;
 					height: 4rpx;
 					border-radius: 2rpx;
-					background: #E45C1A;
+					background: var(--orange-color);
 				}
 			}
 		}
@@ -783,7 +783,7 @@ onBeforeUnmount(() => {
 
 		.result-empty-text {
 			font-size: 24rpx;
-			color: #9CA3AF;
+			color: var(--text-muted);
 		}
 	}
 
@@ -800,7 +800,7 @@ onBeforeUnmount(() => {
 
 	/* Skill 结果卡片 */
 	.result-skill-card {
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-radius: 16rpx;
 		padding: 20rpx;
 		margin-bottom: 12rpx;
@@ -812,7 +812,7 @@ onBeforeUnmount(() => {
 		.rsk-icon {
 			width: 80rpx;
 			height: 80rpx;
-			background: rgba(228, 92, 26,0.1);
+			background: var(--accent-light);
 			border-radius: 18rpx;
 			overflow: hidden;
 			display: flex;
@@ -877,8 +877,8 @@ onBeforeUnmount(() => {
 
 				.rsk-tag {
 					font-size: 20rpx;
-					color: #E45C1A;
-					background: rgba(228, 92, 26, 0.1);
+					color: var(--orange-color);
+					background: var(--accent-light);
 					padding: 4rpx 12rpx;
 					border-radius: 10rpx;
 				}
@@ -886,7 +886,7 @@ onBeforeUnmount(() => {
 		}
 
 		.rsk-use-btn {
-			background: #E45C1A;
+			background: var(--orange-color);
 			padding: 12rpx 24rpx;
 			border-radius: 30rpx;
 			flex-shrink: 0;
