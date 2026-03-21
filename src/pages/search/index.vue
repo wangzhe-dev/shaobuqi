@@ -5,13 +5,13 @@
 		<view class="search-bar">
 			<view class="search-input-wrap">
 				<uni-icons class="search-icon" type="search" size="16" color="rgba(0,0,0,0.45)" />
-				<input
-					v-model="keyword"
-					class="search-input"
-					placeholder="搜索内容、Skill、用户..."
-					placeholder-class="search-ph"
-					confirm-type="search"
-					:focus="true"
+					<input
+						v-model="keyword"
+						class="search-input"
+						placeholder="搜索 Skill 标题、简介，或输入 #标签"
+						placeholder-class="search-ph"
+						confirm-type="search"
+						:focus="true"
 					@confirm="doSearch"
 					@input="onInput"
 				/>
@@ -25,25 +25,28 @@
 		<!-- 未搜索状态 -->
 		<view v-if="!hasSearched" class="pre-search">
 
-			<!-- 热门搜索 -->
-			<view class="section">
-				<view class="section-header">
-					<text class="section-title">热门搜索</text>
-					<uni-icons class="section-icon" type="fire-filled" size="16" color="#C84634" />
-				</view>
-				<view class="hot-tags">
-					<view
-						v-for="(term, i) in HOT_TERMS"
-						:key="term"
-						class="hot-tag"
-						:class="{ 'hot-top': i < 3 }"
-						@tap="searchTerm(term)"
-					>
+				<!-- 热门搜索 -->
+				<view class="section">
+					<view class="section-header">
+						<text class="section-title">热门搜索</text>
+						<uni-icons class="section-icon" type="fire-filled" size="16" color="#C84634" />
+					</view>
+					<view v-if="hotSearches.length" class="hot-tags">
+						<view
+							v-for="(term, i) in hotSearches"
+							:key="term"
+							class="hot-tag"
+							:class="{ 'hot-top': i < 3 }"
+							@tap="searchTerm(term)"
+						>
 						<text class="hot-rank" v-if="i < 3">{{ i + 1 }}</text>
-						<text class="hot-text">{{ term }}</text>
+							<text class="hot-text">{{ term }}</text>
+						</view>
+					</view>
+					<view v-else class="result-empty">
+						<text class="result-empty-text">暂无热门搜索</text>
 					</view>
 				</view>
-			</view>
 
 			<!-- 最近搜索 -->
 			<view v-if="recentSearches.length" class="section">
@@ -72,88 +75,83 @@
 					<text class="section-title">热门标签</text>
 				</view>
 				<view class="label-tags">
-					<view
-						v-for="tag in hotTags"
-						:key="tag"
-						class="label-tag"
-						@tap="searchTerm(tag)"
-					>
-						<text class="label-tag-text"># {{ tag }}</text>
-					</view>
+						<view
+							v-for="tag in hotTags"
+							:key="tag"
+							class="label-tag"
+							@tap="searchTerm(tag, true)"
+						>
+							<text class="label-tag-text"># {{ tag }}</text>
+						</view>
 				</view>
 			</view>
 
 		</view>
 
-		<!-- 搜索结果 -->
-		<view v-else class="search-results">
+			<!-- 搜索结果 -->
+			<view v-else class="search-results">
 
-			<!-- 结果 Tab -->
-			<view class="result-tabs">
-				<view
-					v-for="tab in RESULT_TABS"
-					:key="tab.key"
-					class="rtab"
-					:class="{ active: resultTab === tab.key }"
-					@tap="resultTab = tab.key"
-				>
-					<text class="rtab-text">{{ tab.label }}</text>
-					<view v-if="resultTab === tab.key" class="rtab-bar" />
-				</view>
-			</view>
-
-			<!-- 结果列表 -->
-			<scroll-view class="results-scroll" scroll-y :show-scrollbar="false">
-				<view class="results-inner">
-
-					<!-- 全部 / 社区 -->
-					<view v-if="resultTab === 'all' || resultTab === 'posts'">
-						<view v-for="post in searchPostResults" :key="post.id" class="result-post-card" @tap="toPost(post.id)">
-							<view class="result-post-main">
-								<view class="rp-info">
-									<text class="rp-title">{{ post.title }}</text>
-									<text class="rp-content line-2">{{ post.content }}</text>
-									<view class="rp-foot">
-										<view class="rp-av" :style="{ background: post.color }">
-											<text class="rp-av-t">{{ post.author[0] }}</text>
-										</view>
-										<text class="rp-author">{{ post.author }}</text>
-										<text class="rp-sep">·</text>
-										<view class="rp-likes">
-											<uni-icons type="heart" size="12" color="rgba(0,0,0,0.40)" />
-											<text class="rp-likes-text">{{ post.likes }}</text>
-										</view>
-									</view>
-								</view>
-								<image v-if="post.cover" :src="post.cover" class="rp-cover" mode="aspectFill" lazy-load />
-							</view>
-						</view>
+				<!-- 排序 Tab -->
+				<scroll-view class="result-tabs" scroll-x :show-scrollbar="false">
+					<view class="rtab-row">
+					<view
+						v-for="tab in SORT_TABS"
+						:key="tab.key"
+						class="rtab"
+						:class="{ active: activeSort === tab.key }"
+						@tap="changeSort(tab.key)"
+					>
+						<text class="rtab-text">{{ tab.label }}</text>
+						<view v-if="activeSort === tab.key" class="rtab-bar" />
 					</view>
+					</view>
+				</scroll-view>
 
-					<!-- 全部 / Skill -->
-					<view v-if="resultTab === 'all' || resultTab === 'skills'">
-						<view v-if="resultTab === 'all'" class="result-section-title">
-							<text>Skill</text>
+				<!-- 结果列表 -->
+				<scroll-view
+					class="results-scroll"
+					scroll-y
+					:show-scrollbar="false"
+					lower-threshold="120"
+					@scrolltolower="onLoadMore"
+				>
+					<view class="results-inner">
+						<view class="result-hint-row">
+							<text class="result-hint">共 {{ totalSkills }} 条与“{{ searchedKeyword }}”相关的 Skill</text>
 						</view>
 
-						<view v-if="loadingSkills" class="result-empty">
+						<view v-if="loadingSkills && !searchSkillResults.length" class="result-empty">
 							<text class="result-empty-text">搜索中...</text>
 						</view>
 
-						<template v-else>
-							<view v-if="searchSkillResults.length === 0" class="result-empty">
-								<text class="result-empty-text">没有找到相关 Skill</text>
-							</view>
+						<view v-else-if="searchSkillResults.length === 0" class="result-empty">
+							<text class="result-empty-text">没有找到相关 Skill，换个关键词试试</text>
+						</view>
 
-							<view v-for="skill in searchSkillResults" :key="skill.id" class="result-skill-card" @tap="toSkill(skill.id)">
-								<view class="rsk-icon">
-									<uni-icons class="rsk-emoji" :type="skill.icon" :color="skill.color" size="24" />
-								</view>
+						<template v-else>
+								<view v-for="skill in searchSkillResults" :key="skill.id" class="result-skill-card" @tap="toSkill(skill.id)">
+									<view class="rsk-icon">
+										<image
+											v-if="skill.coverImage"
+											:src="skill.coverImage"
+											class="rsk-cover"
+											mode="aspectFill"
+											lazy-load
+										/>
+										<uni-icons v-else class="rsk-emoji" :type="skill.icon" :color="skill.color" size="24" />
+									</view>
 								<view class="rsk-info">
 									<text class="rsk-title">{{ skill.title }}</text>
-									<text class="rsk-desc line-1">{{ skill.desc }}</text>
+									<text class="rsk-desc line-2">{{ skill.desc }}</text>
+									<view class="rsk-meta">
+										<text class="rsk-meta-t">{{ skill.scene }}</text>
+										<text class="rsk-meta-dot">·</text>
+										<text class="rsk-meta-t">{{ skill.copyCount }} 复制</text>
+										<text class="rsk-meta-dot">·</text>
+										<text class="rsk-meta-t">{{ skill.author }}</text>
+									</view>
 									<view class="rsk-tags">
-										<text v-for="tag in skill.tags" :key="tag" class="rsk-tag">{{ tag }}</text>
+										<text v-for="tag in skill.tags" :key="tag" class="rsk-tag">#{{ tag }}</text>
 									</view>
 								</view>
 								<view class="rsk-use-btn" @tap.stop="useSkill(skill)">
@@ -161,9 +159,14 @@
 								</view>
 							</view>
 						</template>
-					</view>
 
-					<view class="results-bottom" />
+						<view v-if="searchSkillResults.length" class="result-load-footer">
+							<text class="result-load-text">
+								{{ loadingMoreSkills ? '加载更多中...' : (noMore ? '没有更多了' : '上滑加载更多') }}
+							</text>
+						</view>
+
+						<view class="results-bottom" />
 				</view>
 			</scroll-view>
 		</view>
@@ -172,59 +175,61 @@
 </template>
 
 <script setup lang="ts">
-import { copySkill, getSkillList, getSkillTags } from '@/api/skill'
+import { copySkill, getSkillCategories, getSkillList, getSkillTags, type SkillListItem, type SkillListQuery } from '@/api/skill'
 import { useUserStore } from '@/stores'
+import { normalizeImageUrl } from '@/utils/image-url'
 
-const HOT_TERMS = ['AI写作', '周报生成', '文案技巧', '效率工具', '副业变现', 'ChatGPT', '面试技巧', '设计灵感', 'Notion模板', '职场沟通']
 const DEFAULT_HOT_TAGS = ['AI写作', '效率提升', '副业', '设计', '职场', '编程', '学习方法', '创作']
-const RESULT_TABS = [
-	{ key: 'all', label: '全部' },
-	{ key: 'posts', label: '社区' },
-	{ key: 'skills', label: 'Skill' }
+const DEFAULT_HOT_SEARCHES = ['#效率提升', '#学习', '周报', '翻译', '写作', '运营']
+const SORT_TABS: Array<{ key: NonNullable<SkillListQuery['sort']>; label: string }> = [
+	{ key: 'recommend', label: '推荐' },
+	{ key: 'newest', label: '最新' },
+	{ key: 'mostCopy', label: '最多复制' },
+	{ key: 'highRate', label: '高成功率' }
 ]
 
+const PAGE_SIZE = 20
+const INPUT_SEARCH_DEBOUNCE_MS = 320
 const SEARCH_HISTORY_KEY = 'skill_search_recent_v1'
 const userStore = useUserStore()
 
+type SearchSkillCard = {
+	id: string
+	icon: string
+	color: string
+	coverImage: string
+	title: string
+	desc: string
+	scene: string
+	copyCount: string
+	author: string
+	tags: string[]
+}
+
+type ParsedSearch = {
+	keyword?: string
+	tag?: string
+	display: string
+	input: string
+}
+
 const keyword = ref('')
 const hasSearched = ref(false)
-const resultTab = ref('all')
+const activeSort = ref<NonNullable<SkillListQuery['sort']>>('recommend')
 const recentSearches = ref<string[]>([])
 const hotTags = ref([...DEFAULT_HOT_TAGS])
+const hotSearches = ref([...DEFAULT_HOT_SEARCHES])
 const loadingSkills = ref(false)
+const loadingMoreSkills = ref(false)
+const noMore = ref(false)
+const page = ref(1)
+const totalSkills = ref(0)
 const searchedKeyword = ref('')
+const searchSkillResults = ref<SearchSkillCard[]>([])
+const currentSearch = ref<ParsedSearch | null>(null)
 
-const staticPostResults = ref([
-	{
-		id: 'sp1', author: '林晓珊', color: '#D6943A',
-		cover: 'https://picsum.photos/seed/sr1/200/200',
-		title: '用 AI 写出了让甲方满意的文案',
-		content: '昨天用 Skill 广场里的「甲方文案生成」试了一下，效果出乎意料地好...',
-		likes: 238
-	},
-	{
-		id: 'sp2', author: '高远', color: '#D6943A',
-		cover: 'https://picsum.photos/seed/sr2/200/200',
-		title: '用这个 Prompt 写出了10W+ 文章',
-		content: '最近在研究如何用 AI 辅助写作，这个 Prompt 框架真的让我的写作速度提升了3倍...',
-		likes: 1204
-	},
-	{
-		id: 'sp3', author: '周雯雯', color: '#8A5C43',
-		cover: null,
-		title: null,
-		content: '刚刚发现一个宝藏工具！可以一键把文章转成小红书格式，再也不用手动排版了...',
-		likes: 445
-	}
-])
-
-const fallbackSkillResults = [
-	{ id: 's1', icon: 'compose', color: '#C84634', title: '万能文案生成器', desc: '30秒输出3套方案，格式全覆盖', tags: ['文案', '营销'] },
-	{ id: 's2', icon: 'list', color: '#5E738A', title: '周报一键生成', desc: '帮你生成让领导满意的专业周报', tags: ['职场', '效率'] },
-	{ id: 's3', icon: 'videocam-filled', color: '#7B5B3C', title: '小红书爆款标题生成', desc: '批量生成高点击标题，告别标题焦虑', tags: ['写作', '小红书'] }
-]
-
-const searchSkillResults = ref<any[]>([])
+let inputSearchTimer: ReturnType<typeof setTimeout> | null = null
+let requestSeq = 0
 
 const modelColor = (name: string) => {
 	const val = name.toLowerCase()
@@ -235,25 +240,89 @@ const modelColor = (name: string) => {
 	return '#5B5BD6'
 }
 
-const mapApiSkill = (skill: any) => ({
+const normalizePlainText = (value: unknown) => `${value ?? ''}`
+	.replace(/<[^>]*>/g, ' ')
+	.replace(/\s+/g, ' ')
+	.trim()
+
+const formatCount = (value: number | null | undefined) => {
+	const n = Number(value ?? 0)
+	if (!Number.isFinite(n) || n <= 0) return '0'
+	if (n >= 10000) return `${(n / 10000).toFixed(1)}w`
+	return `${Math.round(n)}`
+}
+
+const mapApiSkill = (skill: SkillListItem): SearchSkillCard => {
+	const summary = normalizePlainText(skill.summary ?? skill.brief ?? '')
+	const promptPreview = normalizePlainText(skill.promptPreview ?? '')
+	return {
 	id: `${skill?.id || ''}`,
 	icon: 'compose',
 	color: modelColor(`${skill?.modelName || ''}`),
+	coverImage: skill?.coverImage ? normalizeImageUrl(`${skill.coverImage}`) : '',
 	title: `${skill?.title || '未命名 Skill'}`,
-	desc: `${skill?.summary || skill?.scene || ''}`,
-	tags: Array.isArray(skill?.tags) ? skill.tags.slice(0, 3) : []
-})
+	desc: summary || promptPreview || `${skill?.scene || '暂无简介'}`,
+	scene: `${skill?.scene || skill?.category?.name || '其他'}`,
+	copyCount: formatCount(skill?.copyCount),
+	author: `${skill?.creator?.nickname || '匿名用户'}`,
+	tags: Array.isArray(skill?.tags) ? skill.tags.filter(Boolean).slice(0, 3) : []
+}
+}
 
-const searchPostResults = computed(() => {
-	const kw = searchedKeyword.value.trim().toLowerCase()
-	if (!kw) return staticPostResults.value
-	return staticPostResults.value.filter((post) => {
-		const title = `${post.title || ''}`.toLowerCase()
-		const content = `${post.content || ''}`.toLowerCase()
-		const author = `${post.author || ''}`.toLowerCase()
-		return title.includes(kw) || content.includes(kw) || author.includes(kw)
-	})
-})
+const clearInputSearchTimer = () => {
+	if (!inputSearchTimer) return
+	clearTimeout(inputSearchTimer)
+	inputSearchTimer = null
+}
+
+const parseSearchValue = (value: string, forceTag = false): ParsedSearch | null => {
+	const raw = value.trim()
+	if (!raw) return null
+
+	if (forceTag || raw.startsWith('#')) {
+		const tag = raw.replace(/^#+/, '').trim()
+		if (!tag) return null
+		return {
+			tag,
+			display: `#${tag}`,
+			input: `#${tag}`
+		}
+	}
+
+	return {
+		keyword: raw,
+		display: raw,
+		input: raw
+	}
+}
+
+const buildQueryParams = (targetPage: number): SkillListQuery => {
+	const query = currentSearch.value
+	const params: SkillListQuery = {
+		page: targetPage,
+		pageSize: PAGE_SIZE,
+		sort: activeSort.value
+	}
+
+	if (query?.tag) params.tag = query.tag
+	else if (query?.keyword) params.keyword = query.keyword
+
+	return params
+}
+
+const resetSearchState = () => {
+	requestSeq += 1
+	clearInputSearchTimer()
+	hasSearched.value = false
+	searchedKeyword.value = ''
+	currentSearch.value = null
+	searchSkillResults.value = []
+	page.value = 1
+	totalSkills.value = 0
+	noMore.value = false
+	loadingSkills.value = false
+	loadingMoreSkills.value = false
+}
 
 const loadRecentSearches = () => {
 	try {
@@ -277,69 +346,129 @@ const updateRecentSearches = (value: string) => {
 	saveRecentSearches()
 }
 
-const loadHotTags = async () => {
-	try {
-		const data = await getSkillTags({ pageSize: 12 })
-		if (Array.isArray(data) && data.length) {
-			hotTags.value = data.map((item) => item.name).filter(Boolean).slice(0, 12)
-		}
-	} catch {
-		hotTags.value = [...DEFAULT_HOT_TAGS]
-	}
+const loadSearchSuggestions = async () => {
+	const [tagRes, categoryRes] = await Promise.allSettled([
+		getSkillTags({ pageSize: 12 }),
+		getSkillCategories()
+	])
+
+	const tags = tagRes.status === 'fulfilled' && Array.isArray(tagRes.value)
+		? tagRes.value.map((item) => `${item?.name || ''}`.trim()).filter(Boolean).slice(0, 12)
+		: []
+
+	hotTags.value = tags.length ? tags : [...DEFAULT_HOT_TAGS]
+
+	const categories = categoryRes.status === 'fulfilled' && Array.isArray(categoryRes.value)
+		? categoryRes.value.map((item) => `${item?.name || ''}`.trim()).filter(Boolean).slice(0, 8)
+		: []
+
+	const merged = Array.from(new Set([
+		...tags.slice(0, 6).map((name) => `#${name}`),
+		...categories,
+		...DEFAULT_HOT_SEARCHES
+	])).slice(0, 10)
+	hotSearches.value = merged.length ? merged : [...DEFAULT_HOT_SEARCHES]
 }
 
-const loadSkillResults = async (kw: string) => {
-	loadingSkills.value = true
+const fetchSkillResults = async (reset: boolean) => {
+	if (!currentSearch.value) return
+	const currentRequest = ++requestSeq
+	const targetPage = reset ? 1 : page.value
+
+	if (reset) {
+		loadingSkills.value = true
+		loadingMoreSkills.value = false
+		page.value = 1
+		noMore.value = false
+		searchSkillResults.value = []
+		totalSkills.value = 0
+	} else {
+		loadingMoreSkills.value = true
+	}
+
 	try {
-		const data = await getSkillList({
-			page: 1,
-			pageSize: 20,
-			keyword: kw,
-			sort: 'recommend'
-		})
+		const data = await getSkillList(buildQueryParams(targetPage))
+		if (currentRequest !== requestSeq) return
+
 		const list = Array.isArray(data?.list) ? data.list.map(mapApiSkill) : []
-		searchSkillResults.value = list.length ? list : []
+		if (reset) searchSkillResults.value = list
+		else searchSkillResults.value.push(...list)
+
+		const currentPage = Number(data?.pagination?.page ?? targetPage)
+		const totalPages = Number(data?.pagination?.totalPages ?? 0)
+		const total = Number(data?.pagination?.total ?? searchSkillResults.value.length)
+		totalSkills.value = Number.isFinite(total) ? total : searchSkillResults.value.length
+		noMore.value = totalPages > 0 ? currentPage >= totalPages : list.length < PAGE_SIZE
+		page.value = noMore.value ? currentPage : currentPage + 1
 	} catch {
-		searchSkillResults.value = fallbackSkillResults.filter((item) => {
-			const matched = `${item.title}${item.desc}${item.tags.join(' ')}`.toLowerCase()
-			return matched.includes(kw.toLowerCase())
-		})
+		if (currentRequest !== requestSeq) return
+		if (reset) {
+			searchSkillResults.value = []
+			totalSkills.value = 0
+		}
+		noMore.value = true
+		uni.showToast({ title: reset ? '搜索失败，请稍后重试' : '加载更多失败', icon: 'none' })
+	} finally {
+		if (currentRequest !== requestSeq) return
+		loadingSkills.value = false
+		loadingMoreSkills.value = false
 	}
-
-	if (!searchSkillResults.value.length && !kw) {
-		searchSkillResults.value = [...fallbackSkillResults]
-	}
-
-	loadingSkills.value = false
 }
 
 const onInput = () => {
-	if (keyword.value.trim()) return
-	hasSearched.value = false
-	searchedKeyword.value = ''
-	searchSkillResults.value = []
+	if (!keyword.value.trim()) {
+		resetSearchState()
+		return
+	}
+	if (!hasSearched.value) return
+
+	const parsed = parseSearchValue(keyword.value)
+	if (!parsed) return
+
+	clearInputSearchTimer()
+	inputSearchTimer = setTimeout(() => {
+		currentSearch.value = parsed
+		searchedKeyword.value = parsed.display
+		void fetchSkillResults(true)
+	}, INPUT_SEARCH_DEBOUNCE_MS)
 }
 
-const doSearch = async () => {
-	const kw = keyword.value.trim()
-	if (!kw) return
-	updateRecentSearches(kw)
+const doSearch = async (options?: { asTag?: boolean; addHistory?: boolean }) => {
+	const parsed = parseSearchValue(keyword.value, options?.asTag)
+	if (!parsed) return
+
+	clearInputSearchTimer()
+	keyword.value = parsed.input
 	hasSearched.value = true
-	resultTab.value = 'all'
-	searchedKeyword.value = kw
-	await loadSkillResults(kw)
+	currentSearch.value = parsed
+	searchedKeyword.value = parsed.display
+	if (options?.addHistory !== false) updateRecentSearches(parsed.display)
+	await fetchSkillResults(true)
 }
 
-const searchTerm = (term: string) => {
-	keyword.value = term
-	void doSearch()
+const searchTerm = (term: string, asTag = false) => {
+	const parsed = parseSearchValue(term, asTag)
+	if (!parsed) return
+	keyword.value = parsed.input
+	void doSearch({ asTag, addHistory: true })
+}
+
+const changeSort = (sort: NonNullable<SkillListQuery['sort']>) => {
+	if (activeSort.value === sort) return
+	activeSort.value = sort
+	if (!hasSearched.value || !currentSearch.value) return
+	void fetchSkillResults(true)
+}
+
+const onLoadMore = async () => {
+	if (!hasSearched.value || !currentSearch.value) return
+	if (loadingSkills.value || loadingMoreSkills.value || noMore.value) return
+	await fetchSkillResults(false)
 }
 
 const clearSearch = () => {
 	keyword.value = ''
-	hasSearched.value = false
-	searchedKeyword.value = ''
-	searchSkillResults.value = []
+	resetSearchState()
 }
 
 const clearHistory = () => {
@@ -356,10 +485,6 @@ const useSkill = async (skill: any) => {
 	toSkill(skill.id)
 }
 
-const toPost = (id: string) => {
-	uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
-}
-
 const toSkill = (id: string) => {
 	uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
 }
@@ -370,7 +495,12 @@ const goBack = () => {
 
 onMounted(() => {
 	loadRecentSearches()
-	void loadHotTags()
+	void loadSearchSuggestions()
+})
+
+onBeforeUnmount(() => {
+	requestSeq += 1
+	clearInputSearchTimer()
 })
 </script>
 
@@ -576,6 +706,12 @@ onMounted(() => {
 			border-bottom: 1rpx solid rgba(0,0,0,0.05);
 			flex-shrink: 0;
 
+			.rtab-row {
+				display: flex;
+				align-items: center;
+				min-width: 100%;
+			}
+
 			.rtab {
 				position: relative;
 				padding: 20rpx 20rpx 18rpx;
@@ -611,19 +747,19 @@ onMounted(() => {
 				padding: 16rpx 20rpx;
 			}
 
+			.result-hint-row {
+				padding: 4rpx 2rpx 14rpx;
+			}
+
+			.result-hint {
+				font-size: 24rpx;
+				color: rgba(0,0,0,0.45);
+			}
+
 			.results-bottom {
 				height: 40rpx;
 			}
 		}
-	}
-
-	.result-section-title {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: rgba(0,0,0,0.40);
-		padding: 8rpx 0 12rpx;
-		border-bottom: 1rpx solid rgba(0,0,0,0.05);
-		margin-bottom: 12rpx;
 	}
 
 	.result-empty {
@@ -637,87 +773,15 @@ onMounted(() => {
 		}
 	}
 
-	/* 帖子结果卡片 */
-	.result-post-card {
-		background: #FFFFFF;
-		border-radius: 16rpx;
-		padding: 20rpx;
-		margin-bottom: 12rpx;
-		box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.04);
+	.result-load-footer {
+		display: flex;
+		justify-content: center;
+		padding: 18rpx 0 8rpx;
+	}
 
-		.result-post-main {
-			display: flex;
-			gap: 16rpx;
-
-			.rp-info {
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-				gap: 8rpx;
-
-				.rp-title {
-					font-size: 28rpx;
-					font-weight: 700;
-					color: #1A1A1A;
-				}
-
-				.rp-content {
-					font-size: 24rpx;
-					color: rgba(0,0,0,0.50);
-					line-height: 1.6;
-				}
-
-				.rp-foot {
-					display: flex;
-					align-items: center;
-					gap: 8rpx;
-					margin-top: 4rpx;
-
-					.rp-av {
-						width: 36rpx;
-						height: 36rpx;
-						border-radius: 50%;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-
-						.rp-av-t {
-							font-size: 14rpx;
-							color: #fff;
-							font-weight: 700;
-						}
-					}
-
-					.rp-author {
-						font-size: 22rpx;
-						color: rgba(0,0,0,0.40);
-					}
-
-					.rp-sep {
-						font-size: 22rpx;
-						color: rgba(0,0,0,0.20);
-					}
-
-					.rp-likes {
-						display: flex;
-						align-items: center;
-						gap: 4rpx;
-
-						.rp-likes-text {
-							font-size: 22rpx;
-							color: rgba(0,0,0,0.40);
-						}
-					}
-				}
-			}
-
-			.rp-cover {
-				width: 160rpx;
-				height: 120rpx;
-				border-radius: 12rpx;
-				flex-shrink: 0;
-			}
-		}
+	.result-load-text {
+		font-size: 22rpx;
+		color: rgba(0,0,0,0.36);
 	}
 
 	/* Skill 结果卡片 */
@@ -736,10 +800,16 @@ onMounted(() => {
 			height: 80rpx;
 			background: rgba(228, 92, 26,0.1);
 			border-radius: 18rpx;
+			overflow: hidden;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex-shrink: 0;
+
+			.rsk-cover {
+				width: 100%;
+				height: 100%;
+			}
 
 			.rsk-emoji {
 				width: 42rpx;
@@ -765,17 +835,37 @@ onMounted(() => {
 			.rsk-desc {
 				font-size: 22rpx;
 				color: rgba(0,0,0,0.40);
+				line-height: 1.55;
+			}
+
+			.rsk-meta {
+				display: flex;
+				align-items: center;
+				gap: 8rpx;
+				flex-wrap: wrap;
+			}
+
+			.rsk-meta-t {
+				font-size: 20rpx;
+				color: rgba(0,0,0,0.40);
+				line-height: 1.4;
+			}
+
+			.rsk-meta-dot {
+				font-size: 20rpx;
+				color: rgba(0,0,0,0.2);
 			}
 
 			.rsk-tags {
 				display: flex;
+				flex-wrap: wrap;
 				gap: 8rpx;
 
 				.rsk-tag {
 					font-size: 20rpx;
 					color: #E45C1A;
 					background: rgba(228, 92, 26, 0.1);
-					padding: 3rpx 12rpx;
+					padding: 4rpx 12rpx;
 					border-radius: 10rpx;
 				}
 			}
@@ -793,5 +883,12 @@ onMounted(() => {
 				font-weight: 500;
 			}
 		}
+	}
+
+	.line-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 </style>
