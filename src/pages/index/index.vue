@@ -87,12 +87,26 @@ const onSkillEdgeSwipe = (dir: 'left' | 'right') => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
   background: #fff;
   border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
 }
+
+/* #ifdef H5 */
+.header {
+  padding-top: var(--h5-safe-area-inset-top, 0px);
+}
+
+/* #endif */
+
+/* #ifndef H5 */
+.header {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* #endif */
 
 .tab-strip {
   position: relative;

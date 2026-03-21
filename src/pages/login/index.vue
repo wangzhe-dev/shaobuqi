@@ -982,6 +982,13 @@ onUnmounted(() => {
 	justify-content: center;
 }
 
+/* #ifdef H5 */
+.auth-wrap {
+	padding-top: calc(var(--h5-safe-area-inset-top, 0px) + 66rpx) !important;
+}
+
+/* #endif */
+
 .auth-card {
 	width: 100%;
 	padding: 32rpx 28rpx 24rpx;

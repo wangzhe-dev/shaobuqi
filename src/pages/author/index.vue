@@ -316,11 +316,11 @@
 	}
 
 	/* 顶部 Hero */
-	.profile-hero {
-		position: relative;
-		flex-shrink: 0;
-		padding-top: constant(safe-area-inset-top);
-		padding-top: env(safe-area-inset-top);
+		.profile-hero {
+			position: relative;
+			flex-shrink: 0;
+			padding-top: constant(safe-area-inset-top);
+			padding-top: env(safe-area-inset-top);
 
 		.back-btn {
 			position: absolute;
@@ -345,10 +345,10 @@
 			}
 		}
 
-		.cover-bg {
-			width: 100%;
-			height: 280rpx;
-			background: linear-gradient(160deg, #1E2228 0%, #252A31 50%, #191D23 100%);
+			.cover-bg {
+				width: 100%;
+				height: 280rpx;
+				background: linear-gradient(160deg, #1E2228 0%, #252A31 50%, #191D23 100%);
 		}
 
 		.hero-bottom {
@@ -389,11 +389,18 @@
 					.follow-text { color: rgba(0,0,0,0.50); }
 				}
 			}
+			}
 		}
-	}
 
-	/* 用户信息 */
-	.user-info {
+		/* #ifdef H5 */
+		.profile-hero {
+			padding-top: var(--h5-safe-area-inset-top, 0px) !important;
+		}
+
+		/* #endif */
+
+		/* 用户信息 */
+		.user-info {
 		padding: 4rpx 28rpx 20rpx;
 		background: #FFFFFF;
 		border-bottom: 1rpx solid rgba(0,0,0,0.06);

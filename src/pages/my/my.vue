@@ -601,7 +601,10 @@ const logoutConfirm = () => {
   }
 }
 
-
+/* #ifdef H5 */
+.profile-card {
+  padding-top: calc(var(--h5-safe-area-inset-top, 0px) + 16rpx) !important;
+}
 
 /* #endif */
 

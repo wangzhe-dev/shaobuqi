@@ -47,6 +47,19 @@ html {
 	text-size-adjust: 100%;
 }
 
+// H5 顶部安全区统一变量：
+// - 普通浏览器/微信内置浏览器：0（避免顶部异常留白）
+// - PWA standalone：使用真实刘海安全区
+:root {
+	--h5-safe-area-inset-top: 0px;
+}
+@media (display-mode: standalone) {
+	:root {
+		--h5-safe-area-inset-top: constant(safe-area-inset-top);
+		--h5-safe-area-inset-top: env(safe-area-inset-top);
+	}
+}
+
 // 保证 height:100% 链条在微信/Android WebView 中不断
 // 微信 X5 引擎不会自动把 html/body/#app 撑满，导致 scroll-view 高度塌陷
 html, body, #app {
@@ -58,27 +71,17 @@ html, body, #app {
 // 会返回非零值（微信工具栏高度等），导致 uni-nav-bar 顶部出现多余空白。
 // 浏览器本身已把 viewport 置于其 chrome 下方，不需要额外的 status bar 高度。
 .uni-status-bar {
-	height: 0 !important;
-	min-height: 0 !important;
-}
-// PWA standalone 模式（添加到桌面后）需要真实的安全区高度
-@media (display-mode: standalone) {
-	.uni-status-bar {
-		height: env(safe-area-inset-top) !important;
-		min-height: env(safe-area-inset-top) !important;
-	}
+	height: var(--h5-safe-area-inset-top, 0px) !important;
+	min-height: var(--h5-safe-area-inset-top, 0px) !important;
 }
 
 // 自定义导航栏顶部安全区适配
-// H5 中 statusBarHeight 始终为 0，需用 CSS 变量接管
-// 浏览器模式：env(safe-area-inset-top) = 0，不影响普通 H5
-// PWA standalone 模式：返回实际状态栏高度，防止内容被遮挡
+// H5 中 statusBarHeight 始终为 0，使用统一变量接管
 .navbar,
 .profile-header,
 .profile-hero {
 	// !important 覆盖 Vue :style 绑定的 paddingTop: 0px 内联样式
-	padding-top: constant(safe-area-inset-top) !important;
-	padding-top: env(safe-area-inset-top) !important;
+	padding-top: var(--h5-safe-area-inset-top, 0px) !important;
 }
 
 // Tab-bar 底部占位：custom tab-bar 是 position:fixed，会遮挡 scroll 内容
