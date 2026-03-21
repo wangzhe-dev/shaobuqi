@@ -780,7 +780,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #F7F8FA;
+  background: var(--bg-secondary);
   position: relative;
 }
 
@@ -836,7 +836,7 @@ onUnmounted(() => {
 
     &.active {
       .sort-tab-t {
-        color: #E45C1A;
+        color: var(--orange-color);
         font-weight: 700;
       }
 
@@ -847,7 +847,7 @@ onUnmounted(() => {
         left: 20rpx;
         right: 20rpx;
         height: 4rpx;
-        background: #E45C1A;
+        background: var(--orange-color);
         border-radius: 999rpx;
       }
     }
@@ -989,7 +989,7 @@ onUnmounted(() => {
 
   .empty-state-t {
     font-size: 24rpx;
-    color: #9CA3AF;
+    color: var(--text-muted);
   }
 }
 
@@ -1000,7 +1000,7 @@ onUnmounted(() => {
   padding: 28rpx;
 
   &:active {
-    background: #F5F7FA;
+    background: var(--card-bg-hover);
   }
 
   .sc-badge-row {
@@ -1017,22 +1017,22 @@ onUnmounted(() => {
       border-radius: 8rpx;
 
       &.badge-gold {
-        color: #D6943A;
+        color: var(--yellow-color);
         background: rgba(214, 148, 58, 0.12);
       }
 
       &.badge-blue {
-        color: #5E738A;
+        color: var(--blue-color);
         background: rgba(94, 115, 138, 0.12);
       }
 
       &.badge-green {
-        color: #2F8A57;
+        color: var(--green-color);
         background: rgba(47, 138, 87, 0.12);
       }
 
       &.badge-red {
-        color: #C84634;
+        color: var(--red-color);
         background: rgba(200, 70, 52, 0.12);
       }
 
@@ -1056,7 +1056,7 @@ onUnmounted(() => {
     display: block;
     font-size: 30rpx;
     font-weight: 800;
-    color: #1A1A1A;
+    color: var(--text-color);
     margin-bottom: 12rpx;
     line-height: 1.35;
   }
@@ -1207,7 +1207,7 @@ onUnmounted(() => {
     }
 
     .sc-copy-btn {
-      background: #E45C1A;
+      background: var(--orange-color);
       padding: 16rpx 32rpx;
       border-radius: 100rpx;
       box-shadow: 0 4rpx 16rpx rgba(228, 92, 26, 0.18);
@@ -1230,7 +1230,7 @@ onUnmounted(() => {
 
   .load-txt {
     font-size: 24rpx;
-    color: #9CA3AF;
+    color: var(--text-muted);
   }
 
   .no-more {
@@ -1242,12 +1242,12 @@ onUnmounted(() => {
       flex: 1;
       max-width: 80rpx;
       height: 1rpx;
-      background: #E5E7EB;
+      background: var(--border-light);
     }
 
     .no-more-txt {
       font-size: 22rpx;
-      color: #D1D5DB;
+      color: var(--border-lighter);
       white-space: nowrap;
     }
   }

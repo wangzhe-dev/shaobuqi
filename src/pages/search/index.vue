@@ -558,7 +558,7 @@ onBeforeUnmount(() => {
 			.search-input {
 				flex: 1;
 				font-size: 28rpx;
-				color: #1A1A1A;
+				color: var(--text-color);
 				height: 40rpx;
 				line-height: 40rpx;
 			}
@@ -601,7 +601,7 @@ onBeforeUnmount(() => {
 				.section-title {
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #1A1A1A;
+					color: var(--text-color);
 				}
 
 				.section-icon {
@@ -639,13 +639,13 @@ onBeforeUnmount(() => {
 					width: 40rpx;
 					font-size: 28rpx;
 					font-weight: 700;
-					color: #C84634;
+					color: var(--red-color);
 					text-align: center;
 				}
 
 				.hot-text {
 					font-size: 28rpx;
-					color: #1A1A1A;
+					color: var(--text-color);
 				}
 
 				&:not(.hot-top) .hot-rank {
@@ -736,7 +736,7 @@ onBeforeUnmount(() => {
 				}
 
 				&.active .rtab-text {
-					color: #1A1A1A;
+					color: var(--text-color);
 					font-weight: 700;
 				}
 
@@ -843,7 +843,7 @@ onBeforeUnmount(() => {
 			.rsk-title {
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #1A1A1A;
+				color: var(--text-color);
 			}
 
 			.rsk-desc {

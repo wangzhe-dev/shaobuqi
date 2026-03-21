@@ -107,7 +107,7 @@ const handleError = () => {
 
 .sbq-image-error-text {
 	font-size: 22rpx;
-	color: #9ca3af;
+	color: var(--text-muted);
 }
 
 @keyframes shimmer {

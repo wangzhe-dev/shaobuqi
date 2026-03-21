@@ -699,7 +699,7 @@ const toSkill = (id: number) => {
 /* ── 正文 ── */
 .body-text {
 	display: block;
-	font-size: 30rpx; color: #374151; line-height: 1.80;
+	font-size: 30rpx; color: var(--text-dark); line-height: 1.80;
 	padding: 4rpx 28rpx 24rpx;
 }
 
@@ -721,7 +721,7 @@ const toSkill = (id: number) => {
 
 	.ls-title {
 		font-size: 22rpx;
-		color: #374151;
+		color: var(--text-dark);
 		font-weight: 600;
 		flex: 1;
 		overflow: hidden;
@@ -835,7 +835,7 @@ const toSkill = (id: number) => {
 	font-variant-numeric: tabular-nums;
 
 	&.cost { color: var(--orange-color); }
-	&.token { color: #D6943A; }
+	&.token { color: var(--yellow-color); }
 }
 
 .consume-cost-bar {
@@ -960,8 +960,8 @@ const toSkill = (id: number) => {
 
 .load-end {
 	display: flex; align-items: center; gap: 20rpx; padding: 12rpx 0 4rpx;
-	.load-end-line { flex: 1; height: 1rpx; background: #E5E7EB; }
-	.load-end-t    { font-size: 22rpx; color: #D1D5DB; white-space: nowrap; }
+	.load-end-line { flex: 1; height: 1rpx; background: var(--border-light); }
+	.load-end-t    { font-size: 22rpx; color: var(--border-lighter); white-space: nowrap; }
 }
 
 /* btm-bar 约 96rpx 内容 + 16rpx top padding + safe area */

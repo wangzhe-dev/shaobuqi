@@ -697,7 +697,7 @@
 	.page-header {
 		padding: 36rpx 24rpx 24rpx;
 
-		.page-title { display: block; font-size: 44rpx; font-weight: 900; color: #1A1A1A; margin-bottom: 8rpx; }
+		.page-title { display: block; font-size: 44rpx; font-weight: 900; color: var(--text-color); margin-bottom: 8rpx; }
 		.page-subtitle { display: block; font-size: 24rpx; color: rgba(0,0,0,0.40); }
 	}
 
@@ -724,7 +724,7 @@
 			justify-content: center;
 			flex-shrink: 0;
 		}
-		.module-title { font-size: 28rpx; font-weight: 700; color: #1A1A1A; flex: 1; }
+		.module-title { font-size: 28rpx; font-weight: 700; color: var(--text-color); flex: 1; }
 		.module-subtitle { font-size: 20rpx; color: rgba(0,0,0,0.35); }
 	}
 
@@ -780,7 +780,7 @@
 
 				.bri-rank-text { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.50); }
 
-				&.rank-1 { background: #D6943A; .bri-rank-text { color: #fff; } }
+				&.rank-1 { background: var(--yellow-color); .bri-rank-text { color: #fff; } }
 				&.rank-2 { background: rgba(0,0,0,0.10); .bri-rank-text { color: rgba(255,255,255,0.8); } }
 				&.rank-3 { background: var(--orange-color); .bri-rank-text { color: #fff; } }
 			}
@@ -797,7 +797,7 @@
 			.bri-info {
 				flex: 1;
 
-				.bri-title { display: block; font-size: 26rpx; font-weight: 600; color: #1A1A1A; margin-bottom: 4rpx; }
+				.bri-title { display: block; font-size: 26rpx; font-weight: 600; color: var(--text-color); margin-bottom: 4rpx; }
 				.bri-scene { display: block; font-size: 20rpx; color: rgba(0,0,0,0.40); }
 			}
 
@@ -853,7 +853,7 @@
 						border-radius: 6rpx;
 
 						&.badge-green { color: var(--green-color); background: rgba(47, 138, 87,0.12); }
-						&.badge-blue { color: #5E738A; background: rgba(94, 115, 138,0.12); }
+						&.badge-blue { color: var(--blue-color); background: rgba(94, 115, 138,0.12); }
 					}
 				}
 			}
@@ -862,7 +862,7 @@
 				display: block;
 				font-size: 26rpx;
 				font-weight: 700;
-				color: #1A1A1A;
+				color: var(--text-color);
 				margin-bottom: 16rpx;
 			}
 
@@ -885,7 +885,7 @@
 						gap: 4rpx;
 					}
 
-					.vim-val { font-size: 24rpx; font-weight: 700; color: #1A1A1A; }
+					.vim-val { font-size: 24rpx; font-weight: 700; color: var(--text-color); }
 					.vim-val.orange { color: var(--orange-color); }
 					.vim-val.green { color: var(--green-color); }
 					.vim-label { font-size: 18rpx; color: rgba(0,0,0,0.40); }
@@ -931,7 +931,7 @@
 					flex-shrink: 0;
 				}
 
-				.mc-name { font-size: 26rpx; font-weight: 700; color: #1A1A1A; flex: 1; }
+				.mc-name { font-size: 26rpx; font-weight: 700; color: var(--text-color); flex: 1; }
 
 				.mc-family {
 					font-size: 18rpx;
@@ -1019,7 +1019,7 @@
 			.st-info {
 				flex: 1;
 
-				.st-name { display: block; font-size: 24rpx; font-weight: 600; color: #1A1A1A; margin-bottom: 8rpx; }
+				.st-name { display: block; font-size: 24rpx; font-weight: 600; color: var(--text-color); margin-bottom: 8rpx; }
 
 				.st-bar-wrap {
 					height: 8rpx;
@@ -1064,7 +1064,7 @@
 			gap: 6rpx;
 
 			.mi-label { font-size: 20rpx; color: rgba(0,0,0,0.40); }
-			.mi-val { font-size: 28rpx; font-weight: 800; color: #1A1A1A; }
+			.mi-val { font-size: 28rpx; font-weight: 800; color: var(--text-color); }
 			.mi-val.orange { color: var(--orange-color); }
 			.mi-sub { font-size: 18rpx; color: rgba(0,0,0,0.35); }
 		}
@@ -1235,7 +1235,7 @@
 		.pc-content {
 			display: block;
 			font-size: 30rpx;
-			color: #374151;
+			color: var(--text-dark);
 			line-height: 1.75;
 			margin-bottom: 24rpx;
 		}

@@ -948,7 +948,7 @@ onShow(() => {
 	.bi-hash {
 		font-size: 34rpx;
 		font-weight: 700;
-		color: #3C3C3C;
+		color: var(--text-body);
 		line-height: 1;
 	}
 

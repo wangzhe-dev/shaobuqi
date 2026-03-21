@@ -533,7 +533,7 @@ defineExpose({ refresh: onRefresh })
 
 .pc-body {
   display: block;
-  font-size: 29rpx; color: #374151; line-height: 1.75;
+  font-size: 29rpx; color: var(--text-dark); line-height: 1.75;
   padding: 16rpx 24rpx 0;
 }
 
@@ -556,7 +556,7 @@ defineExpose({ refresh: onRefresh })
   .pc-skill-title {
     flex: 1;
     font-size: 22rpx;
-    color: #374151;
+    color: var(--text-dark);
     font-weight: 600;
   }
 
@@ -585,8 +585,8 @@ defineExpose({ refresh: onRefresh })
   .pc-spend {
     display: flex; align-items: baseline; gap: 8rpx;
     .pc-cost { font-size: 32rpx; font-weight: 800; color: var(--orange-color); font-variant-numeric: tabular-nums; }
-    .pc-cost-sep { font-size: 22rpx; color: #D1D5DB; }
-    .pc-tok { font-size: 22rpx; color: #9CA3AF; }
+    .pc-cost-sep { font-size: 22rpx; color: var(--border-lighter); }
+    .pc-tok { font-size: 22rpx; color: var(--text-muted); }
   }
 
   .pc-rxn-pill {
@@ -641,8 +641,8 @@ defineExpose({ refresh: onRefresh })
 
   .no-more {
     display: flex; align-items: center; gap: 20rpx;
-    .no-more-line { flex: 1; max-width: 80rpx; height: 1rpx; background: #E5E7EB; }
-    .no-more-txt { font-size: 22rpx; color: #D1D5DB; white-space: nowrap; }
+    .no-more-line { flex: 1; max-width: 80rpx; height: 1rpx; background: var(--border-light); }
+    .no-more-txt { font-size: 22rpx; color: var(--border-lighter); white-space: nowrap; }
   }
 }
 

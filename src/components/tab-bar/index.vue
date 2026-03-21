@@ -82,7 +82,7 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-top: none;
 		box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06);
 		z-index: 999;
@@ -115,7 +115,7 @@
 			width: 80rpx;
 			height: 80rpx;
 			border-radius: 50%;
-			background: #E45C1A;
+			background: var(--orange-color);
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -143,7 +143,7 @@
 	}
 
 	.tab-item.active .tab-label {
-		color: #E45C1A;
+		color: var(--orange-color);
 		font-weight: 600;
 	}
 

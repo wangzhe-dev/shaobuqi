@@ -33,7 +33,7 @@
 <style scoped lang="scss">
 .page {
 	min-height: 100vh;
-	background: #f7f8fa;
+	background: var(--bg-secondary);
 }
 
 .content {
@@ -45,7 +45,7 @@
 .update-time {
 	display: block;
 	font-size: 22rpx;
-	color: #9ca3af;
+	color: var(--text-muted);
 	margin-bottom: 32rpx;
 }
 
@@ -53,7 +53,7 @@
 	display: block;
 	font-size: 30rpx;
 	font-weight: 700;
-	color: #1a1a2e;
+	color: var(--text-primary);
 	margin-top: 32rpx;
 	margin-bottom: 12rpx;
 }
@@ -61,7 +61,7 @@
 .section-body {
 	display: block;
 	font-size: 26rpx;
-	color: #4b5563;
+	color: var(--text-gray);
 	line-height: 1.8;
 }
 </style>

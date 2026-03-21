@@ -609,7 +609,7 @@ onShow(() => {
   left: 50%;
   transform: translateX(-50%);
   font-size: 34rpx;
-  color: #111827;
+  color: var(--text-color);
   font-weight: 700;
   line-height: 1;
   pointer-events: none;
@@ -854,7 +854,7 @@ onShow(() => {
 .model-sheet-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color);
 }
 
 .model-sheet-close {
@@ -876,7 +876,7 @@ onShow(() => {
 .model-search-inp {
   flex: 1;
   font-size: 24rpx;
-  color: #111827;
+  color: var(--text-color);
 }
 
 .model-search-ph {

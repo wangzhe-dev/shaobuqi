@@ -172,7 +172,7 @@
 	padding: 18rpx 22rpx;
 	border-radius: 20rpx;
 	background: var(--card-bg);
-	border: 1.5rpx solid #E5E7EB;
+	border: 1.5rpx solid var(--border-light);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -211,7 +211,7 @@
 	border-radius: 20rpx;
 	padding: 24rpx;
 	position: relative;
-	border: 1.5rpx solid #E5E7EB;
+	border: 1.5rpx solid var(--border-light);
 }
 
 .feedback-textarea {
@@ -242,7 +242,7 @@
 	background: var(--card-bg);
 	border-radius: 20rpx;
 	padding: 0 24rpx;
-	border: 1.5rpx solid #E5E7EB;
+	border: 1.5rpx solid var(--border-light);
 }
 
 .contact-input {

@@ -408,7 +408,7 @@ function dismissUpdate() {
 	position: fixed;
 	top: 0; left: 0; right: 0;
 	z-index: 9999;
-	background: linear-gradient(135deg, #5B5BD6 0%, #7C7CE8 100%);
+	background: linear-gradient(135deg, var(--primary-color) 0%, #7C7CE8 100%);
 	padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
 	animation: slideDown 0.36s cubic-bezier(0.34, 1.2, 0.64, 1);
 	box-shadow: 0 4px 20px rgba(91, 91, 214, 0.30);
@@ -460,8 +460,8 @@ function dismissUpdate() {
 	gap: 10rpx;
 	padding: 18rpx 28rpx 18rpx 22rpx;
 	border-radius: 999rpx;
-	background: #5B5BD6;
-	box-shadow: 0 8rpx 28rpx rgba(91, 91, 214, 0.35);
+	background: var(--primary-color);
+	box-shadow: 0 8rpx 28rpx var(--primary-shadow);
 
 	.ep-icon { font-size: 26rpx; line-height: 1; }
 	.ep-text { font-size: 24rpx; font-weight: 700; color: #fff; }
@@ -506,7 +506,7 @@ function dismissUpdate() {
 .modal {
 	width: 100%;
 	max-width: 680rpx;
-	background: #FFFFFF;
+	background: var(--card-bg);
 	border-radius: 36rpx;
 	padding: 48rpx 40rpx 40rpx;
 	position: relative;
@@ -523,14 +523,14 @@ function dismissUpdate() {
 	border-radius: 50%;
 	background: rgba(0,0,0,0.06);
 	display: flex; align-items: center; justify-content: center;
-	.modal-close-t { font-size: 30rpx; color: #9CA3AF; line-height: 1; }
+	.modal-close-t { font-size: 30rpx; color: var(--text-muted); line-height: 1; }
 }
 
 /* App 图标 */
 .modal-app-icon {
 	width: 112rpx; height: 112rpx;
 	border-radius: 28rpx;
-	background: linear-gradient(145deg, #5B5BD6 0%, #7C7CE8 100%);
+	background: linear-gradient(145deg, var(--primary-color) 0%, #7C7CE8 100%);
 	display: flex; align-items: center; justify-content: center;
 	margin: 0 auto 28rpx;
 	box-shadow: 0 12rpx 32rpx rgba(91, 91, 214, 0.35);
@@ -545,14 +545,14 @@ function dismissUpdate() {
 .modal-title {
 	display: block;
 	font-size: 36rpx; font-weight: 800;
-	color: #1A1A2E;
+	color: var(--text-primary);
 	text-align: center;
 	margin-bottom: 12rpx;
 }
 
 .modal-desc {
 	display: block;
-	font-size: 25rpx; color: #6B7280;
+	font-size: 25rpx; color: var(--text-gray);
 	text-align: center; line-height: 1.55;
 	margin-bottom: 32rpx;
 }
@@ -562,7 +562,7 @@ function dismissUpdate() {
 	font-size: 24rpx;
 	color: #4B5563;
 	line-height: 1.55;
-	background: #F7F8FA;
+	background: var(--bg-secondary);
 	border-radius: 14rpx;
 	padding: 16rpx 20rpx;
 	margin-bottom: 24rpx;
@@ -571,14 +571,14 @@ function dismissUpdate() {
 .modal-footer-note {
 	margin-top: 20rpx;
 	padding: 16rpx 18rpx;
-	background: #F3F4F6;
+	background: var(--bg-secondary);
 	border-radius: 14rpx;
 
 	.mfn-title {
 		display: block;
 		font-size: 22rpx;
 		font-weight: 700;
-		color: #374151;
+		color: var(--text-dark);
 		margin-bottom: 8rpx;
 	}
 
@@ -586,7 +586,7 @@ function dismissUpdate() {
 		display: block;
 		font-size: 22rpx;
 		line-height: 1.55;
-		color: #6B7280;
+		color: var(--text-gray);
 	}
 }
 
@@ -598,20 +598,20 @@ function dismissUpdate() {
 
 .ms-item {
 	display: flex; align-items: flex-start; gap: 16rpx;
-	background: #F7F8FA;
+	background: var(--bg-secondary);
 	border-radius: 18rpx;
 	padding: 20rpx 22rpx;
 
 	.ms-num {
 		width: 40rpx; height: 40rpx; border-radius: 50%;
-		background: #5B5BD6;
+		background: var(--primary-color);
 		display: flex; align-items: center; justify-content: center;
 		flex-shrink: 0;
 		.ms-n { font-size: 20rpx; font-weight: 800; color: #fff; line-height: 1; }
 	}
 
-	.ms-t { font-size: 26rpx; color: #374151; line-height: 1.55; flex: 1; }
-	.ms-em { color: #5B5BD6; font-weight: 700; }
+	.ms-t { font-size: 26rpx; color: var(--text-dark); line-height: 1.55; flex: 1; }
+	.ms-em { color: var(--primary-color); font-weight: 700; }
 }
 
 /* 优势列表（Chrome 安装）*/
@@ -623,11 +623,11 @@ function dismissUpdate() {
 .mb-item {
 	display: flex; align-items: center; gap: 16rpx;
 	padding: 16rpx 20rpx;
-	background: #F7F8FA;
+	background: var(--bg-secondary);
 	border-radius: 16rpx;
 
 	.mb-icon { font-size: 30rpx; flex-shrink: 0; }
-	.mb-text { font-size: 26rpx; color: #374151; font-weight: 500; }
+	.mb-text { font-size: 26rpx; color: var(--text-dark); font-weight: 500; }
 }
 
 /* 按钮 */
@@ -636,7 +636,7 @@ function dismissUpdate() {
 .btn-primary {
 	height: 88rpx;
 	border-radius: 22rpx;
-	background: #5B5BD6;
+	background: var(--primary-color);
 	display: flex; align-items: center; justify-content: center;
 	box-shadow: 0 8rpx 24rpx rgba(91, 91, 214, 0.30);
 	.btn-primary-t { font-size: 30rpx; font-weight: 800; color: #fff; }
@@ -647,7 +647,7 @@ function dismissUpdate() {
 	border-radius: 22rpx;
 	background: rgba(0,0,0,0.05);
 	display: flex; align-items: center; justify-content: center;
-	.btn-dismiss-t { font-size: 27rpx; font-weight: 600; color: #9CA3AF; }
+	.btn-dismiss-t { font-size: 27rpx; font-weight: 600; color: var(--text-muted); }
 }
 
 /* ── 动画 ── */

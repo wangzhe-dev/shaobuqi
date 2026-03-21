@@ -363,7 +363,7 @@
 					width: 120rpx;
 					height: 120rpx;
 					border-radius: 50%;
-					border: 4rpx solid #1A1A1A;
+					border: 4rpx solid var(--text-color);
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -405,7 +405,7 @@
 		background: var(--card-bg);
 		border-bottom: 1rpx solid rgba(0,0,0,0.06);
 
-		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: #1A1A1A; margin-bottom: 10rpx; }
+		.user-name { display: block; font-size: 36rpx; font-weight: 800; color: var(--text-color); margin-bottom: 10rpx; }
 		.user-bio { display: block; font-size: 24rpx; color: rgba(0,0,0,0.50); line-height: 1.6; margin-bottom: 14rpx; }
 
 		.user-tags {
@@ -441,7 +441,7 @@
 			align-items: center;
 			gap: 4rpx;
 
-			.stat-n { font-size: 30rpx; font-weight: 800; color: #1A1A1A; }
+			.stat-n { font-size: 30rpx; font-weight: 800; color: var(--text-color); }
 			.stat-n.orange { color: var(--orange-color); }
 			.stat-n.green { color: var(--green-color); }
 			.stat-l { font-size: 20rpx; color: rgba(0,0,0,0.40); }
@@ -510,7 +510,7 @@
 			border: 1rpx solid rgba(0,0,0,0.07);
 			padding: 24rpx;
 
-			&:active { background: #F5F7FA; }
+			&:active { background: var(--card-bg-hover); }
 
 			.sc-head {
 				display: flex;
@@ -533,7 +533,7 @@
 				display: block;
 				font-size: 28rpx;
 				font-weight: 700;
-				color: #1A1A1A;
+				color: var(--text-color);
 				margin-bottom: 14rpx;
 			}
 
@@ -597,7 +597,7 @@
 					border-radius: 100rpx;
 
 					&.status-success { color: var(--green-color); background: rgba(47, 138, 87,0.12); }
-					&.status-normal { color: #5E738A; background: rgba(94, 115, 138,0.12); }
+					&.status-normal { color: var(--blue-color); background: rgba(94, 115, 138,0.12); }
 
 					.fb-status-text { font-weight: 600; }
 				}

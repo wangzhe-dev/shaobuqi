@@ -1,4 +1,4 @@
-page {
+:root, page {
 	width: 100%;
 	height: 100%;
 	background-color: var(--bg-color, #FFFFFF);
@@ -52,6 +52,14 @@ page {
 	--blue-gradient: linear-gradient(135deg, #70849A 0%, #4D6178 100%);
 	--green-color: #2F8A57;
 	--red-color: #C84634;
+
+	/* 通用边框/分隔线 */
+	--border-light: #E5E7EB;
+	--border-lighter: #D1D5DB;
+
+	/* 辅助文字色 */
+	--text-dark: #374151;
+	--text-body: #3C3C3C;
 
 	/* 兼容旧变量名 */
 	--brand-color: #E45C1A;

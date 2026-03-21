@@ -440,9 +440,9 @@ const logoutConfirm = () => {
     }
 
     .avatar-guest {
-      background: #F3F4F6;
+      background: var(--bg-secondary);
       box-shadow: none;
-      border: 2rpx solid #E5E7EB;
+      border: 2rpx solid var(--border-light);
     }
 
     .lv-badge {
@@ -939,7 +939,7 @@ const logoutConfirm = () => {
 .popup-handle {
   width: 72rpx;
   height: 8rpx;
-  background: #E5E7EB;
+  background: var(--border-light);
   border-radius: 100rpx;
   margin: 20rpx auto 32rpx;
 }

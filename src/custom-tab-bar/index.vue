@@ -83,7 +83,7 @@ export default {
 
 <style lang="scss">
 	.tab-bar {
-		background: #FFFFFF;
+		background: var(--card-bg);
 		border-top: none;
 		box-shadow: 0 -8rpx 24rpx rgba(26, 26, 26, 0.06);
 	}
@@ -111,7 +111,7 @@ export default {
 		}
 
 		&.active .tab-label {
-			color: #E45C1A;
+			color: var(--orange-color);
 			font-weight: 700;
 		}
 	}
@@ -136,8 +136,8 @@ export default {
 			transition: all 0.2s ease;
 
 			&.active {
-				background: #E45C1A;
-				border-color: #E45C1A;
+				background: var(--orange-color);
+				border-color: var(--orange-color);
 				box-shadow: 0 6rpx 18rpx rgba(228, 92, 26, 0.24);
 			}
 		}
