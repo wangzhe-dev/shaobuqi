@@ -4,6 +4,26 @@
 		<uni-nav-bar status-bar left-icon="left" title="Skill 详情" @click-left="goBack" />
 
 			<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
+
+				<!-- 骨架屏 -->
+				<view v-if="pageLoading" class="sk-wrap">
+					<view class="sk-line sk-pulse" style="width:72%;height:36rpx;" />
+					<view class="sk-row" style="margin-top:20rpx;">
+						<view class="sk-av sk-pulse" />
+						<view class="sk-col" style="padding-left:16rpx;">
+							<view class="sk-line sk-pulse" style="width:130rpx;" />
+							<view class="sk-line sk-pulse" style="width:90rpx;margin-top:8rpx;" />
+						</view>
+					</view>
+					<view class="sk-stats-row sk-pulse" style="margin-top:24rpx;" />
+					<view class="sk-line sk-pulse" style="width:100%;margin-top:28rpx;" />
+					<view class="sk-line sk-pulse" style="width:100%;margin-top:8rpx;" />
+					<view class="sk-line sk-pulse" style="width:60%;margin-top:8rpx;" />
+					<view class="sk-card-block sk-pulse" style="margin-top:28rpx;" />
+				</view>
+
+				<!-- 正文 -->
+				<view v-else>
 				<!-- 1. 顶部概览区 -->
 				<view class="overview-section">
 					<text class="skill-title">{{ skill.title }}</text>
@@ -170,6 +190,7 @@
 			</view>
 
 			<view class="detail-bottom" />
+				</view><!-- /v-else -->
 		</scroll-view>
 
 		<!-- 底部固定操作栏 -->
@@ -223,6 +244,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		const userStore = useUserStore()
 		const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
+	const pageLoading = ref(true)
 		const isFavorited = ref(false)
 		const isFollowing = ref(false)
 		const currentSkillId = ref('')
@@ -454,9 +476,10 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		}
 	}
 
-	const loadSkillDetail = async (rawId: unknown) => {
+	const loadSkillDetail = async (rawId: unknown, showSkeleton = true) => {
 		const id = normalizeSkillId(rawId)
 		if (!id) return
+		if (showSkeleton) pageLoading.value = true
 		try {
 			const detail = await getSkillDetail(id)
 			currentSkillId.value = `${detail?.id || id}`
@@ -471,7 +494,10 @@ import { normalizeImageUrl } from '@/utils/image-url'
 					isFollowing.value = !!profile?.isFollowing
 				}).catch(() => {})
 			}
-		} catch {}
+		} catch {
+		} finally {
+			pageLoading.value = false
+		}
 	}
 
 	const tryRecordCopy = async (sourceChannel: string, modelName?: string) => {
@@ -493,15 +519,18 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		if (rawId) currentSkillId.value = normalizeSkillId(rawId)
 
 		const isFromPublish = `${query?.fromPublish || ''}` === '1'
+		let hasPreloaded = false
 		if (isFromPublish) {
 			const payload = uni.getStorageSync(PUBLISHED_SKILL_PREVIEW_KEY)
 			if (payload) {
 				applyPublishedSkill(payload)
 				currentSkillId.value = normalizeSkillId(payload.id)
+				pageLoading.value = false
+				hasPreloaded = true
 				uni.showToast({ title: '已加载刚发布内容', icon: 'none' })
 			}
 		}
-		void loadSkillDetail(rawId || currentSkillId.value)
+		void loadSkillDetail(rawId || currentSkillId.value, !hasPreloaded)
 	})
 
 	const copySkill = () => {
@@ -1115,6 +1144,47 @@ import { normalizeImageUrl } from '@/utils/image-url'
 	}
 
 	.detail-bottom { height: calc(180rpx + env(safe-area-inset-bottom)); }
+
+/* ── 骨架屏 ── */
+.sk-wrap {
+	padding: 28rpx 32rpx 0;
+}
+.sk-pulse {
+	background: linear-gradient(90deg, #EBEBEB 25%, #F5F5F5 50%, #EBEBEB 75%);
+	background-size: 200% 100%;
+	animation: skShimmer 1.5s ease-in-out infinite;
+}
+.sk-av {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.sk-line {
+	height: 24rpx;
+	border-radius: 6rpx;
+}
+.sk-row {
+	display: flex;
+	align-items: center;
+}
+.sk-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+.sk-card-block {
+	height: 180rpx;
+	border-radius: 20rpx;
+}
+.sk-stats-row {
+	height: 100rpx;
+	border-radius: 16rpx;
+}
+@keyframes skShimmer {
+	0%   { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
 
 	/* 底部固定操作栏 */
 	.bottom-bar {

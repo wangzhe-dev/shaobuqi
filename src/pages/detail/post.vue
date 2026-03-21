@@ -8,6 +8,39 @@
 			scroll-with-animation
 		>
 
+			<!-- 骨架屏 -->
+			<view v-if="pageLoading" class="sk-wrap">
+				<view class="sk-row">
+					<view class="sk-av sk-pulse" />
+					<view class="sk-col" style="padding-left:16rpx;">
+						<view class="sk-line sk-pulse" style="width:150rpx;" />
+						<view class="sk-line sk-pulse" style="width:100rpx;margin-top:8rpx;" />
+					</view>
+				</view>
+				<view class="sk-line sk-pulse" style="width:100%;margin-top:28rpx;" />
+				<view class="sk-line sk-pulse" style="width:100%;margin-top:8rpx;" />
+				<view class="sk-line sk-pulse" style="width:65%;margin-top:8rpx;" />
+				<view class="sk-card-block sk-pulse" style="margin-top:28rpx;" />
+				<view class="sk-line sk-pulse" style="width:120rpx;margin-top:36rpx;" />
+				<view class="sk-row" style="margin-top:20rpx;">
+					<view class="sk-av-sm sk-pulse" />
+					<view class="sk-col" style="padding-left:12rpx;">
+						<view class="sk-line sk-pulse" style="width:100rpx;" />
+						<view class="sk-line sk-pulse" style="width:90%;margin-top:8rpx;" />
+					</view>
+				</view>
+				<view class="sk-row" style="margin-top:20rpx;">
+					<view class="sk-av-sm sk-pulse" />
+					<view class="sk-col" style="padding-left:12rpx;">
+						<view class="sk-line sk-pulse" style="width:80rpx;" />
+						<view class="sk-line sk-pulse" style="width:75%;margin-top:8rpx;" />
+					</view>
+				</view>
+			</view>
+
+			<!-- 正文 -->
+			<view v-else>
+
 			<!-- 作者行 -->
 			<view class="author-row">
 				<view class="av" :style="{ background: post.authorColor }" @tap="toAuthor(post.authorId)">
@@ -165,6 +198,7 @@
 			</view>
 
 			<view class="scroll-gap" />
+			</view><!-- /v-else -->
 		</scroll-view>
 
 		<!-- 底部固定栏 -->
@@ -308,6 +342,7 @@ const scrollIntoView = ref('')
 const showCmtPanel = ref(false)
 const cmtText = ref('')
 const replyTarget = ref<CommentItem | null>(null)
+const pageLoading = ref(true)
 const loadingMore = ref(false)
 const noMoreComments = ref(false)
 const commentsPage = ref(1)
@@ -438,13 +473,12 @@ onLoad((query: any) => {
 	}
 	currentPostId.value = parsedId
 
-	uni.showLoading({ title: '加载中...' })
 	void Promise.all([loadPost(), loadComments(true)])
 		.catch(() => {
 			uni.showToast({ title: '动态加载失败', icon: 'none' })
 		})
 		.finally(() => {
-			uni.hideLoading()
+			pageLoading.value = false
 		})
 })
 
@@ -932,6 +966,49 @@ const toSkill = (id: number) => {
 
 /* btm-bar 约 96rpx 内容 + 16rpx top padding + safe area */
 .scroll-gap { height: calc(160rpx + env(safe-area-inset-bottom)); }
+
+/* ── 骨架屏 ── */
+.sk-wrap {
+	padding: 28rpx 32rpx 0;
+}
+.sk-pulse {
+	background: linear-gradient(90deg, #EBEBEB 25%, #F5F5F5 50%, #EBEBEB 75%);
+	background-size: 200% 100%;
+	animation: skShimmer 1.5s ease-in-out infinite;
+}
+.sk-av {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.sk-av-sm {
+	width: 56rpx;
+	height: 56rpx;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.sk-line {
+	height: 24rpx;
+	border-radius: 6rpx;
+}
+.sk-row {
+	display: flex;
+	align-items: center;
+}
+.sk-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+.sk-card-block {
+	height: 180rpx;
+	border-radius: 20rpx;
+}
+@keyframes skShimmer {
+	0%   { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
 
 /* ── 底部固定栏 ── */
 .btm-bar {

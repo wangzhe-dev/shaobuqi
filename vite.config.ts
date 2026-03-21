@@ -81,7 +81,7 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'prompt',
-        injectRegister: 'auto',
+        injectRegister: null,
         manifestFilename: 'manifest.webmanifest',
         manifest: {
           name: '烧不起',
@@ -122,7 +122,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           cleanupOutdatedCaches: true,
           clientsClaim: true,
-          skipWaiting: true,
+          navigateFallback: 'index.html',
           navigateFallbackDenylist: [
             /^\/download\/.*\.apk(?:\?.*)?$/i
           ],

@@ -203,32 +203,9 @@ const androidApkUrl = computed(() => {
 	return rawUrl || `${window.location.origin}/download/shaobuqi.apk`
 })
 
-const buildApkDownloadUrl = (): string => {
-	let baseUrl = androidApkUrl.value
-	try {
-		baseUrl = new URL(baseUrl, window.location.origin).toString()
-	} catch {
-		// noop
-	}
-	const joiner = baseUrl.includes('?') ? '&' : '?'
-	return `${baseUrl}${joiner}_t=${Date.now()}`
-}
-
-const triggerAndroidApkDownload = () => {
-	const finalUrl = buildApkDownloadUrl()
-	const anchor = document.createElement('a')
-	anchor.href = finalUrl
-	anchor.setAttribute('download', 'shaobuqi.apk')
-	anchor.setAttribute('rel', 'noopener')
-	anchor.style.display = 'none'
-	document.body.appendChild(anchor)
-	anchor.click()
-	document.body.removeChild(anchor)
-
-	// 某些浏览器会忽略 download，保留一次跳转兜底
-	window.setTimeout(() => {
-		window.location.assign(finalUrl)
-	}, 500)
+const navigateToDownloadPage = () => {
+	const apk = androidApkUrl.value
+	window.location.assign(`/download/?apk=${encodeURIComponent(apk)}`)
 }
 
 const copyCurrentUrl = async (): Promise<boolean> => {
@@ -371,8 +348,7 @@ onUnmounted(() => {
 async function handleGuideAction() {
 	switch (manualGuide.value.action) {
 		case 'download-android':
-			triggerAndroidApkDownload()
-			dismissInstall()
+			navigateToDownloadPage()
 			return
 		case 'open-browser': {
 			const copied = await copyCurrentUrl()
@@ -401,6 +377,10 @@ function dismissInstall() {
 }
 
 function openInstallEntry() {
+	if (isAndroid()) {
+		navigateToDownloadPage()
+		return
+	}
 	clearGuideDismissed(manualGuide.value.action)
 	showManualHint.value = true
 }

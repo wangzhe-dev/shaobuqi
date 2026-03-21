@@ -393,11 +393,6 @@
         document.body.appendChild(anchor);
         anchor.click();
         document.body.removeChild(anchor);
-
-        // 兜底：部分浏览器会忽略 download 属性
-        window.setTimeout(function () {
-          window.location.assign(finalUrl);
-        }, 500);
       }
 
       actionBtn.addEventListener('click', function () {
