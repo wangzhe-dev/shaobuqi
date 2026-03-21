@@ -1,120 +1,152 @@
 <template>
   <scroll-view class="page" scroll-y :show-scrollbar="false">
+    <view class="section profile-section">
+      <view class="profile-card card-shadow">
+        <!-- 未登录 -->
+        <view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
+          <view class="avatar-wrap">
+            <view class="avatar avatar-guest">
+              <uni-icons type="person" size="40" color="#C8CBD4" />
+            </view>
+          </view>
+          <view class="pc-info">
+            <text class="pc-name">登录 / 注册</text>
+            <text class="pc-bio">登录后可查看完整创作数据与历史记录</text>
+            <view class="pc-tags">
+              <text class="pc-tag pc-tag-cta">立即登录</text>
+            </view>
+          </view>
+          <uni-icons type="right" size="14" color="#C8CBD4" />
+        </view>
 
-    <!-- ── Profile ── -->
-    <view class="profile-card">
-      <!-- 未登录 -->
-      <view v-if="!isLoggedIn" class="pc-row pc-guest" @tap="goLogin">
-        <view class="avatar-wrap">
-          <view class="avatar avatar-guest">
-            <uni-icons type="person" size="40" color="#C8CBD4" />
+        <!-- 已登录 -->
+        <view v-else class="pc-row">
+          <view class="avatar-wrap">
+            <view class="avatar">
+              <text class="avatar-t">{{ profile.name[0] || '我' }}</text>
+            </view>
+            <view class="lv-badge">Lv.4</view>
+          </view>
+          <view class="pc-info">
+            <text class="pc-name">{{ profile.name }}</text>
+            <text class="pc-bio">{{ profile.bio }}</text>
+            <view class="pc-tags">
+              <text v-for="tag in profile.tags" :key="tag" class="pc-tag">{{ tag }}</text>
+            </view>
+          </view>
+          <view class="edit-btn" @tap="editProfile">
+            <uni-icons type="compose" size="17" color="#9CA3AF" />
           </view>
         </view>
-        <view class="pc-info">
-          <text class="pc-name">登录 / 注册</text>
-          <text class="pc-bio">登录后解锁全部功能</text>
-          <view class="pc-tags">
-            <text class="pc-tag pc-tag-cta">立即登录 →</text>
+
+        <view class="stats-bar" :class="{ 'stats-dim': !isLoggedIn }">
+          <view class="stat-item">
+            <text class="sv">{{ isLoggedIn ? profile.publishedSkillCount : '--' }}</text>
+            <text class="sl">发布 Skill</text>
+          </view>
+          <view class="stat-div" />
+          <view class="stat-item">
+            <text class="sv orange">{{ isLoggedIn ? profile.totalCopyCount : '--' }}</text>
+            <text class="sl">被复制</text>
+          </view>
+          <view class="stat-div" />
+          <view class="stat-item">
+            <text class="sv green">{{ isLoggedIn ? profile.avgSuccessRate : '--' }}</text>
+            <text class="sl">平均复现率</text>
           </view>
         </view>
-      </view>
 
-      <!-- 已登录 -->
-      <view v-else class="pc-row">
-        <view class="avatar-wrap">
-          <view class="avatar"><text class="avatar-t">{{ profile.name[0] || '我' }}</text></view>
-          <view class="lv-badge">Lv.4</view>
-        </view>
-        <view class="pc-info">
-          <text class="pc-name">{{ profile.name }}</text>
-          <text class="pc-bio">{{ profile.bio }}</text>
-          <view class="pc-tags">
-            <text v-for="tag in profile.tags" :key="tag" class="pc-tag">{{ tag }}</text>
+        <view v-if="isLoggedIn" class="quick-actions-wrap">
+          <view class="qa-card qa-card-publish" @tap="toPublishPage">
+            <view class="qa-card-deco" />
+            <view class="qa-card-icon qa-card-icon-publish">
+              <uni-icons type="plusempty" size="20" color="#fff" />
+            </view>
+            <view class="qa-card-body">
+              <text class="qa-card-title">发布新 Skill</text>
+              <text class="qa-card-desc">沉淀可复用经验，帮助更多人</text>
+            </view>
+            <view class="qa-card-arrow qa-card-arrow-publish">
+              <uni-icons type="right" size="12" color="#E45C1A" />
+            </view>
           </view>
-        </view>
-        <view class="edit-btn" @tap="editProfile">
-          <uni-icons type="compose" size="17" color="#9CA3AF" />
-        </view>
-      </view>
 
-      <view class="stats-bar" :class="{ 'stats-dim': !isLoggedIn }">
-        <view class="stat-item">
-          <text class="sv">{{ isLoggedIn ? profile.publishedSkillCount : '--' }}</text>
-          <text class="sl">发布 Skill</text>
-        </view>
-        <view class="stat-div" />
-        <view class="stat-item">
-          <text class="sv orange">{{ isLoggedIn ? profile.totalCopyCount : '--' }}</text>
-          <text class="sl">被复制</text>
-        </view>
-        <view class="stat-div" />
-        <view class="stat-item">
-          <text class="sv green">{{ isLoggedIn ? profile.avgSuccessRate : '--' }}</text>
-          <text class="sl">平均复现率</text>
+          <view class="qa-card qa-card-data" @tap="toMyDataCenterHome">
+            <view class="qa-card-deco" />
+            <view class="qa-card-icon qa-card-icon-data">
+              <uni-icons type="bars" size="20" color="#fff" />
+            </view>
+            <view class="qa-card-body">
+              <text class="qa-card-title">我的数据中心</text>
+              <text class="qa-card-desc">查看发布、收藏、点赞、复制</text>
+            </view>
+            <view class="qa-card-arrow qa-card-arrow-data">
+              <uni-icons type="right" size="12" color="#5B5BD6" />
+            </view>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- ── 我的数据中心 ── -->
     <view class="section">
-      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
+      <view class="section-head">
+        <text class="section-title">我的数据</text>
+        <text class="section-sub">创作轨迹与互动结果</text>
+      </view>
+
+      <view v-if="!isLoggedIn" class="guest-block card-shadow" @tap="goLogin">
         <view class="gb-inner">
           <text class="gb-icon">📊</text>
           <text class="gb-text">登录后查看发布、收藏、点赞、复制记录</text>
           <view class="gb-btn">去登录</view>
         </view>
       </view>
-      <view v-else class="data-entry-card">
-        <view class="data-entry-item" @tap="toMyDataCenter('publish')">
-          <view class="dei-icon dei-icon-publish">
+
+      <view v-else class="data-grid">
+        <view class="data-grid-item card-shadow" @tap="toMyDataCenter('publish')">
+          <view class="dgi-icon dgi-icon-publish">
             <uni-icons type="compose" size="18" color="#E45C1A" />
           </view>
-          <view class="dei-main">
-            <text class="dei-title">发布</text>
-            <text class="dei-sub">我发布的 Skill</text>
-          </view>
-          <text class="dei-count">{{ dataSummary.published }}</text>
-          <uni-icons type="right" size="13" color="#C8CBD4" />
+          <text class="dgi-title">发布</text>
+          <text class="dgi-count">{{ dataSummary.published }}</text>
+          <text class="dgi-sub">我发布的 Skill</text>
         </view>
-        <view class="data-entry-item" @tap="toMyDataCenter('favorite')">
-          <view class="dei-icon dei-icon-favorite">
+
+        <view class="data-grid-item card-shadow" @tap="toMyDataCenter('favorite')">
+          <view class="dgi-icon dgi-icon-favorite">
             <uni-icons type="heart" size="18" color="#5B5BD6" />
           </view>
-          <view class="dei-main">
-            <text class="dei-title">收藏</text>
-            <text class="dei-sub">我收藏的 Skill</text>
-          </view>
-          <text class="dei-count">{{ dataSummary.favorite }}</text>
-          <uni-icons type="right" size="13" color="#C8CBD4" />
+          <text class="dgi-title">收藏</text>
+          <text class="dgi-count">{{ dataSummary.favorite }}</text>
+          <text class="dgi-sub">收藏的优质内容</text>
         </view>
-        <view class="data-entry-item" @tap="toMyDataCenter('like')">
-          <view class="dei-icon dei-icon-like">
+
+        <view class="data-grid-item card-shadow" @tap="toMyDataCenter('like')">
+          <view class="dgi-icon dgi-icon-like">
             <uni-icons type="chat" size="18" color="#2F8A57" />
           </view>
-          <view class="dei-main">
-            <text class="dei-title">点赞</text>
-            <text class="dei-sub">我点赞的动态</text>
-          </view>
-          <text class="dei-count">{{ dataSummary.like }}</text>
-          <uni-icons type="right" size="13" color="#C8CBD4" />
+          <text class="dgi-title">点赞</text>
+          <text class="dgi-count">{{ dataSummary.like }}</text>
+          <text class="dgi-sub">点赞过的动态</text>
         </view>
-        <view class="data-entry-item" @tap="toMyDataCenter('copy')">
-          <view class="dei-icon dei-icon-copy">
+
+        <view class="data-grid-item card-shadow" @tap="toMyDataCenter('copy')">
+          <view class="dgi-icon dgi-icon-copy">
             <uni-icons type="paperplane" size="18" color="#0B8B8C" />
           </view>
-          <view class="dei-main">
-            <text class="dei-title">复制</text>
-            <text class="dei-sub">我复制过的 Skill</text>
-          </view>
-          <text class="dei-count">{{ dataSummary.copy }}</text>
-          <uni-icons type="right" size="13" color="#C8CBD4" />
+          <text class="dgi-title">复制</text>
+          <text class="dgi-count">{{ dataSummary.copy }}</text>
+          <text class="dgi-sub">复制使用记录</text>
         </view>
       </view>
     </view>
 
-    <!-- ── 设置 ── -->
     <view class="section">
-      <view class="settings-card">
+      <view class="section-head">
+        <text class="section-title">设置与服务</text>
+      </view>
+
+      <view class="settings-card card-shadow">
         <view class="settings-row" @tap="clearCache">
           <view class="settings-icon-box">
             <uni-icons type="trash" color="#9CA3AF" size="17" />
@@ -123,6 +155,7 @@
           <text class="settings-hint">{{ cacheSize }}</text>
           <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
+
         <view class="settings-row" @tap="showAbout">
           <view class="settings-icon-box">
             <uni-icons type="info-filled" color="#9CA3AF" size="17" />
@@ -131,6 +164,7 @@
           <text class="settings-hint">v1.0.0</text>
           <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
+
         <view class="settings-row" @tap="toFeedback">
           <view class="settings-icon-box settings-icon-feedback">
             <uni-icons type="chat" color="#5B5BD6" size="17" />
@@ -138,6 +172,7 @@
           <text class="settings-label">意见反馈</text>
           <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
+
         <view class="settings-row" @tap="showCoopPopup = true">
           <view class="settings-icon-box settings-icon-coop">
             <uni-icons type="heart" color="#FF7A45" size="17" />
@@ -145,7 +180,7 @@
           <text class="settings-label">商务合作</text>
           <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
-        <!-- 未登录：展示登录入口 -->
+
         <view v-if="!isLoggedIn" class="settings-row last login-row" @tap="goLogin">
           <view class="settings-icon-box settings-icon-login">
             <uni-icons type="person" color="#5B5BD6" size="17" />
@@ -153,7 +188,7 @@
           <text class="settings-label login-label">登录 / 注册</text>
           <uni-icons type="right" size="13" color="#5B5BD6" />
         </view>
-        <!-- 已登录：退出登录 -->
+
         <view v-else class="settings-row last logout-row" @tap="logoutConfirm">
           <view class="settings-icon-box">
             <uni-icons type="undo" color="#E45C1A" size="17" />
@@ -167,7 +202,6 @@
     <view class="page-bottom" />
   </scroll-view>
 
-  <!-- ── 商务合作弹窗 ── -->
   <view v-if="showCoopPopup" class="popup-mask" @tap="showCoopPopup = false">
     <view class="popup-sheet" @tap.stop>
       <view class="popup-handle" />
@@ -222,19 +256,8 @@ import { useUserStore } from '@/stores'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
-onShow(() => {
-  // #ifdef MP-WEIXIN
-  uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
-  // #endif
-  loadMyData()
-})
 const userStore = useUserStore()
 const isLoggedIn = computed(() => !!userStore.token)
-
-
-const goLogin = () => {
-  uni.navigateTo({ url: '/pages/login/index' })
-}
 
 const profile = reactive({
   name: '我',
@@ -244,6 +267,29 @@ const profile = reactive({
   totalCopyCount: '0',
   avgSuccessRate: '--'
 })
+
+const dataSummary = reactive({
+  published: '--',
+  favorite: '--',
+  like: '--',
+  copy: '--'
+})
+
+const resetProfile = () => {
+  profile.name = '我'
+  profile.bio = '不断验证Skill，不断分享经验'
+  profile.tags = ['Skill']
+  profile.publishedSkillCount = '0'
+  profile.totalCopyCount = '0'
+  profile.avgSuccessRate = '--'
+}
+
+const resetSummary = (value = '--') => {
+  dataSummary.published = value
+  dataSummary.favorite = value
+  dataSummary.like = value
+  dataSummary.copy = value
+}
 
 const formatCount = (value: number | null | undefined) => {
   const n = Number(value ?? 0)
@@ -256,13 +302,6 @@ const formatRate = (value: number | null | undefined) => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return '--'
   return `${Number(value).toFixed(0)}%`
 }
-
-const dataSummary = reactive({
-  published: '--',
-  favorite: '--',
-  like: '--',
-  copy: '--'
-})
 
 const loadLegacySummary = async () => {
   const [favoriteData, likeData, copyData] = await Promise.all([
@@ -278,17 +317,12 @@ const loadLegacySummary = async () => {
 
 const loadMyData = async () => {
   if (!userStore.token) {
-    dataSummary.published = '--'
-    dataSummary.favorite = '--'
-    dataSummary.like = '--'
-    dataSummary.copy = '--'
+    resetProfile()
+    resetSummary()
     return
   }
 
-  dataSummary.published = '--'
-  dataSummary.favorite = '--'
-  dataSummary.like = '--'
-  dataSummary.copy = '--'
+  resetSummary()
 
   const [me, summary] = await Promise.all([
     getMyProfile().catch(() => null),
@@ -296,12 +330,12 @@ const loadMyData = async () => {
   ])
 
   if (me) {
-    profile.name = me?.nickname || '我'
-    profile.bio = me?.bio || '不断验证Skill，不断分享经验'
-    profile.tags = me?.bio ? ['创作者'] : ['Skill']
-    profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
-    profile.totalCopyCount = formatCount(me?.totalCopyCount)
-    profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
+    profile.name = me.nickname || '我'
+    profile.bio = me.bio || '不断验证Skill，不断分享经验'
+    profile.tags = me.bio ? ['创作者'] : ['Skill']
+    profile.publishedSkillCount = formatCount(me.publishedSkillCount)
+    profile.totalCopyCount = formatCount(me.totalCopyCount)
+    profile.avgSuccessRate = formatRate(me.avgSuccessRate)
   }
 
   if (summary) {
@@ -315,9 +349,24 @@ const loadMyData = async () => {
   if (me) {
     dataSummary.published = formatCount(me.publishedSkillCount)
   }
-
   await loadLegacySummary()
 }
+
+onShow(() => {
+  // #ifdef MP-WEIXIN
+  uni.getTabBar(instance?.proxy)?.setData({ selected: 2 })
+  // #endif
+  void loadMyData()
+})
+
+watch(isLoggedIn, (val) => {
+  if (val) {
+    void loadMyData()
+    return
+  }
+  resetProfile()
+  resetSummary()
+})
 
 const cacheSize = ref('计算中...')
 onMounted(() => {
@@ -326,14 +375,34 @@ onMounted(() => {
       const kb = res.currentSize
       cacheSize.value = kb < 1024 ? `${kb} KB` : `${(kb / 1024).toFixed(1)} MB`
     },
-    fail: () => { cacheSize.value = '' }
+    fail: () => {
+      cacheSize.value = ''
+    }
   })
 })
 
-const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
-const toFeedback = () => uni.navigateTo({ url: '/pages/feedback/index' })
+const goLogin = () => {
+  uni.navigateTo({ url: '/pages/login/index' })
+}
+
+const toPublishPage = () => {
+  uni.switchTab({ url: '/pages/publish/index' })
+}
+
+const toMyDataCenterHome = () => {
+  uni.navigateTo({ url: '/pages/my/data' })
+}
+
 const toMyDataCenter = (tab: 'publish' | 'favorite' | 'like' | 'copy') => {
   uni.navigateTo({ url: `/pages/my/data?tab=${tab}` })
+}
+
+const editProfile = () => {
+  uni.showToast({ title: '编辑资料开发中', icon: 'none' })
+}
+
+const toFeedback = () => {
+  uni.navigateTo({ url: '/pages/feedback/index' })
 }
 
 const showCoopPopup = ref(false)
@@ -354,7 +423,7 @@ const clearCache = () => {
   uni.showModal({
     title: '清除缓存',
     content: '确定要清除本地缓存吗？',
-    confirmColor: '#FF7A45',
+    confirmColor: '#E45C1A',
     success: ({ confirm }) => {
       if (!confirm) return
       uni.clearStorageSync()
@@ -370,7 +439,7 @@ const showAbout = () => {
     content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队',
     showCancel: false,
     confirmText: '知道了',
-    confirmColor: '#5B5BD6',
+    confirmColor: '#5B5BD6'
   })
 }
 
@@ -394,276 +463,261 @@ const logoutConfirm = () => {
   background: var(--bg-secondary);
 }
 
-/* ── Profile ── */
-.profile-card {
-  background: var(--card-bg);
-  padding: 0 24rpx;
+.section {
+  padding: 0 24rpx 20rpx;
+}
+
+.profile-section {
   padding-top: calc(constant(safe-area-inset-top) + 16rpx);
   padding-top: calc(env(safe-area-inset-top) + 16rpx);
-  margin-bottom: 16rpx;
-
-  .pc-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 20rpx;
-    padding-bottom: 24rpx;
-  }
-
-  .pc-guest {
-    align-items: center;
-    cursor: pointer;
-
-    &:active {
-      opacity: 0.7;
-    }
-  }
-
-  .avatar-wrap {
-    position: relative;
-    flex-shrink: 0;
-
-    .avatar {
-      width: 96rpx;
-      height: 96rpx;
-      border-radius: 50%;
-      background: var(--primary-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6rpx 20rpx var(--primary-shadow);
-
-      .avatar-t {
-        font-size: 40rpx;
-        color: #fff;
-        font-weight: 800;
-      }
-    }
-
-    .avatar-guest {
-      background: var(--bg-secondary);
-      box-shadow: none;
-      border: 2rpx solid var(--border-light);
-    }
-
-    .lv-badge {
-      position: absolute;
-      bottom: -4rpx;
-      right: -6rpx;
-      font-size: 17rpx;
-      font-weight: 700;
-      color: var(--accent-color);
-      background: var(--accent-bg);
-      border: 2rpx solid var(--accent-border);
-      padding: 2rpx 10rpx;
-      border-radius: 100rpx;
-    }
-  }
-
-  .pc-info {
-    flex: 1;
-    padding-top: 4rpx;
-    min-width: 0;
-
-    .pc-name {
-      display: block;
-      font-size: 34rpx;
-      font-weight: 800;
-      color: var(--text-primary);
-      margin-bottom: 8rpx;
-    }
-
-    .pc-bio {
-      display: block;
-      font-size: 24rpx;
-      color: var(--text-gray);
-      line-height: 1.5;
-      margin-bottom: 12rpx;
-    }
-
-    .pc-tags {
-      display: flex;
-      gap: 10rpx;
-
-      .pc-tag {
-        font-size: 18rpx;
-        color: var(--primary-color);
-        font-weight: 500;
-        background: var(--primary-light);
-        padding: 4rpx 14rpx;
-        border-radius: 8rpx;
-      }
-
-      .pc-tag-cta {
-        color: var(--accent-color);
-        background: var(--accent-light);
-        font-weight: 600;
-      }
-    }
-  }
-
-  .edit-btn {
-    width: 56rpx;
-    height: 56rpx;
-    border-radius: 16rpx;
-    background: rgba(0, 0, 0, 0.04);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    &:active {
-      background: rgba(0, 0, 0, 0.08);
-    }
-  }
 }
 
 /* #ifdef H5 */
-.profile-card {
-  padding-top: calc(var(--h5-safe-area-inset-top, 0px) + 16rpx) !important;
+.profile-section {
+  padding-top: calc(var(--h5-safe-area-inset-top, 0px) + 16rpx);
 }
 
 /* #endif */
 
+.profile-card {
+  border-radius: 28rpx;
+  padding: 24rpx;
+}
+
+.pc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.pc-guest {
+  align-items: center;
+
+  &:active {
+    opacity: 0.75;
+  }
+}
+
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 20rpx var(--primary-shadow);
+}
+
+.avatar-t {
+  font-size: 40rpx;
+  color: #fff;
+  font-weight: 800;
+}
+
+.avatar-guest {
+  background: var(--bg-secondary);
+  box-shadow: none;
+  border: 2rpx solid var(--border-light);
+}
+
+.lv-badge {
+  position: absolute;
+  bottom: -4rpx;
+  right: -6rpx;
+  font-size: 17rpx;
+  font-weight: 700;
+  color: var(--accent-color);
+  background: var(--accent-bg);
+  border: 2rpx solid var(--accent-border);
+  padding: 2rpx 10rpx;
+  border-radius: 100rpx;
+}
+
+.pc-info {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4rpx;
+}
+
+.pc-name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.pc-bio {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-gray);
+  line-height: 1.5;
+  margin-bottom: 12rpx;
+}
+
+.pc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.pc-tag {
+  font-size: 18rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: var(--primary-light);
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.pc-tag-cta {
+  color: var(--accent-color);
+  background: var(--accent-light);
+  font-weight: 600;
+}
+
+.edit-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.08);
+  }
+}
+
 .stats-bar {
   display: flex;
   align-items: center;
-  padding: 20rpx 0 24rpx;
-  border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+  padding: 20rpx 0 0;
+  margin-top: 20rpx;
+  border-top: 1rpx solid var(--border-color-light);
 
   &.stats-dim {
     opacity: 0.35;
     pointer-events: none;
   }
-
-  .stat-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6rpx;
-
-    .sv {
-      font-size: 32rpx;
-      font-weight: 900;
-      color: var(--text-primary);
-    }
-
-    .sv.orange {
-      color: var(--accent-color);
-    }
-
-    .sv.green {
-      color: var(--green-color);
-    }
-
-    .sl {
-      font-size: 20rpx;
-      color: var(--text-muted);
-    }
-  }
-
-  .stat-div {
-    width: 1rpx;
-    height: 36rpx;
-    background: rgba(0, 0, 0, 0.06);
-  }
 }
 
-/* ── 通用 section ── */
-.section {
-  padding: 0 24rpx 16rpx;
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
 }
 
-
-
-/* ── 未登录占位块 ── */
-.guest-block {
-  border-radius: 20rpx;
-  background: var(--card-bg);
-  border: 1rpx dashed var(--primary-border);
-
-  &:active {
-    background: var(--primary-bg);
-  }
-
-  .gb-inner {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-    padding: 28rpx 24rpx;
-  }
-
-  .gb-icon {
-    font-size: 36rpx;
-    flex-shrink: 0;
-  }
-
-  .gb-text {
-    flex: 1;
-    font-size: 26rpx;
-    color: var(--text-muted);
-  }
-
-  .gb-btn {
-    font-size: 24rpx;
-    color: var(--primary-color);
-    font-weight: 600;
-    background: var(--primary-light);
-    padding: 8rpx 20rpx;
-    border-radius: 100rpx;
-    flex-shrink: 0;
-  }
+.sv {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--text-primary);
 }
 
-.data-entry-card {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  overflow: hidden;
+.sv.orange {
+  color: var(--orange-color);
 }
 
-.data-entry-item {
+.sv.green {
+  color: var(--green-color);
+}
+
+.sl {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
+.stat-div {
+  width: 1rpx;
+  height: 36rpx;
+  background: var(--border-color-light);
+}
+
+.quick-actions-wrap {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-color-light);
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.qa-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14rpx;
-  padding: 24rpx 20rpx;
-  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-
-  &:last-child {
-    border-bottom: none;
-  }
+  gap: 20rpx;
+  padding: 22rpx 20rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  transition: transform 0.15s ease;
 
   &:active {
-    background: var(--primary-bg);
+    transform: scale(0.97);
+    opacity: 0.88;
   }
 }
 
-.dei-icon {
-  width: 54rpx;
-  height: 54rpx;
-  border-radius: 14rpx;
+.qa-card-deco {
+  position: absolute;
+  top: -40rpx;
+  right: -30rpx;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.qa-card-publish {
+  background: linear-gradient(135deg, rgba(228, 92, 26, 0.10) 0%, rgba(228, 92, 26, 0.04) 100%);
+  border: 1rpx solid rgba(228, 92, 26, 0.18);
+
+  .qa-card-deco {
+    background: radial-gradient(circle, #E45C1A 0%, transparent 70%);
+  }
+}
+
+.qa-card-data {
+  background: linear-gradient(135deg, rgba(91, 91, 214, 0.10) 0%, rgba(91, 91, 214, 0.04) 100%);
+  border: 1rpx solid rgba(91, 91, 214, 0.18);
+
+  .qa-card-deco {
+    background: radial-gradient(circle, #5B5BD6 0%, transparent 70%);
+  }
+}
+
+.qa-card-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.dei-icon-publish {
-  background: rgba(228, 92, 26, 0.12);
+.qa-card-icon-publish {
+  background: linear-gradient(145deg, #F27A3A, #E45C1A);
+  box-shadow: 0 6rpx 16rpx rgba(228, 92, 26, 0.30);
 }
 
-.dei-icon-favorite {
-  background: var(--primary-light-12);
+.qa-card-icon-data {
+  background: linear-gradient(145deg, #7B7BE8, #5B5BD6);
+  box-shadow: 0 6rpx 16rpx rgba(91, 91, 214, 0.30);
 }
 
-.dei-icon-like {
-  background: rgba(47, 138, 87, 0.12);
-}
-
-.dei-icon-copy {
-  background: var(--teal-light);
-}
-
-.dei-main {
+.qa-card-body {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -671,171 +725,157 @@ const logoutConfirm = () => {
   gap: 4rpx;
 }
 
-.dei-title {
-  font-size: 28rpx;
+.qa-card-title {
+  font-size: 27rpx;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
-.dei-sub {
+.qa-card-desc {
   font-size: 22rpx;
   color: var(--text-muted);
+  line-height: 1.4;
 }
 
-.dei-count {
-  font-size: 26rpx;
-  color: var(--text-gray);
-  font-weight: 700;
-  margin-right: 6rpx;
-}
-
-/* ── Skill 列表 ── */
-.skill-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.skill-card {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  padding: 24rpx;
-
-  &:active {
-    background: var(--primary-bg);
-  }
-
-  .sc-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12rpx;
-
-    .scene-tag {
-      font-size: 18rpx;
-      color: var(--primary-color);
-      font-weight: 500;
-      background: var(--primary-light);
-      padding: 4rpx 12rpx;
-      border-radius: 6rpx;
-    }
-
-    .sc-time {
-      font-size: 20rpx;
-      color: var(--text-muted);
-    }
-  }
-
-  .sc-title {
-    display: block;
-    font-size: 28rpx;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 16rpx;
-    line-height: 1.4;
-  }
-
-  .sc-stats {
-    display: flex;
-    align-items: center;
-    gap: 10rpx;
-
-    .sc-stat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4rpx;
-      padding: 12rpx 0;
-      background: var(--bg-secondary);
-      border-radius: 12rpx;
-
-      .ss-val {
-        font-size: 26rpx;
-        font-weight: 700;
-        color: var(--text-primary);
-      }
-
-      .ss-val.orange {
-        color: var(--accent-color);
-      }
-
-      .ss-val.green {
-        color: var(--green-color);
-      }
-
-      .ss-val.blue {
-        color: var(--primary-color);
-      }
-
-      .ss-lab {
-        font-size: 18rpx;
-        color: var(--text-muted);
-      }
-    }
-  }
-}
-
-.list-card {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  overflow: hidden;
-}
-
-.line-item {
+.qa-card-arrow {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 22rpx 20rpx;
-  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-  &:last-child {
-    border-bottom: none;
-  }
+.qa-card-arrow-publish {
+  background: rgba(228, 92, 26, 0.12);
+}
+
+.qa-card-arrow-data {
+  background: rgba(91, 91, 214, 0.12);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6rpx 4rpx 14rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+.guest-block {
+  border-radius: 24rpx;
+  border: 1rpx dashed var(--primary-border);
 
   &:active {
     background: var(--primary-bg);
   }
 }
 
-.item-main {
-  flex: 1;
-  min-width: 0;
+.gb-inner {
   display: flex;
-  flex-direction: column;
-  gap: 6rpx;
+  align-items: center;
+  gap: 16rpx;
+  padding: 28rpx 24rpx;
 }
 
-.item-title {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
+.gb-icon {
+  font-size: 36rpx;
+  flex-shrink: 0;
 }
 
-.item-sub {
-  font-size: 22rpx;
+.gb-text {
+  flex: 1;
+  font-size: 25rpx;
   color: var(--text-muted);
 }
 
-.item-meta {
-  font-size: 22rpx;
-  color: var(--text-gray);
+.gb-btn {
+  font-size: 24rpx;
+  color: var(--primary-color);
+  font-weight: 600;
+  background: var(--primary-light);
+  padding: 8rpx 20rpx;
+  border-radius: 100rpx;
+  flex-shrink: 0;
 }
 
-.empty-row {
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.data-grid-item {
+  min-height: 210rpx;
+  border-radius: 22rpx;
+  padding: 20rpx 18rpx;
   display: flex;
-  justify-content: center;
-  padding: 28rpx 20rpx;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8rpx;
+
+  &:active {
+    background: var(--primary-bg);
+  }
 }
 
-.empty-t {
+.dgi-icon {
+  width: 50rpx;
+  height: 50rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dgi-icon-publish {
+  background: rgba(228, 92, 26, 0.12);
+}
+
+.dgi-icon-favorite {
+  background: var(--primary-light-12);
+}
+
+.dgi-icon-like {
+  background: rgba(47, 138, 87, 0.12);
+}
+
+.dgi-icon-copy {
+  background: var(--teal-light);
+}
+
+.dgi-title {
   font-size: 24rpx;
   color: var(--text-muted);
 }
 
-/* ── 设置 ── */
+.dgi-count {
+  font-size: 36rpx;
+  color: var(--text-primary);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.dgi-sub {
+  margin-top: auto;
+  font-size: 21rpx;
+  color: var(--text-gray);
+  line-height: 1.35;
+}
+
 .settings-card {
-  background: var(--card-bg);
   border-radius: 24rpx;
   overflow: hidden;
 }
@@ -845,7 +885,7 @@ const logoutConfirm = () => {
   align-items: center;
   gap: 14rpx;
   padding: 24rpx 20rpx;
-  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1rpx solid var(--border-color-light);
 
   &.last {
     border-bottom: none;
@@ -854,34 +894,39 @@ const logoutConfirm = () => {
   &:active {
     background: var(--primary-bg);
   }
+}
 
-  .settings-icon-box {
-    width: 52rpx;
-    height: 52rpx;
-    border-radius: 14rpx;
-    background: rgba(0, 0, 0, 0.04);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
+.settings-icon-box {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 14rpx;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-  .settings-icon-login {
-    background: var(--primary-light);
-  }
+.settings-icon-login,
+.settings-icon-feedback {
+  background: var(--primary-light);
+}
 
-  .settings-label {
-    flex: 1;
-    font-size: 28rpx;
-    color: var(--text-primary);
-    font-weight: 500;
-  }
+.settings-icon-coop {
+  background: var(--accent-light);
+}
 
-  .settings-hint {
-    font-size: 24rpx;
-    color: var(--text-muted);
-    margin-right: 6rpx;
-  }
+.settings-label {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.settings-hint {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  margin-right: 6rpx;
 }
 
 .logout-row {
@@ -906,16 +951,6 @@ const logoutConfirm = () => {
   height: calc(80rpx + env(safe-area-inset-bottom));
 }
 
-/* ── 新增设置行图标 ── */
-.settings-icon-feedback {
-  background: var(--primary-light) !important;
-}
-
-.settings-icon-coop {
-  background: var(--accent-light) !important;
-}
-
-/* ── 商务合作弹窗 ── */
 .popup-mask {
   position: fixed;
   top: 0;
@@ -933,7 +968,6 @@ const logoutConfirm = () => {
   background: var(--card-bg);
   border-radius: 32rpx 32rpx 0 0;
   padding: 0 32rpx calc(40rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
 }
 
 .popup-handle {

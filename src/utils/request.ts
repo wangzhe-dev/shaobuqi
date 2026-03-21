@@ -19,6 +19,9 @@ const whiteList = [
 // 登录态弹窗锁，避免并发请求重复弹出
 let authModalLock = false
 
+// 防重提交内存锁
+const PENDING_REQUESTS = new Map<string, { data: string; time: number }>()
+
 const isWhiteListRequest = (url?: string): boolean => {
 	if (!url) return false
 	const pureUrl = `${url}`.split('?')[0]
@@ -63,26 +66,24 @@ service.interceptors.request.use((config : HttpRequestConfig) => {
 
 	// 防止数据重复提交
 	if (config.method === 'POST' || config.method === 'PUT' || config.method === 'DELETE') {
-		const requestObj = {
-			url: config.url,
-			data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
-			time: new Date().getTime()
-		}
+		const requestKey = `${config.method}-${config.url}`
+		const requestData = typeof config.data === 'object' ? JSON.stringify(config.data || {}) : String(config.data)
+		const now = Date.now()
+		const interval = 1000
 
-		const storageRequestObj = uni.getStorageSync('storageRequestObj')
-		if (!storageRequestObj) {
-			uni.setStorageSync('storageRequestObj', requestObj)
-		} else {
-			const storageUrl = storageRequestObj.url
-			const storageData = storageRequestObj.data
-			const storageTime = storageRequestObj.time
-			// 间隔时间(ms)，小于此时间视为重复提交
-			const interval = 1000
-			if (storageData === requestObj.data && requestObj.time - storageTime < interval && storageUrl === requestObj.url) {
-				return Promise.reject('数据正在处理，请勿重复提交')
-			} else {
-				uni.setStorageSync('storageRequestObj', requestObj)
-			}
+		const prevRequest = PENDING_REQUESTS.get(requestKey)
+		if (prevRequest && prevRequest.data === requestData && (now - prevRequest.time < interval)) {
+			return Promise.reject('数据正在处理，请勿重复提交')
+		}
+		PENDING_REQUESTS.set(requestKey, { data: requestData, time: now })
+
+		// 定期清理过期的防重记录，防止内存泄漏
+		if (PENDING_REQUESTS.size > 50) {
+			PENDING_REQUESTS.forEach((val, key) => {
+				if (now - val.time > interval) {
+					PENDING_REQUESTS.delete(key)
+				}
+			})
 		}
 	}
 
