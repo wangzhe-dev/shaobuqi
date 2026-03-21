@@ -1,15 +1,12 @@
 <template>
 	<view class="page">
-		<uni-nav-bar status-bar :title="skillId ? '写反馈' : '记一笔'">
-			<template #left>
-				<text class="top-cancel" @tap="goBack">取消</text>
-			</template>
-			<template #right>
-				<view class="btn-pub" :class="{ on: canPublish }" @tap="publish">
-					<text class="btn-pub-t">发布</text>
-				</view>
-			</template>
-		</uni-nav-bar>
+		<!-- Top nav -->
+		<view class="top-bar">
+			<text class="top-cancel" @tap="goBack">取消</text>
+			<view class="btn-pub" :class="{ on: canPublish }" @tap="publish">
+				<text class="btn-pub-t">发布</text>
+			</view>
+		</view>
 
 		<scroll-view class="body" scroll-y :show-scrollbar="false">
 			<!-- Rich text editor -->
@@ -157,14 +154,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
-import AppImage from '@/components/app-image/index.vue'
-import { createSkillFeedback } from '@/api/skill'
-import { createFeedPost, updateFeedPostImages } from '@/api/feed'
 import type { FeedReaction } from '@/api/feed'
+import { createFeedPost, updateFeedPostImages } from '@/api/feed'
+import { createSkillFeedback } from '@/api/skill'
 import { uploadImageFile } from '@/api/upload'
+import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { computed, reactive, ref } from 'vue'
 
 const modelOptions = [
 	'Claude Sonnet', 'Claude Opus', 'Claude Haiku',
@@ -357,27 +354,62 @@ onLoad((query: any) => {
 	font-family: 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 }
 
+/* ── top bar ── */
+.top-bar {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 20rpx 24rpx 16rpx;
+	flex-shrink: 0;
+}
+
+/* #ifdef H5 */
+.top-bar {
+	padding-top: calc(20rpx + constant(safe-area-inset-top));
+	padding-top: calc(20rpx + env(safe-area-inset-top));
+}
+/* #endif */
+
 .top-cancel {
 	font-size: 30rpx;
 	color: #6B7280;
 	font-weight: 500;
-}
-
-.btn-pub {
 	position: relative;
 	z-index: 1;
-	height: 60rpx;
-	padding: 0 32rpx;
-	border-radius: 100rpx;
-	background: rgba(91, 91, 214, 0.15);
-	display: flex;
-	align-items: center;
+}
 
-	.btn-pub-t {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: rgba(91, 91, 214, 0.45);
-	}
+.top-title {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 34rpx;
+	color: #111827;
+	font-weight: 700;
+	line-height: 1;
+	pointer-events: none;
+}
+
+	.btn-pub {
+		position: relative;
+		z-index: 1;
+		height: 60rpx;
+		min-width: 120rpx;
+		padding: 0 32rpx;
+		border-radius: 100rpx;
+		background: rgba(91, 91, 214, 0.15);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+
+		.btn-pub-t {
+			font-size: 26rpx;
+			font-weight: 700;
+			line-height: 1;
+			white-space: nowrap;
+			color: rgba(91, 91, 214, 0.45);
+		}
 
 	&.on {
 		background: #5B5BD6;

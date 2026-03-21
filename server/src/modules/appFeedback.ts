@@ -13,11 +13,11 @@ const submitSchema = z.object({
 export const appFeedbackRouter = Router()
 
 appFeedbackRouter.post('/', requireAuth, async (req, res) => {
-  const parsed = submitSchema.safeParse(req.body)
-  if (!parsed.success) {
-    sendError(res, parsed.error.errors[0]?.message || '参数不合法', 400)
-    return
-  }
+	const parsed = submitSchema.safeParse(req.body)
+	if (!parsed.success) {
+		sendError(res, parsed.error.issues[0]?.message || '参数不合法', 400)
+		return
+	}
 
   const { type, content, contact } = parsed.data
   const userId = req.auth!.userId

@@ -1,6 +1,6 @@
 <template>
 	<view class="page">
-		<uni-nav-bar status-bar title="发布">
+		<uni-nav-bar status-bar title="发布" left-width="140rpx" right-width="140rpx">
 			<template #left>
 				<text class="top-cancel" @tap="goBack">取消</text>
 			</template>
@@ -54,54 +54,75 @@
 				</view>
 			</view>
 
-			<!-- Scene selector -->
-			<view class="meta-section">
-				<view class="meta-row">
-					<text class="meta-label">分类</text>
-					<text v-if="!form.scene" class="meta-hint">选一个，让更多人发现</text>
+				<!-- Scene selector -->
+				<view class="meta-section">
+					<view class="meta-row">
+						<text class="meta-label">分类</text>
+						<text v-if="!form.scene" class="meta-hint">选一个，让更多人发现</text>
+					</view>
+					<view class="scene-picker">
+						<uni-data-checkbox
+							v-model="form.scene"
+							mode="tag"
+							:localdata="sceneOptions"
+						/>
+					</view>
 				</view>
-				<scroll-view class="scene-scroll" scroll-x :show-scrollbar="false">
-					<view class="scene-list">
-						<view
-							v-for="s in SCENE_OPTIONS"
-							:key="s"
-							class="scene-chip"
-							:class="{ on: form.scene === s }"
-							@tap="form.scene = s"
-						>
-							<text class="scene-chip-t">{{ s }}</text>
+
+				<!-- Usage scenes input -->
+				<view id="section-tags" class="meta-section tags-section">
+					<view class="meta-row">
+						<text class="meta-label">使用场景</text>
+						<text class="meta-sub" :class="{ warn: form.tags.length >= TAG_LIMIT }">
+							{{ form.tags.length }}/{{ TAG_LIMIT }}
+						</text>
+					</view>
+					<text class="tags-tip">可输入自定义标签，或点下面推荐项</text>
+					<view class="tags-wrap">
+						<view v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
+							<text class="tag-t">{{ tag }}</text>
+							<text class="tag-rm" @tap.stop="removeTag(i)">×</text>
+						</view>
+						<input
+							v-if="form.tags.length < TAG_LIMIT"
+							class="tag-inp"
+							v-model="tagInput"
+							:focus="tagInputFocus"
+							placeholder="添加使用场景，回车确认"
+							placeholder-class="tag-ph"
+							maxlength="12"
+							@confirm="addTag"
+							@blur="tagInputFocus = false"
+						/>
+					</view>
+					<view v-if="tagSuggestions.length" class="tags-suggest">
+						<text class="tags-suggest-label">推荐</text>
+						<view class="tags-suggest-wrap">
+							<view v-for="tag in tagSuggestions" :key="tag" class="tag-sg" @tap="appendTag(tag)">
+								<text class="tag-sg-t">+ {{ tag }}</text>
+							</view>
 						</view>
 					</view>
-				</scroll-view>
-			</view>
-
-			<!-- Usage scenes input -->
-			<view id="section-tags" class="meta-section tags-section">
-				<view class="meta-row">
-					<text class="meta-label">使用场景</text>
-					<text class="meta-sub">{{ form.tags.length }}/5</text>
 				</view>
-				<view class="tags-wrap">
-					<view v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
-						<text class="tag-t">{{ tag }}</text>
-						<text class="tag-rm" @tap.stop="removeTag(i)">×</text>
-					</view>
-					<input
-						v-if="form.tags.length < 5"
-						class="tag-inp"
-						v-model="tagInput"
-						:focus="tagInputFocus"
-						placeholder="添加使用场景，回车确认"
-						placeholder-class="tag-ph"
-						maxlength="12"
-						@confirm="addTag"
-						@blur="tagInputFocus = false"
-					/>
-				</view>
-			</view>
 
-			<view class="body-gap" />
-		</scroll-view>
+				<view class="meta-section brief-section">
+					<uni-section
+						title="简介"
+						sub-title="会展示在列表卡片，建议 30~90 字"
+						type="line"
+						padding
+					>
+						<uni-easyinput
+							type="textarea"
+							v-model="form.brief"
+							placeholder="请输入简介，帮助用户快速理解内容价值"
+							:maxlength="120"
+						/>
+					</uni-section>
+				</view>
+
+				<view class="body-gap" />
+			</scroll-view>
 
 		<!-- Formatting bar (above bottom toolbar, fixed) -->
 		<view v-if="showFormatBar" class="format-bar">
@@ -163,20 +184,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
-import AppImage from '@/components/app-image/index.vue'
 import { createSkill, getSkillCategories, updateSkill } from '@/api/skill'
 import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
+import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
+const TAG_LIMIT = 5
 const FALLBACK_SCENES = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
 const SCENE_OPTIONS = ref<string[]>(FALLBACK_SCENES)
+const TAG_FALLBACK_SUGGESTIONS = ['入门', '提效', '模板', '案例', '复盘', '技巧']
+const TAG_SCENE_SUGGESTIONS: Record<string, string[]> = {
+	写作: ['标题', '文案', '润色', '提纲', '公众号'],
+	编程: ['调试', '重构', '脚手架', '性能', '接口'],
+	自媒体: ['选题', '脚本', '封面', '增长', '转化'],
+	办公: ['汇报', '周报', 'PPT', '表格', '邮件'],
+	运营: ['活动', '拉新', '留存', '投放', 'SOP'],
+	学习: ['笔记', '总结', '记忆', '刷题', '拆解'],
+	设计: ['配色', '排版', '海报', 'UI', '品牌'],
+	电商: ['详情页', '客服', '选品', '评价', '促销']
+}
 
 type PostForm = {
 	title: string
+	brief: string
 	html: string
 	text: string
 	scene: string
@@ -195,10 +229,29 @@ const scrollToId = ref('')
 
 const form = reactive<PostForm>({
 	title: '',
+	brief: '',
 	html: '',
 	text: '',
 	scene: '',
 	tags: []
+})
+
+const sceneOptions = computed(() => {
+	const merged = Array.from(new Set(SCENE_OPTIONS.value
+		.map((v) => `${v}`.trim())
+		.filter(Boolean)))
+	return merged.map((v) => ({ text: v, value: v }))
+})
+
+const tagSuggestions = computed(() => {
+	const scene = form.scene.trim()
+	const base = TAG_SCENE_SUGGESTIONS[scene] || TAG_FALLBACK_SUGGESTIONS
+	return base
+		.map((v) => `${v}`.trim())
+		.filter(Boolean)
+		.filter((v, i, arr) => arr.indexOf(v) === i)
+		.filter((v) => !form.tags.includes(v))
+		.slice(0, 8)
 })
 
 const stripHtml = (html: string) =>
@@ -267,11 +320,32 @@ const removeMedia = (i: number) => mediaList.value.splice(i, 1)
 /* ── usage scenes(tags) ── */
 const addTag = () => {
 	const v = tagInput.value.trim().replace(/^#/, '')
-	if (v && !form.tags.includes(v) && form.tags.length < 5) form.tags.push(v)
+	if (!v) {
+		tagInput.value = ''
+		return
+	}
+	if (form.tags.includes(v)) {
+		tagInput.value = ''
+		return
+	}
+	if (form.tags.length >= TAG_LIMIT) {
+		uni.showToast({ title: `最多添加${TAG_LIMIT}个标签`, icon: 'none' })
+		return
+	}
+	form.tags.push(v)
 	tagInput.value = ''
 }
 
 const removeTag = (i: number) => form.tags.splice(i, 1)
+
+const appendTag = (tag: string) => {
+	if (!tag || form.tags.includes(tag)) return
+	if (form.tags.length >= TAG_LIMIT) {
+		uni.showToast({ title: `最多添加${TAG_LIMIT}个标签`, icon: 'none' })
+		return
+	}
+	form.tags.push(tag)
+}
 
 // # 按钮：滚动到使用场景区并聚焦输入框，避免和编辑器内插入文本的逻辑重叠
 const focusTagInput = () => {
@@ -286,7 +360,7 @@ const focusTagInput = () => {
 const canPublish = computed(() => !!(form.title.trim() || form.text.trim()))
 
 const hasContent = computed(() =>
-	!!(form.title.trim() || form.text.trim() || mediaList.value.length)
+	!!(form.title.trim() || form.brief.trim() || form.text.trim() || mediaList.value.length)
 )
 
 /* ── helpers ── */
@@ -296,6 +370,12 @@ const buildBrief = (text: string) => {
 	const lines = pure.split(/[。！？!?；;\n]/).map((s) => s.trim()).filter(Boolean)
 	const merged = (lines.slice(0, 2).join('，') || pure).trim()
 	return merged.length > 90 ? `${merged.slice(0, 87)}...` : merged
+}
+
+const buildPromptPreview = (text: string) => {
+	const pure = text.replace(/\s+/g, ' ').trim()
+	if (!pure) return ''
+	return pure.length > 120 ? `${pure.slice(0, 117)}...` : pure
 }
 
 const formatDate = (d: Date) =>
@@ -392,10 +472,11 @@ const uploadSkillImages = async (skillId: number, localPaths: string[]) => {
 	}
 }
 
-const buildFeedItem = (id: string, brief: string, scene: string) => ({
+const buildFeedItem = (id: string, brief: string, scene: string, promptPreview: string) => ({
 	id,
 	title: form.title.trim() || '无标题',
 	summary: brief,
+	promptPreview: promptPreview || brief,
 	scene,
 	tags: (form.tags.length ? form.tags : [scene]).slice(0, 3),
 	avgToken: '--',
@@ -417,6 +498,7 @@ const buildFeedItem = (id: string, brief: string, scene: string) => ({
 /* ── actions ── */
 const resetForm = () => {
 	form.title = ''
+	form.brief = ''
 	form.html = ''
 	form.text = ''
 	form.scene = ''
@@ -450,7 +532,8 @@ const doPublish = async () => {
 	if (!requireLogin(userStore.token, '发布内容')) return
 
 	const now = new Date()
-	const brief = buildBrief(form.text) || form.title.trim()
+	const brief = form.brief.trim() || buildBrief(form.text) || form.title.trim()
+	const promptPreview = buildPromptPreview(form.text) || brief
 	const scene = form.scene || '其他'
 	const sceneTags = form.tags.length ? [...form.tags] : [scene]
 
@@ -483,9 +566,9 @@ const doPublish = async () => {
 			})
 		}
 
-		const id = `${skillId}`
-		uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now, uploadedContentUrls))
-		uni.setStorageSync(FEED_PUBLISHED_KEY, buildFeedItem(id, brief, scene))
+			const id = `${skillId}`
+			uni.setStorageSync(SKILL_PREVIEW_KEY, buildSkillPayload(id, brief, scene, now, uploadedContentUrls))
+			uni.setStorageSync(FEED_PUBLISHED_KEY, buildFeedItem(id, brief, scene, promptPreview))
 
 		uni.hideLoading()
 		uni.showToast({ title: '发布成功', icon: 'success' })
@@ -529,21 +612,26 @@ onShow(() => {
 	font-weight: 500;
 }
 
-.btn-pub {
-	position: relative;
-	z-index: 1;
-	height: 60rpx;
-	padding: 0 32rpx;
-	border-radius: 100rpx;
-	background: rgba(91, 91, 214, 0.15);
-	display: flex;
-	align-items: center;
+	.btn-pub {
+		position: relative;
+		z-index: 1;
+		height: 60rpx;
+		min-width: 120rpx;
+		padding: 0 32rpx;
+		border-radius: 100rpx;
+		background: rgba(91, 91, 214, 0.15);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
 
-	.btn-pub-t {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: rgba(91, 91, 214, 0.45);
-	}
+		.btn-pub-t {
+			font-size: 26rpx;
+			font-weight: 700;
+			line-height: 1;
+			white-space: nowrap;
+			color: rgba(91, 91, 214, 0.45);
+		}
 
 	&.on {
 		background: #5B5BD6;
@@ -636,6 +724,7 @@ onShow(() => {
 /* ── meta sections ── */
 .meta-section { padding: 16rpx 28rpx 0; }
 .tags-section  { padding-bottom: 28rpx; }
+.brief-section { padding-top: 4rpx; }
 
 .meta-row {
 	display: flex;
@@ -647,37 +736,48 @@ onShow(() => {
 .meta-label { font-size: 24rpx; font-weight: 700; color: rgba(0, 0, 0, 0.55); }
 .meta-hint  { font-size: 22rpx; color: #C8CACC; }
 .meta-sub   { font-size: 22rpx; color: #9CA3AF; }
+.meta-sub.warn { color: #E45C1A; font-weight: 600; }
 
-/* ── scene chips ── */
-.scene-scroll { width: 100%; }
+/* ── scene picker ── */
+.scene-picker {
+	margin-top: 2rpx;
 
-.scene-list {
-	display: inline-flex;
-	gap: 12rpx;
-	padding-bottom: 4rpx;
-}
+	:deep(.uni-data-checklist) { flex: initial; }
+	:deep(.checklist-group) { align-items: center; }
 
-.scene-chip {
-	display: inline-flex;
-	align-items: center;
-	height: 60rpx;
-	padding: 0 22rpx;
-	border-radius: 12rpx;
-	background: rgba(0, 0, 0, 0.04);
-	border: 1rpx solid rgba(0, 0, 0, 0.08);
-	white-space: nowrap;
-	flex-shrink: 0;
+	:deep(.checklist-box.is--tag) {
+		height: 60rpx;
+		margin: 0 12rpx 10rpx 0;
+		padding: 0 22rpx;
+		border-radius: 12rpx;
+		border: 1rpx solid rgba(0, 0, 0, 0.08);
+		background: rgba(0, 0, 0, 0.04);
+	}
 
-	.scene-chip-t { font-size: 24rpx; font-weight: 600; color: rgba(0, 0, 0, 0.55); }
+	:deep(.checklist-box.is--tag .checklist-text) {
+		font-size: 24rpx;
+		font-weight: 600;
+		color: rgba(0, 0, 0, 0.55);
+	}
 
-	&.on {
+	:deep(.checklist-box.is--tag.is-checked) {
 		background: rgba(91, 91, 214, 0.10);
 		border-color: rgba(91, 91, 214, 0.30);
-		.scene-chip-t { color: #5B5BD6; }
+	}
+
+	:deep(.checklist-box.is--tag.is-checked .checklist-text) {
+		color: #5B5BD6;
 	}
 }
 
 /* ── tags ── */
+.tags-tip {
+	display: block;
+	margin-bottom: 12rpx;
+	font-size: 22rpx;
+	color: rgba(0, 0, 0, 0.40);
+}
+
 .tags-wrap {
 	display: flex;
 	flex-wrap: wrap;
@@ -713,6 +813,43 @@ onShow(() => {
 }
 
 .tag-ph { color: #C8CACC; }
+
+.tags-suggest {
+	margin-top: 10rpx;
+	display: flex;
+	align-items: flex-start;
+	gap: 10rpx;
+}
+
+.tags-suggest-label {
+	flex-shrink: 0;
+	font-size: 22rpx;
+	font-weight: 600;
+	color: rgba(0, 0, 0, 0.45);
+	line-height: 46rpx;
+}
+
+.tags-suggest-wrap {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10rpx;
+}
+
+.tag-sg {
+	height: 46rpx;
+	padding: 0 14rpx;
+	border-radius: 999rpx;
+	border: 1rpx dashed rgba(91, 91, 214, 0.30);
+	background: rgba(91, 91, 214, 0.05);
+	display: inline-flex;
+	align-items: center;
+}
+
+.tag-sg-t {
+	font-size: 22rpx;
+	font-weight: 600;
+	color: rgba(91, 91, 214, 0.85);
+}
 
 .body-gap { height: calc(200rpx + env(safe-area-inset-bottom)); }
 

@@ -113,7 +113,9 @@
               </view>
 
               <text class="sc-title">{{ skill.title }}</text>
-              <text class="sc-summary">{{ skill.summary }}</text>
+              <view class="sc-prompt-row">
+                <text class="sc-prompt">{{ skill.promptPreview || skill.summary || skill.title }}</text>
+              </view>
 
               <!-- 图片九宫格 -->
               <view
@@ -187,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { copySkill as copySkillApi, getSkillCategories, getSkillList } from '@/api/skill'
+import { copySkill as copySkillApi, getSkillCategories, getSkillDetail, getSkillList } from '@/api/skill'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
@@ -474,29 +476,51 @@ const modelColor = (modelName: string) => {
   return '#5B5BD6'
 }
 
+const normalizePlainText = (value: unknown) => `${value ?? ''}`
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+const buildPromptPreview = (item: any, fallback: string) => {
+  const promptRaw = item?.promptPreview ?? item?.fullPrompt ?? item?.content?.fullPrompt
+  const promptText = normalizePlainText(promptRaw)
+  if (promptText) return promptText
+  return normalizePlainText(fallback)
+}
+
 const mapApiSkill = (item: any) => {
-  const copyCountNum = Number(item?.copyCount ?? 0)
-  const tokenNum = Number(item?.avgTotalTokens ?? 0)
-  const rateNum = Number(item?.successRate ?? 0)
+  const copyCountNum = Number(item?.copyCount ?? item?.stats?.copyCount ?? 0)
+  const tokenNum = Number(item?.avgTotalTokens ?? item?.tokenInfo?.avgTotalTokens ?? 0)
+  const rateNum = Number(item?.successRate ?? item?.stats?.successRate ?? 0)
   const title = `${item?.title || '未命名 Skill'}`
   const creatorName = `${item?.creator?.nickname || '匿名用户'}`
   const scene = `${item?.scene || '其他'}`
 
-  const feedbackCountNum = Number(item?.feedbackCount ?? 0)
-  const isNew = !!item?.publishAt && (Date.now() - new Date(item.publishAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+  const feedbackCountNum = Number(item?.feedbackCount ?? item?.stats?.feedbackCount ?? 0)
+  const publishAtRaw = item?.publishAt ?? item?.publish_at ?? item?.createdAt ?? ''
+  const publishAtTime = publishAtRaw ? new Date(publishAtRaw).getTime() : 0
+  const isNew = Number.isFinite(publishAtTime) && publishAtTime > 0 && (Date.now() - publishAtTime) < 7 * 24 * 60 * 60 * 1000
+  const summary = normalizePlainText(item?.summary ?? item?.brief)
+  const promptPreview = buildPromptPreview(item, summary || title)
+  const modelName = `${item?.modelName ?? item?.tokenInfo?.recommendedModelName ?? item?.tokenInfo?.commonModelName ?? '--'}`
+  const tags = Array.isArray(item?.tags)
+    ? item.tags
+    : (Array.isArray(item?.useScenes) ? item.useScenes : [])
+  const coverImageUrl = item?.coverImage || (Array.isArray(item?.images?.cover) ? item.images.cover[0] : '')
 
   return {
     id: `${item?.id}`,
     title,
-    summary: `${item?.summary || ''}`,
+    summary,
+    promptPreview,
     scene,
-    tags: Array.isArray(item?.tags) ? item.tags : [],
+    tags,
     avgToken: formatToken(tokenNum),
-    model: `${item?.modelName || '--'}`,
-    modelColor: modelColor(`${item?.modelName || ''}`),
+    model: modelName,
+    modelColor: modelColor(modelName),
     successRate: formatRate(rateNum),
     copyCount: formatCount(copyCountNum),
-    favoriteCount: formatCount(Number(item?.favoriteCount ?? 0)),
+    favoriteCount: formatCount(Number(item?.favoriteCount ?? item?.stats?.favoriteCount ?? 0)),
     author: creatorName,
     authorColor: `${item?.creator?.displayColor || '#5B5BD6'}`,
     featured: item?.featured === true,
@@ -504,7 +528,7 @@ const mapApiSkill = (item: any) => {
     lowCost: tokenNum > 0 && tokenNum < 1200,
     highConsume: tokenNum > 8000,
     stable: rateNum >= 90 && feedbackCountNum >= 3,
-    images: item?.coverImage ? [normalizeImageUrl(item.coverImage)] : [],
+    images: coverImageUrl ? [normalizeImageUrl(`${coverImageUrl}`)] : [],
   }
 }
 
@@ -599,6 +623,34 @@ watch(activeSort, () => {
 
 const copySkill  = async (skill: any) => {
   if (!requireLogin(userStore.token, '复制 Skill')) return
+
+  let copyText = ''
+  try {
+    const detail = await getSkillDetail(skill.id)
+    copyText = normalizePlainText(detail?.content?.fullPrompt)
+  } catch {}
+
+  if (!copyText) {
+    copyText = normalizePlainText(skill?.promptPreview ?? skill?.summary ?? '')
+  }
+  if (!copyText) {
+    uni.showToast({ title: '暂无可复制内容', icon: 'none' })
+    return
+  }
+
+  const copied = await new Promise<boolean>((resolve) => {
+    uni.setClipboardData({
+      data: copyText,
+      showToast: false,
+      success: () => resolve(true),
+      fail: () => resolve(false),
+    })
+  })
+  if (!copied) {
+    uni.showToast({ title: '复制失败', icon: 'none' })
+    return
+  }
+
   try {
     await copySkillApi(skill.id, { sourceChannel: 'feed' })
   } catch {
@@ -908,10 +960,22 @@ onUnmounted(() => {
     color: #1A1A1A; margin-bottom: 12rpx; line-height: 1.35;
   }
 
-  .sc-summary {
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-    overflow: hidden; font-size: 24rpx; color: rgba(0,0,0,0.50);
-    line-height: 1.65; margin-bottom: 18rpx;
+  .sc-prompt-row {
+    display: block;
+    margin-bottom: 18rpx;
+  }
+
+  .sc-prompt {
+    flex: 1;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 24rpx;
+    color: rgba(0,0,0,0.50);
+    line-height: 1.65;
+    word-break: break-all;
   }
 
   .sc-imgs {

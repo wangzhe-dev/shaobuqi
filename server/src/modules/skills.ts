@@ -16,6 +16,7 @@ type SkillListRow = RowDataPacket & {
   id: number
   title: string
   brief: string | null
+  prompt_preview: string | null
   scene: string | null
   publish_at: string | null
   is_featured: number
@@ -937,6 +938,7 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
       u.nickname AS creator_nickname,
       u.avatar_url AS creator_avatar_url,
       u.display_color AS creator_color,
+      c.id AS category_id,
       c.name AS category_name,
       (
         SELECT si.image_url
@@ -944,7 +946,14 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
         WHERE si.skill_id = s.id
         ORDER BY (si.image_type = 'cover') DESC, si.sort_no ASC, si.id ASC
         LIMIT 1
-      ) AS cover_image
+      ) AS cover_image,
+      (
+        SELECT sc.full_prompt
+        FROM skill_contents sc
+        WHERE sc.skill_id = s.id
+        ORDER BY sc.is_current DESC, sc.version_no DESC, sc.id DESC
+        LIMIT 1
+      ) AS prompt_preview
     FROM skills s
     INNER JOIN users u ON u.id = s.creator_id
     LEFT JOIN categories c ON c.id = s.category_id
@@ -972,6 +981,8 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
       id: row.id,
       title: row.title,
       summary: row.brief,
+      brief: row.brief,
+      promptPreview: row.prompt_preview,
       scene: row.scene,
       publishAt: row.publish_at,
       featured: row.is_featured === 1,
@@ -1158,6 +1169,11 @@ skillsRouter.get('/:id', optionalAuth, async (req, res) => {
   )
 
   const content = contentRows[0]
+  const contentVariables = content
+    ? safeParseJson<Array<{ name: string; desc?: string | null }>>(content.variables_json, [])
+    : []
+  const contentSteps = content ? safeParseJson<string[]>(content.steps_json, []) : []
+  const contentUseScenes = content ? safeParseJson<string[]>(content.use_scenes_json, []) : []
 
   const isFavoritedSet = req.auth?.userId ? await getFavoriteSkillIdSet(req.auth.userId, [skillId]) : new Set<number>()
 
@@ -1165,6 +1181,7 @@ skillsRouter.get('/:id', optionalAuth, async (req, res) => {
     id: detail.id,
     title: detail.title,
     brief: detail.brief,
+    summary: detail.brief,
     scene: detail.scene,
     status: detail.status,
     publishAt: detail.publish_at,
@@ -1193,6 +1210,7 @@ skillsRouter.get('/:id', optionalAuth, async (req, res) => {
         }
       : null,
     tags: tagRows.map((row) => row.tag_name),
+    useScenes: contentUseScenes,
     creator: {
       id: detail.creator_id,
       nickname: detail.creator_nickname,
@@ -1211,9 +1229,9 @@ skillsRouter.get('/:id', optionalAuth, async (req, res) => {
           fullPrompt: content.full_prompt,
           fullPromptHtml: content.full_prompt_html,
           variableNotes: content.variable_notes,
-          variables: safeParseJson<Array<{ name: string; desc?: string | null }>>(content.variables_json, []),
-          steps: safeParseJson<string[]>(content.steps_json, []),
-          useScenes: safeParseJson<string[]>(content.use_scenes_json, []),
+          variables: contentVariables,
+          steps: contentSteps,
+          useScenes: contentUseScenes,
           createdAt: content.created_at,
           updatedAt: content.updated_at
         }

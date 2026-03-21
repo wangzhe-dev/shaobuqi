@@ -24,6 +24,130 @@ export type SkillListQuery = {
 	maxAvgTotalTokens?: number
 }
 
+export type SkillListItem = {
+	id: number
+	title: string
+	summary: string | null
+	brief?: string | null
+	promptPreview?: string | null
+	scene: string | null
+	publishAt: string | null
+	featured: boolean
+	copyCount: number
+	favoriteCount: number
+	feedbackCount: number
+	successRate: number | string | null
+	avgTotalTokens: number | null
+	modelName: string | null
+	coverImage: string | null
+	tags: string[]
+	category: { id: number; name: string | null } | null
+	creator: {
+		id: number
+		nickname: string
+		avatarUrl: string | null
+		displayColor: string | null
+	}
+	isFavorited: boolean
+}
+
+export type SkillListResponse = {
+	list: SkillListItem[]
+	pagination: {
+		page: number
+		pageSize: number
+		total: number
+		totalPages: number
+	}
+}
+
+export type SkillDetailContentVariable =
+	| string
+	| { name: string; desc?: string | null }
+
+export type SkillDetailResponse = {
+	id: number
+	title: string
+	brief: string | null
+	summary?: string | null
+	scene: string | null
+	status: number
+	publishAt: string | null
+	coverImage: string | null
+	stats: {
+		copyCount: number
+		favoriteCount: number
+		feedbackCount: number
+		successRate: number | string | null
+		totalUses: number
+		weekUses: number
+	}
+	tokenInfo: {
+		avgInputTokens: number | null
+		avgOutputTokens: number | null
+		avgTotalTokens: number | null
+		estimatedCostLow: number | string | null
+		estimatedCostHigh: number | string | null
+		recommendedModelName: string | null
+		commonModelName: string | null
+	}
+	category: { id: number; name: string | null } | null
+	tags: string[]
+	useScenes?: string[]
+	creator: {
+		id: number
+		nickname: string
+		avatarUrl: string | null
+		displayColor: string | null
+	}
+	isFavorited: boolean
+	canEdit: boolean
+	content: {
+		id: number
+		versionNo: number
+		prompt: string | null
+		systemPrompt: string | null
+		userTemplate: string | null
+		fullPrompt: string | null
+		fullPromptHtml: string | null
+		variableNotes: string | null
+		variables: SkillDetailContentVariable[]
+		steps: string[]
+		useScenes: string[]
+		createdAt: string
+		updatedAt: string
+	} | null
+	images: {
+		cover: string[]
+		content: string[]
+	}
+	feedbacks: Array<{
+		id: number
+		status: 'success' | 'normal' | 'fail'
+		comment: string
+		modelName: string | null
+		inputTokens: number | null
+		outputTokens: number | null
+		totalTokens: number | null
+		costAmount: number | null
+		createdAt: string
+		user: {
+			id: number
+			nickname: string
+			avatarUrl: string | null
+			displayColor: string | null
+		}
+	}>
+	similarSkills: Array<{
+		id: number
+		title: string
+		scene: string | null
+		avgTotalTokens: number | null
+		successRate: number | string | null
+		copyCount: number
+	}>
+}
+
 export type CreateSkillPayload = {
 	title: string
 	brief?: string | null
@@ -50,11 +174,11 @@ export type CreateSkillPayload = {
 }
 
 export const getSkillList = (params: SkillListQuery) => {
-	return http.get<any>('/skills', params)
+	return http.get<SkillListResponse>('/skills', params)
 }
 
 export const getSkillDetail = (id: string | number) => {
-	return http.get<any>(`/skills/${id}`)
+	return http.get<SkillDetailResponse>(`/skills/${id}`)
 }
 
 export const createSkill = (data: CreateSkillPayload) => {

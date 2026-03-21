@@ -1,24 +1,12 @@
 <template>
 	<view class="page">
 
-		<uni-nav-bar status-bar left-icon="left" title="Skill 详情" @click-left="goBack">
-			<template #right>
-				<view class="nav-actions">
-					<view class="nav-btn" @tap="shareSkill">
-						<uni-icons type="paperplane" size="20" color="rgba(0,0,0,0.70)" />
-					</view>
-					<view class="nav-btn" @tap="reportSkill">
-						<uni-icons type="more-filled" size="20" color="rgba(0,0,0,0.70)" />
-					</view>
-				</view>
-			</template>
-		</uni-nav-bar>
+		<uni-nav-bar status-bar left-icon="left" title="Skill 详情" @click-left="goBack" />
 
-		<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
-			<!-- 1. 顶部概览区 -->
-			<view class="overview-section">
-				<view class="scene-tag">{{ skill.scene }}</view>
-				<text class="skill-title">{{ skill.title }}</text>
+			<scroll-view class="main-scroll" scroll-y :show-scrollbar="false">
+				<!-- 1. 顶部概览区 -->
+				<view class="overview-section">
+					<text class="skill-title">{{ skill.title }}</text>
 
 				<view class="author-row">
 					<view class="author-av" :style="{ background: skill.authorColor }">
@@ -60,20 +48,22 @@
 				</view>
 			</view>
 
-      <!-- 简介 -->
-      <view class="skill-intro">
-        <text class="si-title">简介</text>
-        <text class="si-text">{{ skill.brief }}</text>
+	      <!-- 简介 -->
+	      <view class="skill-intro">
+	        <view class="si-head">
+	        	<text class="si-title">简介</text>
+	        	<view class="scene-tag">{{ skill.scene }}</view>
+	        </view>
+	        <text class="si-text">{{ skill.brief }}</text>
         <!-- 图片九宫格 -->
-        <view v-if="skill.images && skill.images.length" class="skill-imgs"
-          :class="`gi-${skill.images.length <= 4 ? skill.images.length : 'many'}`">
+        <view v-if="skill.images && skill.images.length" class="skill-imgs">
           <app-image v-for="(src, i) in skill.images.slice(0, 9)" :key="i"
             :src="src" class="skill-img" mode="aspectFill"
             @tap="previewSkillImage(skill.images, i)" />
         </view>
       </view>
 
-      <!-- 使用场景（当前统一使用 tags 字段） -->
+      <!-- 使用场景（优先 content.useScenes，兜底 tags） -->
       <view v-if="skill.useScenes.length" class="scene-block">
         <text class="sb-title">使用场景</text>
         <view class="scene-chip-list">
@@ -94,53 +84,12 @@
 							</view>
 						</view>
 
-					<view class="skill-content-panel">
-						<rich-text v-if="promptHtmlNodes" class="scp-rich" :nodes="promptHtmlNodes" />
-						<text v-else class="scp-text">{{ skill.fullPrompt }}</text>
-					</view>
-
-					<view v-if="Array.isArray(skill.contentImages) && skill.contentImages.length" class="content-img-block">
-						<text class="content-img-title">内容图片</text>
-						<view class="content-img-grid">
-							<app-image
-								v-for="(img, idx) in skill.contentImages"
-								:key="`${img}-${idx}`"
-								class="content-img"
-								:src="img"
-								mode="aspectFill"
-								@tap="previewContentImage(idx)"
-							/>
+						<view class="skill-content-panel">
+							<rich-text v-if="promptHtmlNodes" class="scp-rich" :nodes="promptHtmlNodes" />
+							<text v-else class="scp-text">{{ skill.fullPrompt }}</text>
 						</view>
 					</view>
-				</view>
-
-			<view v-if="variableNotesText" class="section-card variable-notes-card">
-				<view class="section-header">
-					<uni-icons class="section-badge" type="info-filled" size="18" color="#7B5B3C" />
-					<text class="section-title">变量说明</text>
-				</view>
-				<text class="vn-text">{{ variableNotesText }}</text>
-			</view>
-
-				<!-- 5. 使用步骤 -->
-				<view class="section-card">
-					<view class="section-header">
-						<uni-icons class="section-badge" type="paperplane-filled" size="18" color="#2F8A57" />
-						<text class="section-title">使用步骤</text>
-						<text class="section-subtitle">复制后按顺序操作</text>
-					</view>
-
-				<view class="steps-list">
-					<view v-for="(step, idx) in skill.steps" :key="idx" class="step-item">
-						<view class="step-num">
-							<text class="step-num-text">{{ idx + 1 }}</text>
-						</view>
-						<text class="step-text">{{ step }}</text>
-					</view>
-				</view>
-			</view>
-
-			<!-- 6. 评论区 -->
+				<!-- 6. 评论区 -->
 			<view class="section-card">
 				<view class="section-header">
 					<uni-icons class="section-badge" type="chatbubble-filled" size="18" color="#5E738A" />
@@ -262,48 +211,23 @@
 			</view>
 		</view>
 
-		<!-- 复制成功引导弹层 -->
-		<view v-if="showCopyGuide" class="copy-guide-overlay" @tap="showCopyGuide = false">
-			<view class="copy-guide-sheet" @tap.stop>
-				<view class="cg-title-row">
-					<uni-icons type="checkmarkempty" size="18" color="#2F8A57" />
-					<text class="cg-title">已复制 Skill！</text>
-				</view>
-				<text class="cg-subtitle">接下来你想做什么？</text>
-				<view class="cg-actions">
-					<view class="cg-btn" @tap="goUse">
-						<uni-icons class="cg-btn-icon" type="paperplane-filled" size="18" color="#E45C1A" />
-						<text class="cg-btn-text">去使用</text>
-					</view>
-					<view class="cg-btn" @tap="saveFavorite">
-						<uni-icons class="cg-btn-icon" type="star-filled" size="18" color="#D6943A" />
-						<text class="cg-btn-text">收藏到我的 Skill</text>
-					</view>
-					<view class="cg-btn" @tap="recordResult">
-						<uni-icons class="cg-btn-icon" type="compose" size="18" color="#5E738A" />
-						<text class="cg-btn-text">记录一次结果</text>
-					</view>
-				</view>
-			</view>
 		</view>
-	</view>
-</template>
+	</template>
 
 <script setup lang="ts">
 	import { copySkill as copySkillApi, createSkillFeedback, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
-	import AppImage from '@/components/app-image/index.vue'
-	import { useUserStore } from '@/stores'
-	import { requireLogin } from '@/utils/auth-guard'
-	import { normalizeImageUrl } from '@/utils/image-url'
-	const userStore = useUserStore()
-	const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
+import AppImage from '@/components/app-image/index.vue'
+import { useUserStore } from '@/stores'
+import { requireLogin } from '@/utils/auth-guard'
+import { normalizeImageUrl } from '@/utils/image-url'
+		const userStore = useUserStore()
+		const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
-	const isFavorited = ref(false)
-	const isFollowing = ref(false)
-	const showCopyGuide = ref(false)
-	const currentSkillId = ref('')
-	const isOwnSkill = ref(false)
-	const creatorId = ref<number | null>(null)
+		const isFavorited = ref(false)
+		const isFollowing = ref(false)
+		const currentSkillId = ref('')
+		const isOwnSkill = ref(false)
+		const creatorId = ref<number | null>(null)
 	const showFeedbackPanel = ref(false)
 	const feedbackText = ref('')
 	const feedbackSubmitting = ref(false)
@@ -334,10 +258,6 @@
 		weekUses: '0',
 		fullPrompt: '',
 		fullPromptHtml: '',
-		contentImages: [] as string[],
-		variableNotes: '',
-		variables: [] as Array<{ name: string; desc?: string | null }>,
-		steps: [] as string[],
 		feedbacks: [] as any[],
 		similarSkills: [] as any[]
 	})
@@ -393,13 +313,6 @@
 
 	const promptHtmlNodes = computed(() => `${skill.value.fullPromptHtml || ''}`.trim())
 
-	const variableNotesText = computed(() => {
-		const direct = `${skill.value.variableNotes || ''}`.trim()
-		if (direct) return direct
-		if (!Array.isArray(skill.value.variables) || !skill.value.variables.length) return ''
-		return skill.value.variables.map((item: any) => `{${item.name}}：${item.desc || ''}`).join('\n')
-	})
-
 	const statusLabel = (status: string) => {
 		return { success: '成功', normal: '一般', fail: '翻车' }[status] || status
 	}
@@ -412,29 +325,16 @@
 	const normalizeImageList = (raw: unknown): string[] => {
 		if (!Array.isArray(raw)) return []
 		return raw
-			.map((item) => normalizeImageUrl(`${item || ''}`))
-			.filter(Boolean)
-	}
-
-	const normalizeVariables = (raw: unknown): Array<{ name: string; desc?: string | null }> => {
-		if (!Array.isArray(raw)) return []
-		return raw
 			.map((item) => {
-				if (typeof item === 'string') {
-					const name = item.trim()
-					return name ? { name } : null
-				}
+				if (typeof item === 'string') return normalizeImageUrl(item)
 				if (item && typeof item === 'object') {
-					const rec = item as { name?: unknown; desc?: unknown }
-					const name = `${rec.name || ''}`.trim()
-					if (!name) return null
-					const descRaw = rec.desc
-					const desc = descRaw === null || descRaw === undefined ? null : `${descRaw}`
-					return { name, desc }
+					const rec = item as { imageUrl?: unknown; url?: unknown }
+					const url = `${rec.imageUrl ?? rec.url ?? ''}`.trim()
+					return normalizeImageUrl(url)
 				}
-				return null
+				return ''
 			})
-			.filter((item): item is { name: string; desc?: string | null } => !!item)
+			.filter(Boolean)
 	}
 
 	const hasFeedbackUsage = (fb: any) => {
@@ -449,7 +349,9 @@
 
 	const mapApiDetail = (detail: any) => {
 		const detailTags = normalizeTagList(detail?.tags)
-		const detailUseScenes = detailTags
+		const detailUseScenes = normalizeTagList(detail?.content?.useScenes)
+		const finalUseScenes = detailUseScenes.length ? detailUseScenes : detailTags
+		const finalTags = detailTags.length ? detailTags : detailUseScenes
 		return {
 			id: `${detail?.id || ''}`,
 			creatorId: detail?.creator?.id ?? null,
@@ -463,9 +365,9 @@
 			favoriteCount: formatCount(detail?.stats?.favoriteCount),
 			successRate: formatRate(detail?.stats?.successRate),
 			feedbackCount: formatCount(detail?.stats?.feedbackCount),
-			brief: `${detail?.brief || ''}`,
-			tags: detailTags,
-			useScenes: detailUseScenes,
+			brief: `${detail?.brief ?? detail?.summary ?? ''}`,
+			tags: finalTags,
+			useScenes: finalUseScenes,
 			images: Array.isArray(detail?.images?.cover) && detail.images.cover.length
 				? normalizeImageList(detail.images.cover)
 				: (detail?.coverImage ? [normalizeImageUrl(detail.coverImage)] : []),
@@ -480,10 +382,6 @@
 			weekUses: formatCount(detail?.stats?.weekUses),
 			fullPrompt: `${detail?.content?.fullPrompt || ''}`,
 			fullPromptHtml: `${detail?.content?.fullPromptHtml || ''}`,
-			contentImages: normalizeImageList(detail?.images?.content),
-			variableNotes: `${detail?.content?.variableNotes || ''}`,
-			variables: normalizeVariables(detail?.content?.variables),
-			steps: Array.isArray(detail?.content?.steps) ? detail.content.steps : [],
 			feedbacks: Array.isArray(detail?.feedbacks)
 				? detail.feedbacks.map((fb: any) => ({
 					id: fb.id,
@@ -535,10 +433,6 @@
 			images: Array.isArray(payload.images) ? normalizeImageList(payload.images).slice(0, 9) : skill.value.images,
 			fullPrompt: payload.fullPrompt ?? skill.value.fullPrompt,
 			fullPromptHtml: payload.fullPromptHtml ?? skill.value.fullPromptHtml,
-			contentImages: Array.isArray(payload.contentImages) ? normalizeImageList(payload.contentImages).slice(0, 9) : skill.value.contentImages,
-			variableNotes: payload.variableNotes ?? skill.value.variableNotes,
-			variables: Array.isArray(payload.variables) ? payload.variables : skill.value.variables,
-			steps: Array.isArray(payload.steps) ? payload.steps : skill.value.steps,
 			feedbacks: Array.isArray(payload.feedbacks) ? payload.feedbacks : skill.value.feedbacks,
 			similarSkills: Array.isArray(payload.similarSkills) ? payload.similarSkills : skill.value.similarSkills
 		}
@@ -590,7 +484,6 @@
 
 	const copySkill = () => {
 		if (!requireLogin(userStore.token, '复制 Skill')) return
-		showCopyGuide.value = true
 		uni.setClipboardData({
 			data: skill.value.fullPrompt || '',
 			success: () => {
@@ -613,12 +506,6 @@
 
 	const previewSkillImage = (images: string[], idx: number) => {
 		if (!images || !images.length) return
-		uni.previewImage({ current: images[idx] || images[0], urls: images })
-	}
-
-	const previewContentImage = (idx: number) => {
-		const images = Array.isArray(skill.value.contentImages) ? skill.value.contentImages.filter((item: any) => !!item) : []
-		if (!images.length) return
 		uni.previewImage({ current: images[idx] || images[0], urls: images })
 	}
 
@@ -658,8 +545,6 @@
 			isFollowing.value = prev  // 请求失败回滚
 		}
 	}
-	const shareSkill = () => uni.showToast({ title: '分享功能开发中', icon: 'none' })
-	const reportSkill = () => uni.showToast({ title: '举报功能开发中', icon: 'none' })
 
 	const closeFeedbackPanel = () => {
 		if (feedbackSubmitting.value) return
@@ -736,22 +621,6 @@
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })
 	}
 	const goBack = () => uni.navigateBack()
-
-	const goUse = () => {
-		showCopyGuide.value = false
-		uni.showToast({ title: '打开你的 AI 工具使用吧', icon: 'none' })
-	}
-
-	const saveFavorite = () => {
-		showCopyGuide.value = false
-		void toggleFavorite()
-	}
-
-	const recordResult = () => {
-		showCopyGuide.value = false
-		const query = currentSkillId.value ? `?skillId=${currentSkillId.value}` : ''
-		uni.navigateTo({ url: `/pages/publish/record${query}` })
-	}
 </script>
 
 <style lang="scss" scoped>
@@ -762,18 +631,6 @@
 		background: #FFFFFF;
 	}
 
-	.nav-actions {
-		display: flex;
-		gap: 8rpx;
-
-		.nav-btn {
-			width: 64rpx;
-			height: 64rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-	}
 
 	.main-scroll { flex: 1; overflow: hidden; }
 
@@ -832,25 +689,44 @@
 	}
 
 	/* 2. 简介与场景 */
-	.skill-intro {
-		margin: 20rpx 24rpx 0;
-		background: #FFFFFF;
-		border: 1rpx solid rgba(228, 92, 26, 0.14);
-		border-radius: 24rpx;
-		padding: 24rpx;
-		box-shadow: 0 10rpx 30rpx rgba(228, 92, 26, 0.08);
+		.skill-intro {
+			margin: 20rpx 24rpx 0;
+			background: #FFFFFF;
+			border: 1rpx solid rgba(228, 92, 26, 0.14);
+			border-radius: 24rpx;
+			padding: 24rpx;
+			box-shadow: 0 10rpx 30rpx rgba(228, 92, 26, 0.08);
 
-		.si-title {
-			display: block;
-			font-size: 24rpx;
-			font-weight: 700;
-			color: #B74914;
-			margin-bottom: 12rpx;
-		}
+			.si-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12rpx;
+				margin-bottom: 12rpx;
+			}
 
-		.si-text {
-			display: block;
-			font-size: 25rpx;
+			.si-title {
+				display: block;
+				font-size: 24rpx;
+				font-weight: 700;
+				color: #B74914;
+			}
+
+			.scene-tag {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				font-size: 20rpx;
+				color: rgba(0,0,0,0.50);
+				background: rgba(0,0,0,0.07);
+				padding: 6rpx 18rpx;
+				border-radius: 100rpx;
+			}
+
+			.si-text {
+				display: block;
+				font-size: 25rpx;
 			color: rgba(0,0,0,0.74);
 			line-height: 1.72;
 		}
@@ -897,25 +773,15 @@
 	}
 
 	/* 1. 顶部概览区 */
-	.overview-section {
-		margin: 20rpx 24rpx 0;
-		background: #FFFFFF;
-		border-radius: 28rpx;
-		border: 1rpx solid rgba(0,0,0,0.07);
-		padding: 28rpx;
+		.overview-section {
+			margin: 20rpx 24rpx 0;
+			background: #FFFFFF;
+			border-radius: 28rpx;
+			border: 1rpx solid rgba(0,0,0,0.07);
+			padding: 28rpx;
 
-		.scene-tag {
-			display: inline-flex;
-			font-size: 20rpx;
-			color: rgba(0,0,0,0.50);
-			background: rgba(0,0,0,0.07);
-			padding: 6rpx 18rpx;
-			border-radius: 100rpx;
-			margin-bottom: 18rpx;
-		}
-
-		.skill-title {
-			display: block;
+			.skill-title {
+				display: block;
 			font-size: 38rpx;
 			font-weight: 900;
 			color: #1A1A1A;
@@ -988,26 +854,21 @@
 		}
 	}
 
-	/* 图片九宫格 */
-	.skill-imgs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4rpx;
-		margin-top: 16rpx;
+		/* 图片九宫格 */
+		.skill-imgs {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 10rpx;
+			margin-top: 16rpx;
 
-		.skill-img { border-radius: 10rpx; display: block; }
-
-		/* 1张：宽横图 */
-		&.gi-1 .skill-img { width: 100%; height: 360rpx; border-radius: 16rpx; }
-		/* 2张：并排各半 */
-		&.gi-2 .skill-img { width: calc(50% - 2rpx); height: 240rpx; }
-		/* 3张：三等分一行 */
-		&.gi-3 .skill-img { width: calc(33.33% - 3rpx); height: 200rpx; }
-		/* 4张：2×2 方格 */
-		&.gi-4 .skill-img { width: calc(50% - 2rpx); height: 220rpx; }
-		/* 5-9张：每行3列自然换行，末行左对齐 */
-		&.gi-many .skill-img { width: calc(33.33% - 3rpx); height: 190rpx; }
-	}
+			.skill-img {
+				width: 100%;
+				height: 168rpx;
+				border-radius: 12rpx;
+				display: block;
+				background: rgba(0, 0, 0, 0.04);
+			}
+		}
 
 
 		/* 4. Skill 正文区 */
@@ -1035,77 +896,12 @@
 				word-break: break-word;
 			}
 
-			.scp-rich :deep(img) {
-				max-width: 100%;
-				height: auto;
-				border-radius: 10rpx;
+				.scp-rich :deep(img) {
+					max-width: 100%;
+					height: auto;
+					border-radius: 10rpx;
+				}
 			}
-
-			.content-img-block {
-				margin-top: 18rpx;
-			}
-
-			.content-img-title {
-				display: block;
-				margin-bottom: 10rpx;
-				font-size: 22rpx;
-				font-weight: 700;
-				color: rgba(0, 0, 0, 0.60);
-			}
-
-			.content-img-grid {
-				display: grid;
-				grid-template-columns: repeat(3, minmax(0, 1fr));
-				gap: 10rpx;
-			}
-
-			.content-img {
-				width: 100%;
-				height: 168rpx;
-				border-radius: 12rpx;
-				background: rgba(0, 0, 0, 0.04);
-			}
-		}
-
-	.variable-notes-card {
-		.vn-text {
-			display: block;
-			font-size: 24rpx;
-			color: rgba(0, 0, 0, 0.72);
-			line-height: 1.7;
-			white-space: pre-wrap;
-			word-break: break-word;
-		}
-	}
-
-	/* 5. 使用步骤 */
-	.steps-list {
-		display: flex;
-		flex-direction: column;
-		gap: 16rpx;
-
-		.step-item {
-			display: flex;
-			gap: 16rpx;
-			align-items: flex-start;
-
-			.step-num {
-				width: 48rpx;
-				height: 48rpx;
-				border-radius: 50%;
-				background: #E45C1A;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex-shrink: 0;
-				margin-top: 4rpx;
-
-				.step-num-text { font-size: 22rpx; color: #fff; font-weight: 800; }
-			}
-
-			.step-text { font-size: 26rpx; color: rgba(0,0,0,0.75); line-height: 1.65; flex: 1; }
-		}
-	}
 
 	/* 6. 复现反馈区 */
 	.write-feedback-btn {
@@ -1397,95 +1193,15 @@
 			}
 		}
 
-		.copy-guide-overlay {
-			position: fixed;
-			top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0,0,0,0.7);
-		z-index: 200;
-		display: flex;
-		align-items: flex-end;
-	}
-
-	.copy-guide-sheet {
-		width: 100%;
-		background: #FFFFFF;
-		border-radius: 40rpx 40rpx 0 0;
-		border-top: 1rpx solid rgba(0,0,0,0.08);
-		padding: 40rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
-
-		.cg-title-row {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 8rpx;
-			margin-bottom: 10rpx;
-		}
-
-		.cg-title {
-			display: block;
-			font-size: 34rpx;
-			font-weight: 800;
-			color: #1A1A1A;
-			text-align: center;
-		}
-
-		.cg-subtitle {
-			display: block;
-			font-size: 24rpx;
-			color: rgba(0,0,0,0.40);
-			margin-bottom: 36rpx;
-			text-align: center;
-		}
-
-		.cg-actions {
-			display: flex;
-			flex-direction: column;
-			gap: 16rpx;
-
-			.cg-btn {
-				height: 96rpx;
-				background: rgba(0,0,0,0.06);
-				border-radius: 24rpx;
-				border: 1rpx solid rgba(0,0,0,0.08);
-				display: flex;
-				align-items: center;
-				gap: 20rpx;
-				padding: 0 28rpx;
-
-				&:first-child {
-					background: rgba(228, 92, 26,0.12);
-					border-color: rgba(228, 92, 26, 0.16);
-				}
-
-				.cg-btn-icon {
-					width: 28rpx;
-					height: 28rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					flex-shrink: 0;
-				}
-				.cg-btn-text { font-size: 28rpx; font-weight: 600; color: rgba(0,0,0,0.85); }
-			}
-		}
-	}
-
 	/* 低版本微信 WebView 对 gap/grid 支持不完整，补充降级规则 */
 	@supports not (gap: 1px) {
 		.navbar .navbar-inner > * + * { margin-left: 16rpx; }
-		.navbar .nav-actions > * + * { margin-left: 8rpx; }
-		.section-header > * + * { margin-left: 10rpx; }
+.section-header > * + * { margin-left: 10rpx; }
 		.copy-all-btn > * + * { margin-left: 6rpx; }
 
 		.scene-chip-list > * { margin-right: 12rpx; margin-bottom: 12rpx; }
 		.overview-section .author-row > * + * { margin-left: 12rpx; }
 		.overview-section .ov-stat > * + * { margin-top: 6rpx; }
-
-		.steps-list > * + * { margin-top: 16rpx; }
-		.steps-list .step-item > * + * { margin-left: 16rpx; }
 
 		.feedback-list > * + * { margin-top: 20rpx; }
 		.feedback-list .fb-head > * + * { margin-left: 12rpx; }
@@ -1499,20 +1215,16 @@
 		.bottom-bar > * + * { margin-left: 16rpx; }
 		.bottom-bar .bb-fav > * + * { margin-top: 4rpx; }
 		.bottom-bar .bb-copy-btn > * + * { margin-left: 12rpx; }
-
-		.copy-guide-sheet .cg-title-row > * + * { margin-left: 8rpx; }
-		.copy-guide-sheet .cg-actions > * + * { margin-top: 16rpx; }
-		.copy-guide-sheet .cg-btn > * + * { margin-left: 20rpx; }
 	}
 
 	@supports not (display: grid) {
-		.skill-content-card .content-img-grid {
+		.skill-intro .skill-imgs {
 			display: flex;
 			flex-wrap: wrap;
 			margin: -5rpx;
 		}
 
-		.skill-content-card .content-img {
+		.skill-intro .skill-img {
 			width: calc((100% - 30rpx) / 3);
 			margin: 5rpx;
 		}
