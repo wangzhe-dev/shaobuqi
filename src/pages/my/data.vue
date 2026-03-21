@@ -303,6 +303,22 @@ const formatDate = (value: string | null | undefined) => {
 
 const normalizeText = (value: unknown) => `${value ?? ''}`.replace(/\s+/g, ' ').trim()
 
+const SOURCE_CHANNEL_LABEL_MAP: Record<string, string> = {
+  detail: '详情页',
+  copy_all: '详情页整段复制',
+  similar: '相似推荐',
+  search: '搜索页',
+  feed: '首页推荐',
+  trend: '趋势页',
+  author: '作者页'
+}
+
+const formatSourceChannel = (value: string | null | undefined) => {
+  const key = `${value ?? ''}`.trim().toLowerCase()
+  if (!key) return '未知来源'
+  return SOURCE_CHANNEL_LABEL_MAP[key] || key
+}
+
 const resetTabState = (key: TabKey) => {
   const state = stateMap[key]
   state.list = []
@@ -407,7 +423,7 @@ const loadTabData = async (key: TabKey, reset = false) => {
       ? res.list.map((item: ApiCopyItem) => ({
           id: `${item.id}`,
           createdAt: formatDate(item.createdAt),
-          sourceChannel: `${item.sourceChannel || '未知来源'}`,
+          sourceChannel: formatSourceChannel(item.sourceChannel),
           skillId: `${item.skill?.id || ''}`,
           title: `${item.skill?.title || 'Skill 已删除'}`,
           scene: `${item.skill?.scene || '其他'}`

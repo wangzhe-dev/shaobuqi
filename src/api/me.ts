@@ -22,7 +22,6 @@ export interface MyFavoriteListResponse {
 
 export interface MyCopyItem {
 	id: number
-	skillId: number
 	sourceChannel: string | null
 	createdAt: string
 	skill: { id: number; title: string; scene: string | null } | null
@@ -52,6 +51,13 @@ export interface MyLikeListResponse {
 	pagination: FeedPagination
 }
 
+export interface MySummaryResponse {
+	publishedCount: number
+	favoriteCount: number
+	likeCount: number
+	copyCount: number
+}
+
 export const getMyProfile = () => {
 	return http.get<UserInfo>('/me/profile')
 }
@@ -74,4 +80,8 @@ export const getMyCopies = (params?: { page?: number; pageSize?: number }) => {
 
 export const getMyLikes = (params?: { page?: number; pageSize?: number }) => {
 	return http.get<MyLikeListResponse>('/me/likes', params)
+}
+
+export const getMySummary = () => {
+	return http.get<MySummaryResponse>('/me/summary')
 }

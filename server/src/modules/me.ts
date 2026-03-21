@@ -61,6 +61,13 @@ type MyLikeRow = RowDataPacket & {
   skill_scene: string | null
 }
 
+type MySummaryRow = RowDataPacket & {
+  published_count: number
+  favorite_count: number
+  like_count: number
+  copy_count: number
+}
+
 const listSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().max(100).optional()
@@ -120,6 +127,45 @@ meRouter.put('/avatar', async (req, res) => {
   )
 
   sendSuccess(res, { avatarUrl: parsed.data.avatarUrl }, '头像更新成功')
+})
+
+meRouter.get('/summary', async (req, res) => {
+  const userId = req.auth!.userId
+
+  const rows = await queryRows<MySummaryRow[]>(
+    `SELECT
+      u.published_skill_count AS published_count,
+      (
+        SELECT COUNT(1)
+        FROM skill_favorites f
+        WHERE f.user_id = ?
+      ) AS favorite_count,
+      (
+        SELECT COUNT(1)
+        FROM feed_post_likes l
+        INNER JOIN skill_usage_records sur ON sur.id = l.usage_record_id
+        WHERE l.user_id = ?
+          AND sur.note_text IS NOT NULL
+          AND TRIM(sur.note_text) <> ''
+      ) AS like_count,
+      (
+        SELECT COUNT(1)
+        FROM skill_copies c
+        WHERE c.user_id = ?
+      ) AS copy_count
+    FROM users u
+    WHERE u.id = ?
+    LIMIT 1`,
+    [userId, userId, userId, userId]
+  )
+
+  const row = rows[0]
+  sendSuccess(res, {
+    publishedCount: row?.published_count ?? 0,
+    favoriteCount: row?.favorite_count ?? 0,
+    likeCount: row?.like_count ?? 0,
+    copyCount: row?.copy_count ?? 0
+  })
 })
 
 meRouter.get('/skills', async (req, res) => {
@@ -308,7 +354,7 @@ meRouter.get('/likes', async (req, res) => {
     LEFT JOIN skills s ON s.id = sur.skill_id
     WHERE l.user_id = ?
       AND sur.note_text IS NOT NULL
-      AND sur.note_text <> ''
+      AND TRIM(sur.note_text) <> ''
     ORDER BY l.created_at DESC
     LIMIT ? OFFSET ?`,
     [userId, pageSize, offset]
@@ -320,7 +366,7 @@ meRouter.get('/likes', async (req, res) => {
     INNER JOIN skill_usage_records sur ON sur.id = l.usage_record_id
     WHERE l.user_id = ?
       AND sur.note_text IS NOT NULL
-      AND sur.note_text <> ''`,
+      AND TRIM(sur.note_text) <> ''`,
     [userId]
   )
   const total = countRows[0]?.total ?? 0

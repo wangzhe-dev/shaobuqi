@@ -217,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { getMyCopies, getMyFavorites, getMyLikes, getMyProfile } from '@/api/me'
+import { getMyCopies, getMyFavorites, getMyLikes, getMyProfile, getMySummary } from '@/api/me'
 import { useUserStore } from '@/stores'
 import { getCurrentInstance } from 'vue'
 
@@ -264,6 +264,18 @@ const dataSummary = reactive({
   copy: '--'
 })
 
+const loadLegacySummary = async () => {
+  const [favoriteData, likeData, copyData] = await Promise.all([
+    getMyFavorites({ page: 1, pageSize: 1 }).catch(() => null),
+    getMyLikes({ page: 1, pageSize: 1 }).catch(() => null),
+    getMyCopies({ page: 1, pageSize: 1 }).catch(() => null)
+  ])
+
+  if (favoriteData) dataSummary.favorite = formatCount(Number(favoriteData.pagination?.total ?? 0))
+  if (likeData) dataSummary.like = formatCount(Number(likeData.pagination?.total ?? 0))
+  if (copyData) dataSummary.copy = formatCount(Number(copyData.pagination?.total ?? 0))
+}
+
 const loadMyData = async () => {
   if (!userStore.token) {
     dataSummary.published = '--'
@@ -273,31 +285,38 @@ const loadMyData = async () => {
     return
   }
 
-  try {
-    const me = await getMyProfile()
+  dataSummary.published = '--'
+  dataSummary.favorite = '--'
+  dataSummary.like = '--'
+  dataSummary.copy = '--'
+
+  const [me, summary] = await Promise.all([
+    getMyProfile().catch(() => null),
+    getMySummary().catch(() => null)
+  ])
+
+  if (me) {
     profile.name = me?.nickname || '我'
     profile.bio = me?.bio || '不断验证Skill，不断分享经验'
     profile.tags = me?.bio ? ['创作者'] : ['Skill']
     profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
     profile.totalCopyCount = formatCount(me?.totalCopyCount)
     profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
-    dataSummary.published = formatCount(me?.publishedSkillCount)
-  } catch { }
+  }
 
-  try {
-    const favoriteData = await getMyFavorites({ page: 1, pageSize: 1 })
-    dataSummary.favorite = formatCount(Number(favoriteData?.pagination?.total ?? 0))
-  } catch { }
+  if (summary) {
+    dataSummary.published = formatCount(summary.publishedCount)
+    dataSummary.favorite = formatCount(summary.favoriteCount)
+    dataSummary.like = formatCount(summary.likeCount)
+    dataSummary.copy = formatCount(summary.copyCount)
+    return
+  }
 
-  try {
-    const likeData = await getMyLikes({ page: 1, pageSize: 1 })
-    dataSummary.like = formatCount(Number(likeData?.pagination?.total ?? 0))
-  } catch { }
+  if (me) {
+    dataSummary.published = formatCount(me.publishedSkillCount)
+  }
 
-  try {
-    const copyData = await getMyCopies({ page: 1, pageSize: 1 })
-    dataSummary.copy = formatCount(Number(copyData?.pagination?.total ?? 0))
-  } catch { }
+  await loadLegacySummary()
 }
 
 const cacheSize = ref('计算中...')
