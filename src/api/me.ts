@@ -19,3 +19,7 @@ export const getMyFavorites = (params?: { page?: number; pageSize?: number }) =>
 export const getMyCopies = (params?: { page?: number; pageSize?: number }) => {
 	return http.get<any>('/me/copies', params)
 }
+
+export const getMyLikes = (params?: { page?: number; pageSize?: number }) => {
+	return http.get<any>('/me/likes', params)
+}

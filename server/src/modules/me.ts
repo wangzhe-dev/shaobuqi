@@ -45,6 +45,22 @@ type MyCopyRow = RowDataPacket & {
   scene: string | null
 }
 
+type MyLikeRow = RowDataPacket & {
+  like_id: number
+  liked_at: string
+  post_id: number
+  post_text: string
+  model_name: string
+  post_created_at: string
+  post_like_count: number
+  post_comment_count: number
+  author_id: number
+  author_name: string
+  skill_id: number | null
+  skill_title: string | null
+  skill_scene: string | null
+}
+
 const listSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().max(100).optional()
@@ -252,6 +268,86 @@ meRouter.get('/copies', async (req, res) => {
             scene: row.scene
           }
         : null
+    })),
+    pagination: buildPaginationMeta(page, pageSize, total)
+  })
+})
+
+meRouter.get('/likes', async (req, res) => {
+  const parsed = listSchema.safeParse(req.query)
+  const { page, pageSize, offset } = parsePagination(parsed.success ? parsed.data.page : undefined, parsed.success ? parsed.data.pageSize : undefined)
+
+  const userId = req.auth!.userId
+
+  const rows = await queryRows<MyLikeRow[]>(
+    `SELECT
+      l.id AS like_id,
+      l.created_at AS liked_at,
+      sur.id AS post_id,
+      sur.note_text AS post_text,
+      sur.model_name,
+      sur.created_at AS post_created_at,
+      (
+        SELECT COUNT(1)
+        FROM feed_post_likes fl
+        WHERE fl.usage_record_id = sur.id
+      ) AS post_like_count,
+      (
+        SELECT COUNT(1)
+        FROM feed_post_comments fc
+        WHERE fc.usage_record_id = sur.id
+      ) AS post_comment_count,
+      u.id AS author_id,
+      u.nickname AS author_name,
+      s.id AS skill_id,
+      s.title AS skill_title,
+      s.scene AS skill_scene
+    FROM feed_post_likes l
+    INNER JOIN skill_usage_records sur ON sur.id = l.usage_record_id
+    INNER JOIN users u ON u.id = sur.user_id
+    LEFT JOIN skills s ON s.id = sur.skill_id
+    WHERE l.user_id = ?
+      AND sur.note_text IS NOT NULL
+      AND sur.note_text <> ''
+    ORDER BY l.created_at DESC
+    LIMIT ? OFFSET ?`,
+    [userId, pageSize, offset]
+  )
+
+  const countRows = await queryRows<CountRow[]>(
+    `SELECT COUNT(1) AS total
+    FROM feed_post_likes l
+    INNER JOIN skill_usage_records sur ON sur.id = l.usage_record_id
+    WHERE l.user_id = ?
+      AND sur.note_text IS NOT NULL
+      AND sur.note_text <> ''`,
+    [userId]
+  )
+  const total = countRows[0]?.total ?? 0
+
+  sendSuccess(res, {
+    list: rows.map((row) => ({
+      likeId: row.like_id,
+      likedAt: row.liked_at,
+      post: {
+        id: row.post_id,
+        text: row.post_text,
+        modelName: row.model_name,
+        createdAt: row.post_created_at,
+        likeCount: row.post_like_count,
+        commentCount: row.post_comment_count,
+        author: {
+          id: row.author_id,
+          nickname: row.author_name
+        },
+        skill: row.skill_id
+          ? {
+              id: row.skill_id,
+              title: row.skill_title,
+              scene: row.skill_scene
+            }
+          : null
+      }
     })),
     pagination: buildPaginationMeta(page, pageSize, total)
   })

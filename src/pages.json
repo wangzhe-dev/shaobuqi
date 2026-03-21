@@ -39,6 +39,13 @@
 			}
 		},
 		{
+			"path": "pages/my/data",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/detail/post",
 			"style": {
 				"navigationBarTitleText": "",

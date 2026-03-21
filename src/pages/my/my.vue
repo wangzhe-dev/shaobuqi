@@ -55,112 +55,61 @@
       </view>
     </view>
 
-    <!-- ── 我的 Skill ── -->
+    <!-- ── 我的数据中心 ── -->
     <view class="section">
-      <view class="section-hd">
-        <text class="sh-title">我发布的 Skill</text>
-        <text v-if="isLoggedIn" class="sh-more" @tap="toAllSkills">全部 ›</text>
-      </view>
-      <!-- 未登录提示 -->
       <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
         <view class="gb-inner">
-          <text class="gb-icon">⚡</text>
-          <text class="gb-text">登录后查看你发布的 Skill</text>
+          <text class="gb-icon">📊</text>
+          <text class="gb-text">登录后查看发布、收藏、点赞、复制记录</text>
           <view class="gb-btn">去登录</view>
         </view>
       </view>
-      <!-- 已登录内容 -->
-      <template v-else>
-        <view class="skill-list">
-          <view v-if="mySkills.length === 0" class="empty-row">
-            <text class="empty-t">还没有发布 Skill</text>
+      <view v-else class="data-entry-card">
+        <view class="data-entry-item" @tap="toMyDataCenter('publish')">
+          <view class="dei-icon dei-icon-publish">
+            <uni-icons type="compose" size="18" color="#E45C1A" />
           </view>
-          <view v-for="skill in mySkills" :key="skill.id" class="skill-card" @tap="toSkill(skill.id)">
-            <view class="sc-top">
-              <view class="scene-tag">{{ skill.scene }}</view>
-              <text class="sc-time">{{ skill.time }}</text>
-            </view>
-            <text class="sc-title">{{ skill.title }}</text>
-            <view class="sc-stats">
-              <view class="sc-stat">
-                <text class="ss-val orange">{{ skill.copyCount }}</text>
-                <text class="ss-lab">复制</text>
-              </view>
-              <view class="sc-stat">
-                <text class="ss-val">{{ skill.favoriteCount }}</text>
-                <text class="ss-lab">收藏</text>
-              </view>
-              <view class="sc-stat">
-                <text class="ss-val green">{{ skill.successRate }}</text>
-                <text class="ss-lab">复现率</text>
-              </view>
-              <view class="sc-stat">
-                <text class="ss-val blue">{{ skill.feedbackCount }}</text>
-                <text class="ss-lab">反馈</text>
-              </view>
-            </view>
+          <view class="dei-main">
+            <text class="dei-title">发布</text>
+            <text class="dei-sub">我发布的 Skill</text>
           </view>
+          <text class="dei-count">{{ dataSummary.published }}</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
-      </template>
-    </view>
-
-    <!-- ── 我的收藏 ── -->
-    <view class="section">
-      <view class="section-hd">
-        <text class="sh-title">我的收藏</text>
-      </view>
-      <!-- 未登录提示 -->
-      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
-        <view class="gb-inner">
-          <text class="gb-icon">🔖</text>
-          <text class="gb-text">登录后查看收藏的 Skill</text>
-          <view class="gb-btn">去登录</view>
+        <view class="data-entry-item" @tap="toMyDataCenter('favorite')">
+          <view class="dei-icon dei-icon-favorite">
+            <uni-icons type="heart" size="18" color="#5B5BD6" />
+          </view>
+          <view class="dei-main">
+            <text class="dei-title">收藏</text>
+            <text class="dei-sub">我收藏的 Skill</text>
+          </view>
+          <text class="dei-count">{{ dataSummary.favorite }}</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <view class="data-entry-item" @tap="toMyDataCenter('like')">
+          <view class="dei-icon dei-icon-like">
+            <uni-icons type="chat" size="18" color="#2F8A57" />
+          </view>
+          <view class="dei-main">
+            <text class="dei-title">点赞</text>
+            <text class="dei-sub">我点赞的动态</text>
+          </view>
+          <text class="dei-count">{{ dataSummary.like }}</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
+        </view>
+        <view class="data-entry-item" @tap="toMyDataCenter('copy')">
+          <view class="dei-icon dei-icon-copy">
+            <uni-icons type="paperplane" size="18" color="#0B8B8C" />
+          </view>
+          <view class="dei-main">
+            <text class="dei-title">复制</text>
+            <text class="dei-sub">我复制过的 Skill</text>
+          </view>
+          <text class="dei-count">{{ dataSummary.copy }}</text>
+          <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
       </view>
-      <!-- 已登录内容 -->
-      <template v-else>
-        <view class="list-card">
-          <view v-if="myFavorites.length === 0" class="empty-row">
-            <text class="empty-t">还没有收藏 Skill</text>
-          </view>
-          <view v-for="favorite in myFavorites" :key="favorite.id" class="line-item" @tap="toSkill(favorite.id)">
-            <view class="item-main">
-              <text class="item-title">{{ favorite.title }}</text>
-              <text class="item-sub">{{ favorite.creator }} · {{ favorite.scene }}</text>
-            </view>
-            <text class="item-meta">{{ favorite.favoriteCount }} 收藏</text>
-          </view>
-        </view>
-      </template>
-    </view>
-
-    <!-- ── 我的复制 ── -->
-    <view class="section">
-      <view class="section-hd">
-        <text class="sh-title">我的复制</text>
-      </view>
-      <!-- 未登录提示 -->
-      <view v-if="!isLoggedIn" class="guest-block" @tap="goLogin">
-        <view class="gb-inner">
-          <text class="gb-icon">📋</text>
-          <text class="gb-text">登录后查看复制记录</text>
-          <view class="gb-btn">去登录</view>
-        </view>
-      </view>
-      <!-- 已登录内容 -->
-      <template v-else>
-        <view class="list-card">
-          <view v-if="myCopies.length === 0" class="empty-row">
-            <text class="empty-t">还没有复制记录</text>
-          </view>
-          <view v-for="copy in myCopies" :key="copy.id" class="line-item">
-            <view class="item-main">
-              <text class="item-title">{{ copy.title }}</text>
-              <text class="item-sub">{{ copy.scene }} · {{ copy.time }}</text>
-            </view>
-          </view>
-        </view>
-      </template>
     </view>
 
     <!-- ── 设置 ── -->
@@ -268,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { getMyCopies, getMyFavorites, getMyProfile, getMySkills } from '@/api/me'
+import { getMyCopies, getMyFavorites, getMyLikes, getMyProfile } from '@/api/me'
 import { useUserStore } from '@/stores'
 import { getCurrentInstance } from 'vue'
 
@@ -286,32 +235,6 @@ const isLoggedIn = computed(() => !!userStore.token)
 const goLogin = () => {
   uni.navigateTo({ url: '/pages/login/index' })
 }
-
-const mySkills = ref<Array<{
-  id: string
-  title: string
-  scene: string
-  time: string
-  copyCount: string
-  favoriteCount: string
-  successRate: string
-  feedbackCount: string
-}>>([])
-
-const myFavorites = ref<Array<{
-  id: string
-  title: string
-  scene: string
-  creator: string
-  favoriteCount: string
-}>>([])
-
-const myCopies = ref<Array<{
-  id: string
-  title: string
-  scene: string
-  time: string
-}>>([])
 
 const profile = reactive({
   name: '我',
@@ -334,20 +257,21 @@ const formatRate = (value: number | null | undefined) => {
   return `${Number(value).toFixed(0)}%`
 }
 
-const formatRelativeTime = (time: string | null | undefined) => {
-  if (!time) return '--'
-  const date = new Date(time)
-  if (Number.isNaN(date.getTime())) return '--'
-  const diff = Date.now() - date.getTime()
-  const day = 24 * 60 * 60 * 1000
-  if (diff < day) return '今天'
-  if (diff < 2 * day) return '1天前'
-  if (diff < 7 * day) return `${Math.floor(diff / day)}天前`
-  return `${Math.floor(diff / (7 * day))}周前`
-}
+const dataSummary = reactive({
+  published: '--',
+  favorite: '--',
+  like: '--',
+  copy: '--'
+})
 
 const loadMyData = async () => {
-  if (!userStore.token) return
+  if (!userStore.token) {
+    dataSummary.published = '--'
+    dataSummary.favorite = '--'
+    dataSummary.like = '--'
+    dataSummary.copy = '--'
+    return
+  }
 
   try {
     const me = await getMyProfile()
@@ -357,44 +281,22 @@ const loadMyData = async () => {
     profile.publishedSkillCount = formatCount(me?.publishedSkillCount)
     profile.totalCopyCount = formatCount(me?.totalCopyCount)
     profile.avgSuccessRate = formatRate(me?.avgSuccessRate)
+    dataSummary.published = formatCount(me?.publishedSkillCount)
   } catch { }
 
   try {
-    const skillData = await getMySkills({ page: 1, pageSize: 20, status: 1 })
-    const list = Array.isArray(skillData?.list) ? skillData.list : []
-    mySkills.value = list.map((skill: any) => ({
-      id: `${skill.id}`,
-      title: skill.title,
-      scene: skill.scene || '其他',
-      time: formatRelativeTime(skill.publishAt || skill.updatedAt),
-      copyCount: formatCount(skill.copyCount),
-      favoriteCount: formatCount(skill.favoriteCount),
-      successRate: formatRate(skill.successRate),
-      feedbackCount: formatCount(skill.feedbackCount)
-    }))
+    const favoriteData = await getMyFavorites({ page: 1, pageSize: 1 })
+    dataSummary.favorite = formatCount(Number(favoriteData?.pagination?.total ?? 0))
   } catch { }
 
   try {
-    const favoriteData = await getMyFavorites({ page: 1, pageSize: 8 })
-    const list = Array.isArray(favoriteData?.list) ? favoriteData.list : []
-    myFavorites.value = list.map((item: any) => ({
-      id: `${item?.skill?.id || ''}`,
-      title: `${item?.skill?.title || '未命名 Skill'}`,
-      scene: `${item?.skill?.scene || '其他'}`,
-      creator: `${item?.skill?.creator?.nickname || '匿名用户'}`,
-      favoriteCount: formatCount(item?.skill?.favoriteCount)
-    }))
+    const likeData = await getMyLikes({ page: 1, pageSize: 1 })
+    dataSummary.like = formatCount(Number(likeData?.pagination?.total ?? 0))
   } catch { }
 
   try {
-    const copyData = await getMyCopies({ page: 1, pageSize: 8 })
-    const list = Array.isArray(copyData?.list) ? copyData.list : []
-    myCopies.value = list.map((item: any) => ({
-      id: `${item?.id || ''}`,
-      title: `${item?.skill?.title || '已删除 Skill'}`,
-      scene: `${item?.skill?.scene || '其他'}`,
-      time: formatRelativeTime(item?.createdAt)
-    }))
+    const copyData = await getMyCopies({ page: 1, pageSize: 1 })
+    dataSummary.copy = formatCount(Number(copyData?.pagination?.total ?? 0))
   } catch { }
 }
 
@@ -409,16 +311,11 @@ onMounted(() => {
   })
 })
 
-const toSkill = (id: string) => {
-  if (!id) {
-    uni.showToast({ title: 'Skill 已不存在', icon: 'none' })
-    return
-  }
-  uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
-}
-const toAllSkills = () => uni.navigateTo({ url: '/pages/skill/index' })
 const editProfile = () => uni.showToast({ title: '编辑资料开发中', icon: 'none' })
 const toFeedback = () => uni.navigateTo({ url: '/pages/feedback/index' })
+const toMyDataCenter = (tab: 'publish' | 'favorite' | 'like' | 'copy') => {
+  uni.navigateTo({ url: `/pages/my/data?tab=${tab}` })
+}
 
 const showCoopPopup = ref(false)
 const copyContact = (text: string, label: string) => {
@@ -658,23 +555,7 @@ const logoutConfirm = () => {
   padding: 0 24rpx 16rpx;
 }
 
-.section-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4rpx 4rpx 16rpx;
 
-  .sh-title {
-    font-size: 28rpx;
-    font-weight: 700;
-    color: #1A1A2E;
-  }
-
-  .sh-more {
-    font-size: 24rpx;
-    color: #9CA3AF;
-  }
-}
 
 /* ── 未登录占位块 ── */
 .guest-block {
@@ -713,6 +594,80 @@ const logoutConfirm = () => {
     border-radius: 100rpx;
     flex-shrink: 0;
   }
+}
+
+.data-entry-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.data-entry-item {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    background: #F8F8FF;
+  }
+}
+
+.dei-icon {
+  width: 54rpx;
+  height: 54rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dei-icon-publish {
+  background: rgba(228, 92, 26, 0.12);
+}
+
+.dei-icon-favorite {
+  background: rgba(91, 91, 214, 0.12);
+}
+
+.dei-icon-like {
+  background: rgba(47, 138, 87, 0.12);
+}
+
+.dei-icon-copy {
+  background: rgba(11, 139, 140, 0.12);
+}
+
+.dei-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.dei-title {
+  font-size: 28rpx;
+  color: #1A1A2E;
+  font-weight: 600;
+}
+
+.dei-sub {
+  font-size: 22rpx;
+  color: #9CA3AF;
+}
+
+.dei-count {
+  font-size: 26rpx;
+  color: #6B7280;
+  font-weight: 700;
+  margin-right: 6rpx;
 }
 
 /* ── Skill 列表 ── */
