@@ -27,6 +27,7 @@ type HighValueSkillRow = RowDataPacket & {
   avg_total_tokens: number | null
   copy_count: number
   success_rate: number | null
+  model_name: string | null
 }
 
 const querySchema = z.object({
@@ -81,7 +82,8 @@ statsRouter.get('/trends', async (req, res) => {
       s.scene,
       s.avg_total_tokens,
       s.copy_count,
-      s.success_rate
+      s.success_rate,
+      COALESCE(s.recommended_model_name, s.common_model_name) AS model_name
     FROM skills s
     WHERE s.status = 1
     ORDER BY
@@ -112,7 +114,8 @@ statsRouter.get('/trends', async (req, res) => {
       scene: row.scene,
       avgTotalTokens: row.avg_total_tokens,
       copyCount: row.copy_count,
-      successRate: row.success_rate
+      successRate: row.success_rate,
+      modelName: row.model_name
     }))
   })
 })

@@ -203,7 +203,8 @@ export const copySkill = (
 		sourceChannel?: string
 		copiedTextHash?: string
 		usage?: {
-			modelName: string
+			modelId?: number | null
+			modelName?: string | null
 			inputTokens?: number | null
 			outputTokens?: number | null
 			totalTokens?: number | null

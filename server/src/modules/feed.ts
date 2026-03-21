@@ -33,6 +33,7 @@ type FeedRow = RowDataPacket & {
 type PostIdRow = RowDataPacket & { id: number }
 type PostOwnerRow = RowDataPacket & { id: number; user_id: number }
 type SkillIdRow = RowDataPacket & { id: number }
+type ModelLookupRow = RowDataPacket & { id: number; model_name: string; is_active: number }
 type CountRow = RowDataPacket & { total: number }
 
 type CommentRow = RowDataPacket & {
@@ -56,7 +57,8 @@ const reactionEnum = z.enum(['worth', 'ok', 'regret', 'addicted'])
 
 const createPostSchema = z.object({
   skillId: z.coerce.number().int().positive().optional().nullable(),
-  modelName: z.string().trim().min(1).max(64),
+  modelId: z.coerce.number().int().positive().optional().nullable(),
+  modelName: z.string().trim().max(64).optional(),
   inputTokens: z.coerce.number().int().nonnegative().optional().nullable(),
   outputTokens: z.coerce.number().int().nonnegative().optional().nullable(),
   totalTokens: z.coerce.number().int().nonnegative().optional().nullable(),
@@ -65,7 +67,9 @@ const createPostSchema = z.object({
   reaction: reactionEnum.optional().nullable(),
   noteText: z.string().trim().min(1).max(2000),
   images: z.array(z.string().trim().min(1).max(500)).max(9).optional().default([])
-})
+}).refine((payload) => {
+  return Boolean(payload.modelId) || Boolean(`${payload.modelName ?? ''}`.trim())
+}, { message: '请至少提供 modelId 或 modelName' })
 
 const updateReactionSchema = z.object({
   reaction: reactionEnum.nullable()
@@ -283,6 +287,57 @@ feedRouter.post('/', requireAuth, async (req, res) => {
   const payload = parsed.data
   const userId = req.auth!.userId
 
+  let resolvedModelId: number | null = null
+  let resolvedModelName = `${payload.modelName ?? ''}`.trim()
+  if (payload.modelId) {
+    try {
+      const modelRows = await queryRows<ModelLookupRow[]>(
+        `SELECT id, model_name, is_active
+        FROM ai_models
+        WHERE id = ?
+        LIMIT 1`,
+        [payload.modelId]
+      )
+      const model = modelRows[0]
+      if (!model || model.is_active !== 1) {
+        sendError(res, '模型不存在或已下线', 400)
+        return
+      }
+      resolvedModelId = model.id
+      resolvedModelName = model.model_name
+    } catch {
+      // 旧库可能尚未创建 ai_models 表，回退为 modelName 兼容路径
+    }
+  }
+  if (!resolvedModelId && resolvedModelName) {
+    try {
+      const modelRows = await queryRows<ModelLookupRow[]>(
+        `SELECT id, model_name, is_active
+        FROM ai_models
+        WHERE LOWER(TRIM(model_name)) = LOWER(TRIM(?))
+          OR LOWER(TRIM(model_key)) = LOWER(TRIM(?))
+        ORDER BY is_recommended DESC, sort_no ASC, id ASC
+        LIMIT 1`,
+        [resolvedModelName, resolvedModelName]
+      )
+      const model = modelRows[0]
+      if (model) {
+        if (model.is_active !== 1) {
+          sendError(res, '模型已下线，请重新选择', 400)
+          return
+        }
+        resolvedModelId = model.id
+        resolvedModelName = model.model_name
+      }
+    } catch {
+      // 旧库可能尚未创建 ai_models 表，保留 modelName 兼容路径
+    }
+  }
+  if (!resolvedModelName) {
+    sendError(res, '请选择模型', 400)
+    return
+  }
+
   if (payload.skillId) {
     const skillRows = await queryRows<SkillIdRow[]>(
       `SELECT id
@@ -315,7 +370,7 @@ feedRouter.post('/', requireAuth, async (req, res) => {
     [
       userId,
       payload.skillId ?? null,
-      payload.modelName,
+      resolvedModelName,
       payload.inputTokens ?? null,
       payload.outputTokens ?? null,
       payload.totalTokens ?? null,
@@ -328,6 +383,32 @@ feedRouter.post('/', requireAuth, async (req, res) => {
   )
 
   const postId = Number(result.insertId)
+  if (resolvedModelId) {
+    try {
+      await execWrite(
+        `UPDATE skill_usage_records
+        SET model_id = ?
+        WHERE id = ?`,
+        [resolvedModelId, postId]
+      )
+    } catch {
+      // 旧库可能未执行 model_id 升级，保持兼容
+    }
+
+    try {
+      await execWrite(
+        `INSERT INTO user_recent_models (user_id, model_id, last_used_at, use_count)
+        VALUES (?, ?, CURRENT_TIMESTAMP, 1)
+        ON DUPLICATE KEY UPDATE
+          last_used_at = CURRENT_TIMESTAMP,
+          use_count = use_count + 1`,
+        [userId, resolvedModelId]
+      )
+    } catch {
+      // 最近使用写入失败不影响发布主流程
+    }
+  }
+
   const row = await getFeedItemById(postId, userId)
   if (!row) {
     sendSuccess(res, { id: postId }, '发布成功')

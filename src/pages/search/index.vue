@@ -204,6 +204,7 @@ type SearchSkillCard = {
 	copyCount: string
 	author: string
 	tags: string[]
+	modelName: string
 }
 
 type ParsedSearch = {
@@ -245,6 +246,12 @@ const normalizePlainText = (value: unknown) => `${value ?? ''}`
 	.replace(/\s+/g, ' ')
 	.trim()
 
+const normalizeUsageModelName = (value: unknown): string => {
+	const modelName = `${value ?? ''}`.trim()
+	if (!modelName || modelName === '--' || modelName === '未知模型') return ''
+	return modelName
+}
+
 const formatCount = (value: number | null | undefined) => {
 	const n = Number(value ?? 0)
 	if (!Number.isFinite(n) || n <= 0) return '0'
@@ -256,17 +263,18 @@ const mapApiSkill = (skill: SkillListItem): SearchSkillCard => {
 	const summary = normalizePlainText(skill.summary ?? skill.brief ?? '')
 	const promptPreview = normalizePlainText(skill.promptPreview ?? '')
 	return {
-	id: `${skill?.id || ''}`,
-	icon: 'compose',
-	color: modelColor(`${skill?.modelName || ''}`),
-	coverImage: skill?.coverImage ? normalizeImageUrl(`${skill.coverImage}`) : '',
-	title: `${skill?.title || '未命名 Skill'}`,
-	desc: summary || promptPreview || `${skill?.scene || '暂无简介'}`,
-	scene: `${skill?.scene || skill?.category?.name || '其他'}`,
-	copyCount: formatCount(skill?.copyCount),
-	author: `${skill?.creator?.nickname || '匿名用户'}`,
-	tags: Array.isArray(skill?.tags) ? skill.tags.filter(Boolean).slice(0, 3) : []
-}
+		id: `${skill?.id || ''}`,
+		icon: 'compose',
+		color: modelColor(`${skill?.modelName || ''}`),
+		coverImage: skill?.coverImage ? normalizeImageUrl(`${skill.coverImage}`) : '',
+		title: `${skill?.title || '未命名 Skill'}`,
+		desc: summary || promptPreview || `${skill?.scene || '暂无简介'}`,
+		scene: `${skill?.scene || skill?.category?.name || '其他'}`,
+		copyCount: formatCount(skill?.copyCount),
+		author: `${skill?.creator?.nickname || '匿名用户'}`,
+		tags: Array.isArray(skill?.tags) ? skill.tags.filter(Boolean).slice(0, 3) : [],
+		modelName: normalizeUsageModelName(skill?.modelName)
+	}
 }
 
 const clearInputSearchTimer = () => {
@@ -479,7 +487,13 @@ const clearHistory = () => {
 const useSkill = async (skill: any) => {
 	if (userStore.token && skill?.id) {
 		try {
-			await copySkill(skill.id, { sourceChannel: 'search' })
+			const modelName = normalizeUsageModelName(skill?.modelName)
+			await copySkill(
+				skill.id,
+				modelName
+					? { sourceChannel: 'search', usage: { modelName } }
+					: { sourceChannel: 'search' }
+			)
 		} catch {}
 	}
 	toSkill(skill.id)

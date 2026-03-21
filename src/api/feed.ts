@@ -4,6 +4,7 @@ export type FeedReaction = 'worth' | 'ok' | 'regret' | 'addicted'
 
 export interface FeedItem {
   id: number
+  modelId?: number | null
   modelName: string
   totalTokens: number | null
   costAmount: string | null
@@ -65,7 +66,8 @@ export interface FeedCommentListResponse {
 
 export interface CreateFeedPostPayload {
   skillId?: number | null
-  modelName: string
+  modelId?: number | null
+  modelName?: string | null
   inputTokens?: number | null
   outputTokens?: number | null
   totalTokens?: number | null

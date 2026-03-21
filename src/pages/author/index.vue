@@ -127,7 +127,9 @@
 </template>
 
 <script setup lang="ts">
-	import { getCreatorProfile, getSkillList, copySkill as copySkillApi } from '@/api/skill'
+	import { getCreatorProfile, getSkillDetail, getSkillList, copySkill as copySkillApi } from '@/api/skill'
+	import { useUserStore } from '@/stores'
+	import { requireLogin } from '@/utils/auth-guard'
 
 	const TABS = [
 		{ key: 'skills', label: 'Skill' },
@@ -136,6 +138,7 @@
 
 	const isFollowing = ref(false)
 	const activeTab = ref('skills')
+	const userStore = useUserStore()
 
 	const author = reactive({
 		name: '',
@@ -156,7 +159,19 @@
 		avgToken: string
 		successRate: string
 		copyCount: string
+		modelName: string
 	}>>([])
+
+	const normalizeUsageModelName = (value: unknown): string => {
+		const modelName = `${value ?? ''}`.trim()
+		if (!modelName || modelName === '--' || modelName === '未知模型') return ''
+		return modelName
+	}
+
+	const normalizePlainText = (value: unknown) => `${value ?? ''}`
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
 
 	// 反馈暂无公开接口，保留空列表
 	const authorFeedbacks = ref<Array<{
@@ -223,7 +238,8 @@
 				time: formatRelativeTime(item.publishAt || item.updatedAt),
 				avgToken: formatToken(item.avgTotalTokens),
 				successRate: formatRate(item.successRate),
-				copyCount: formatCount(item.copyCount)
+				copyCount: formatCount(item.copyCount),
+				modelName: normalizeUsageModelName(item.modelName)
 			}))
 		} catch {
 			uni.showToast({ title: '加载 Skill 列表失败', icon: 'none' })
@@ -241,8 +257,38 @@
 	})
 
 	const copySkill = async (skill: any) => {
+		if (!requireLogin(userStore.token, '复制 Skill')) return
+		let copyText = ''
 		try {
-			await copySkillApi(skill.id)
+			const detail = await getSkillDetail(skill?.id)
+			copyText = normalizePlainText(detail?.content?.fullPrompt)
+		} catch {}
+		if (!copyText) copyText = normalizePlainText(skill?.title)
+		if (!copyText) {
+			uni.showToast({ title: '暂无可复制内容', icon: 'none' })
+			return
+		}
+		const copied = await new Promise<boolean>((resolve) => {
+			uni.setClipboardData({
+				data: copyText,
+				showToast: false,
+				success: () => resolve(true),
+				fail: () => resolve(false)
+			})
+		})
+		if (!copied) {
+			uni.showToast({ title: '复制失败', icon: 'none' })
+			return
+		}
+
+		try {
+			const modelName = normalizeUsageModelName(skill?.modelName)
+			await copySkillApi(
+				skill.id,
+				modelName
+					? { sourceChannel: 'author', usage: { modelName } }
+					: { sourceChannel: 'author' }
+			)
 			uni.showToast({ title: '已复制 Skill', icon: 'success' })
 		} catch {}
 	}

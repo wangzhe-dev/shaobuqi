@@ -113,6 +113,12 @@ type FavoriteRow = RowDataPacket & {
   skill_id: number
 }
 
+type ModelLookupRow = RowDataPacket & {
+  id: number
+  model_name: string
+  is_active: number
+}
+
 type CreatorProfileRow = RowDataPacket & {
   id: number
   nickname: string
@@ -233,7 +239,8 @@ const copySchema = z.object({
   copiedTextHash: z.string().trim().length(64).optional().nullable(),
   usage: z
     .object({
-      modelName: z.string().trim().min(1).max(64),
+      modelId: z.coerce.number().int().positive().optional().nullable(),
+      modelName: z.string().trim().max(64).optional().nullable(),
       inputTokens: z.coerce.number().int().nonnegative().optional().nullable(),
       outputTokens: z.coerce.number().int().nonnegative().optional().nullable(),
       totalTokens: z.coerce.number().int().nonnegative().optional().nullable(),
@@ -243,6 +250,9 @@ const copySchema = z.object({
       noteText: z.string().trim().max(2000).optional().nullable(),
       images: z.array(z.string().trim().min(1).max(500)).max(9).optional().default([])
     })
+    .refine((usage) => {
+      return Boolean(usage.modelId) || Boolean(`${usage.modelName ?? ''}`.trim())
+    }, { message: 'usage.modelId 或 usage.modelName 至少提供一个' })
     .optional()
 })
 
@@ -1592,6 +1602,62 @@ skillsRouter.post('/:id/copies', requireAuth, async (req, res) => {
   const { sourceChannel, copiedTextHash, usage } = parsed.data
   const userId = req.auth!.userId
 
+  let usageModelId: number | null = null
+  let usageModelName = ''
+  if (usage) {
+    usageModelName = `${usage.modelName ?? ''}`.trim()
+    if (usage.modelId) {
+      try {
+        const modelRows = await queryRows<ModelLookupRow[]>(
+          `SELECT id, model_name, is_active
+          FROM ai_models
+          WHERE id = ?
+          LIMIT 1`,
+          [usage.modelId]
+        )
+        const model = modelRows[0]
+        if (!model || model.is_active !== 1) {
+          sendError(res, '模型不存在或已下线', 400)
+          return
+        }
+        usageModelId = model.id
+        usageModelName = model.model_name
+      } catch {
+        // 旧库可能尚未创建 ai_models 表，回退为 modelName 兼容路径
+      }
+    }
+
+    if (!usageModelId && usageModelName) {
+      try {
+        const modelRows = await queryRows<ModelLookupRow[]>(
+          `SELECT id, model_name, is_active
+          FROM ai_models
+          WHERE LOWER(TRIM(model_name)) = LOWER(TRIM(?))
+            OR LOWER(TRIM(model_key)) = LOWER(TRIM(?))
+          ORDER BY is_recommended DESC, sort_no ASC, id ASC
+          LIMIT 1`,
+          [usageModelName, usageModelName]
+        )
+        const model = modelRows[0]
+        if (model) {
+          if (model.is_active !== 1) {
+            sendError(res, '模型已下线，请重新选择', 400)
+            return
+          }
+          usageModelId = model.id
+          usageModelName = model.model_name
+        }
+      } catch {
+        // 旧库可能尚未创建 ai_models 表，回退为 modelName 兼容路径
+      }
+    }
+
+    if (!usageModelName) {
+      sendError(res, '复制参数不合法', 400)
+      return
+    }
+  }
+
   const result = await withTransaction(async (conn) => {
     const [copyResult] = await conn.execute<ResultSetHeader>(
       `INSERT INTO skill_copies (
@@ -1606,7 +1672,7 @@ skillsRouter.post('/:id/copies', requireAuth, async (req, res) => {
     const copyId = Number(copyResult.insertId)
 
     if (usage) {
-      await conn.execute(
+      const [usageInsertResult] = await conn.execute<ResultSetHeader>(
         `INSERT INTO skill_usage_records (
           user_id,
           skill_id,
@@ -1625,7 +1691,7 @@ skillsRouter.post('/:id/copies', requireAuth, async (req, res) => {
           userId,
           skillId,
           copyId,
-          usage.modelName,
+          usageModelName,
           usage.inputTokens ?? null,
           usage.outputTokens ?? null,
           usage.totalTokens ?? null,
@@ -1636,6 +1702,33 @@ skillsRouter.post('/:id/copies', requireAuth, async (req, res) => {
           stringifyJson(usage.images ?? [])
         ]
       )
+
+      if (usageModelId) {
+        const usageRecordId = Number(usageInsertResult.insertId)
+        try {
+          await conn.execute(
+            `UPDATE skill_usage_records
+            SET model_id = ?
+            WHERE id = ?`,
+            [usageModelId, usageRecordId]
+          )
+        } catch {
+          // 旧库可能未执行 model_id 升级，保持兼容
+        }
+
+        try {
+          await conn.execute(
+            `INSERT INTO user_recent_models (user_id, model_id, last_used_at, use_count)
+            VALUES (?, ?, CURRENT_TIMESTAMP, 1)
+            ON DUPLICATE KEY UPDATE
+              last_used_at = CURRENT_TIMESTAMP,
+              use_count = use_count + 1`,
+            [userId, usageModelId]
+          )
+        } catch {
+          // 旧库可能未执行 user_recent_models 升级，保持兼容
+        }
+      }
     }
 
     await conn.execute(

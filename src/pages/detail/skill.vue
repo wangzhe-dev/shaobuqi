@@ -337,6 +337,22 @@ import { normalizeImageUrl } from '@/utils/image-url'
 			.filter(Boolean)
 	}
 
+	const normalizePlainText = (value: unknown) => `${value ?? ''}`
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+
+	const normalizeUsageModelName = (value: unknown): string => {
+		const modelName = `${value ?? ''}`.trim()
+		if (!modelName || modelName === '--' || modelName === '未知模型') return ''
+		return modelName
+	}
+
+	const resolveCurrentSkillModelName = (): string => {
+		return normalizeUsageModelName(skill.value.recommendedModel)
+			|| normalizeUsageModelName(skill.value.commonModel)
+	}
+
 	const hasFeedbackUsage = (fb: any) => {
 		const hasModel = !!`${fb?.modelName || ''}`.trim()
 		const hasInput = Number(fb?.inputTokens ?? 0) > 0
@@ -458,10 +474,16 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		} catch {}
 	}
 
-	const tryRecordCopy = async (sourceChannel: string) => {
+	const tryRecordCopy = async (sourceChannel: string, modelName?: string) => {
 		if (!userStore.token || !currentSkillId.value) return
 		try {
-			await copySkillApi(currentSkillId.value, { sourceChannel })
+			const finalModelName = normalizeUsageModelName(modelName)
+			await copySkillApi(
+				currentSkillId.value,
+				finalModelName
+					? { sourceChannel, usage: { modelName: finalModelName } }
+					: { sourceChannel }
+			)
 		} catch {}
 	}
 
@@ -488,7 +510,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 			data: skill.value.fullPrompt || '',
 			success: () => {
 				uni.showToast({ title: '已复制 Skill', icon: 'success' })
-				void tryRecordCopy('detail')
+				void tryRecordCopy('detail', resolveCurrentSkillModelName())
 			}
 		})
 	}
@@ -499,7 +521,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 			data: skill.value.fullPrompt || '',
 			success: () => {
 				uni.showToast({ title: '已复制全部内容', icon: 'success' })
-				void tryRecordCopy('copy_all')
+				void tryRecordCopy('copy_all', resolveCurrentSkillModelName())
 			}
 		})
 	}
@@ -614,8 +636,37 @@ import { normalizeImageUrl } from '@/utils/image-url'
 	const copyQuick = async (s: any) => {
 		if (!requireLogin(userStore.token, '复制 Skill')) return
 		if (s?.id) {
+			let copyText = ''
 			try {
-				await copySkillApi(s.id, { sourceChannel: 'similar' })
+				const detail = await getSkillDetail(s.id)
+				copyText = normalizePlainText(detail?.content?.fullPrompt)
+			} catch {}
+			if (!copyText) copyText = normalizePlainText(s?.title)
+			if (!copyText) {
+				uni.showToast({ title: '暂无可复制内容', icon: 'none' })
+				return
+			}
+			const copied = await new Promise<boolean>((resolve) => {
+				uni.setClipboardData({
+					data: copyText,
+					showToast: false,
+					success: () => resolve(true),
+					fail: () => resolve(false)
+				})
+			})
+			if (!copied) {
+				uni.showToast({ title: '复制失败', icon: 'none' })
+				return
+			}
+
+			try {
+				const modelName = normalizeUsageModelName(s?.modelName ?? s?.model)
+				await copySkillApi(
+					s.id,
+					modelName
+						? { sourceChannel: 'similar', usage: { modelName } }
+						: { sourceChannel: 'similar' }
+				)
 			} catch {}
 		}
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })

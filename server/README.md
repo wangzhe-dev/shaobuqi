@@ -55,6 +55,14 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 3. 再导入 `server/sql/seed_dev.sql`。
 4. 确认 `users`、`skills`、`skill_contents` 等表已创建，并且有开发账号数据。
 
+老库增量升级（不重建库）：
+
+```bash
+mysql -u<user> -p <db_name> < server/sql/migrate_20260321_ai_models.sql
+```
+
+phpMyAdmin 可直接导入 `server/sql/migrate_20260321_ai_models.sql`，会按真实表名 `skill_usage_records` 自动补齐模型相关结构与数据。
+
 默认账号：
 
 - mobile: `13800000000`
@@ -125,6 +133,11 @@ mysql -u<user> -p <db_name> < server/sql/seed_dev.sql
 - `POST /h5api/feed/:id/comments`
 - `POST /h5api/feed/comments/:id/like`
 - `DELETE /h5api/feed/comments/:id/like`
+
+### Models
+
+- `GET /h5api/models`
+- `GET /h5api/models/recent`
 
 ### Upload
 

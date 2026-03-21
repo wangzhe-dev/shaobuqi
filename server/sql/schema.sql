@@ -162,12 +162,29 @@ CREATE TABLE IF NOT EXISTS `skill_copies` (
   CONSTRAINT `fk_skill_copies_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `ai_models` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `provider_code` VARCHAR(32) NOT NULL,
+  `model_key` VARCHAR(64) NOT NULL,
+  `model_name` VARCHAR(64) NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `is_recommended` TINYINT(1) NOT NULL DEFAULT 0,
+  `sort_no` INT NOT NULL DEFAULT 100,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ai_models_provider_key` (`provider_code`, `model_key`),
+  UNIQUE KEY `uk_ai_models_name` (`model_name`),
+  KEY `idx_ai_models_active_sort` (`is_active`, `sort_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `skill_usage_records` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` BIGINT UNSIGNED NOT NULL,
   `skill_id` BIGINT UNSIGNED DEFAULT NULL,
   `copy_id` BIGINT UNSIGNED DEFAULT NULL,
   `model_name` VARCHAR(64) NOT NULL,
+  `model_id` BIGINT UNSIGNED DEFAULT NULL,
   `input_tokens` INT UNSIGNED DEFAULT NULL,
   `output_tokens` INT UNSIGNED DEFAULT NULL,
   `total_tokens` INT UNSIGNED DEFAULT NULL,
@@ -181,9 +198,24 @@ CREATE TABLE IF NOT EXISTS `skill_usage_records` (
   KEY `idx_skill_usage_user_time` (`user_id`, `created_at`),
   KEY `idx_skill_usage_skill_time` (`skill_id`, `created_at`),
   KEY `idx_skill_usage_model_time` (`model_name`, `created_at`),
+  KEY `idx_skill_usage_model_id_time` (`model_id`, `created_at`),
   CONSTRAINT `fk_skill_usage_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_skill_usage_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_skill_usage_copy` FOREIGN KEY (`copy_id`) REFERENCES `skill_copies` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_skill_usage_copy` FOREIGN KEY (`copy_id`) REFERENCES `skill_copies` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_skill_usage_model` FOREIGN KEY (`model_id`) REFERENCES `ai_models` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `user_recent_models` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `model_id` BIGINT UNSIGNED NOT NULL,
+  `last_used_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `use_count` INT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_recent_model` (`user_id`, `model_id`),
+  KEY `idx_user_recent_last_used` (`user_id`, `last_used_at`),
+  CONSTRAINT `fk_user_recent_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_user_recent_model` FOREIGN KEY (`model_id`) REFERENCES `ai_models` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `feed_post_likes` (

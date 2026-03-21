@@ -441,6 +441,12 @@ const normalizePlainText = (value: unknown) => `${value ?? ''}`
   .replace(/\s+/g, ' ')
   .trim()
 
+const normalizeUsageModelName = (value: unknown): string => {
+  const modelName = `${value ?? ''}`.trim()
+  if (!modelName || modelName === '--' || modelName === '未知模型') return ''
+  return modelName
+}
+
 const buildPromptPreview = (item: any, fallback: string) => {
   const promptRaw = item?.promptPreview ?? item?.fullPrompt ?? item?.content?.fullPrompt
   const promptText = normalizePlainText(promptRaw)
@@ -612,7 +618,13 @@ const copySkill = async (skill: any) => {
   }
 
   try {
-    await copySkillApi(skill.id, { sourceChannel: 'feed' })
+    const modelName = normalizeUsageModelName(skill?.model ?? skill?.modelName)
+    await copySkillApi(
+      skill.id,
+      modelName
+        ? { sourceChannel: 'feed', usage: { modelName } }
+        : { sourceChannel: 'feed' }
+    )
   } catch {
     // ignore API record error in UI action
   }

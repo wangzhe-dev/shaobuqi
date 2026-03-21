@@ -332,7 +332,7 @@
 
 <script setup lang="ts">
 	import { getCurrentInstance } from 'vue'
-	import { copySkill as copySkillApi, getSkillList, getTrends } from '@/api/skill'
+	import { copySkill as copySkillApi, getSkillDetail, getSkillList, getTrends } from '@/api/skill'
 	import { useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
 
@@ -443,6 +443,17 @@
 		return `${Number(value).toFixed(0)}%`
 	}
 
+	const normalizePlainText = (value: unknown) => `${value ?? ''}`
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+
+	const normalizeUsageModelName = (value: unknown): string => {
+		const modelName = `${value ?? ''}`.trim()
+		if (!modelName || modelName === '--' || modelName === '未知模型') return ''
+		return modelName
+	}
+
 	const topBurnSkills = ref([
 		{ id: 's5', title: '全自动 PRD 文档生成', scene: '办公', avgToken: '6.5k' },
 		{ id: 's7', title: '长篇小说创作助手', scene: '写作', avgToken: '12.3k' },
@@ -468,15 +479,15 @@
 	const highValueSkills = ref([
 		{
 			id: 'e1', title: '极简翻译润色器', scene: '写作',
-			avgToken: '800', copyCount: '5.2k', successRate: '96%'
+			avgToken: '800', copyCount: '5.2k', successRate: '96%', modelName: ''
 		},
 		{
 			id: 'e2', title: '会议纪要速记模板', scene: '办公',
-			avgToken: '1.2k', copyCount: '4.1k', successRate: '92%'
+			avgToken: '1.2k', copyCount: '4.1k', successRate: '92%', modelName: ''
 		},
 		{
 			id: 'e3', title: '商品描述批量生成', scene: '电商',
-			avgToken: '1.5k', copyCount: '3.8k', successRate: '89%'
+			avgToken: '1.5k', copyCount: '3.8k', successRate: '89%', modelName: ''
 		}
 	])
 
@@ -592,7 +603,8 @@
 					scene: `${item?.scene || '其他'}`,
 					avgToken: formatToken(item?.avgTotalTokens),
 					copyCount: formatCount(item?.copyCount),
-					successRate: formatRate(item?.successRate)
+					successRate: formatRate(item?.successRate),
+					modelName: normalizeUsageModelName(item?.modelName)
 				}))
 				myRecentSkills.value = highValue.slice(0, 3).map((item: any) => ({
 					id: `${item?.id || ''}`,
@@ -633,9 +645,38 @@
 
 	const copySkill = async (skill: any) => {
 		if (!requireLogin(userStore.token, '复制 Skill')) return
+		let copyText = ''
+		try {
+			const detail = await getSkillDetail(skill?.id)
+			copyText = normalizePlainText(detail?.content?.fullPrompt)
+		} catch {}
+		if (!copyText) copyText = normalizePlainText(skill?.title)
+		if (!copyText) {
+			uni.showToast({ title: '暂无可复制内容', icon: 'none' })
+			return
+		}
+		const copied = await new Promise<boolean>((resolve) => {
+			uni.setClipboardData({
+				data: copyText,
+				showToast: false,
+				success: () => resolve(true),
+				fail: () => resolve(false)
+			})
+		})
+		if (!copied) {
+			uni.showToast({ title: '复制失败', icon: 'none' })
+			return
+		}
+
 		if (skill?.id) {
 			try {
-				await copySkillApi(skill.id, { sourceChannel: 'trend' })
+				const modelName = normalizeUsageModelName(skill?.modelName)
+				await copySkillApi(
+					skill.id,
+					modelName
+						? { sourceChannel: 'trend', usage: { modelName } }
+						: { sourceChannel: 'trend' }
+				)
 			} catch {}
 		}
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })

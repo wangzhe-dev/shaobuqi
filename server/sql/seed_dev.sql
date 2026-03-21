@@ -21,6 +21,45 @@ ON DUPLICATE KEY UPDATE
   status        = VALUES(status),
   updated_at    = CURRENT_TIMESTAMP;
 
+-- 模型字典（国内优先 + 国际常用）
+INSERT INTO ai_models (provider_code, model_key, model_name, is_active, is_recommended, sort_no) VALUES
+  ('deepseek', 'deepseek-chat', 'deepseek-chat', 1, 1, 10),
+  ('deepseek', 'deepseek-reasoner', 'deepseek-reasoner', 1, 1, 20),
+  ('qwen', 'qwen-plus', 'qwen-plus', 1, 1, 30),
+  ('qwen', 'qwen-turbo', 'qwen-turbo', 1, 0, 40),
+  ('qwen', 'qwen-max', 'qwen-max', 1, 1, 50),
+  ('qwen', 'qwen-long', 'qwen-long', 1, 0, 60),
+  ('zhipu', 'glm-4-plus', 'glm-4-plus', 1, 1, 70),
+  ('zhipu', 'glm-4-air', 'glm-4-air', 1, 0, 80),
+  ('zhipu', 'glm-4-flash', 'glm-4-flash', 1, 0, 90),
+  ('zhipu', 'glm-4v-plus', 'glm-4v-plus', 1, 0, 100),
+  ('moonshot', 'moonshot-v1-8k', 'moonshot-v1-8k', 1, 0, 110),
+  ('moonshot', 'moonshot-v1-32k', 'moonshot-v1-32k', 1, 0, 120),
+  ('moonshot', 'moonshot-v1-128k', 'moonshot-v1-128k', 1, 1, 130),
+  ('doubao', 'doubao-pro-32k', 'doubao-pro-32k', 1, 1, 140),
+  ('doubao', 'doubao-lite-32k', 'doubao-lite-32k', 1, 0, 150),
+  ('baidu_qianfan', 'ernie-4.0-8k', 'ernie-4.0-8k', 1, 0, 160),
+  ('baidu_qianfan', 'ernie-3.5-8k', 'ernie-3.5-8k', 1, 0, 170),
+  ('tencent_hunyuan', 'hunyuan-standard', 'hunyuan-standard', 1, 0, 180),
+  ('tencent_hunyuan', 'hunyuan-lite', 'hunyuan-lite', 1, 0, 190),
+  ('minimax', 'abab6.5s-chat', 'abab6.5s-chat', 1, 0, 200),
+  ('xfyun_spark', 'spark-max', 'spark-max', 1, 0, 210),
+  ('xfyun_spark', 'spark-pro', 'spark-pro', 1, 0, 220),
+  ('anthropic', 'claude-sonnet-4-5', 'claude-sonnet-4-5', 1, 1, 230),
+  ('anthropic', 'claude-opus-4-5', 'claude-opus-4-5', 1, 0, 240),
+  ('anthropic', 'claude-haiku-4-5', 'claude-haiku-4-5', 1, 0, 250),
+  ('openai', 'gpt-4o', 'gpt-4o', 1, 1, 260),
+  ('openai', 'gpt-4.1', 'gpt-4.1', 1, 1, 270),
+  ('openai', 'o1', 'o1', 1, 0, 280),
+  ('google', 'gemini-2.0-flash', 'gemini-2.0-flash', 1, 0, 290),
+  ('google', 'gemini-2.0-pro', 'gemini-2.0-pro', 1, 0, 300)
+ON DUPLICATE KEY UPDATE
+  model_name = VALUES(model_name),
+  is_active = VALUES(is_active),
+  is_recommended = VALUES(is_recommended),
+  sort_no = VALUES(sort_no),
+  updated_at = CURRENT_TIMESTAMP;
+
 -- 开发环境测试：消耗动态（feed-post 数据来源）
 -- 用子查询按 email 取 user_id，避免 AUTO_INCREMENT 不连续导致外键失败
 INSERT INTO skill_usage_records
@@ -70,3 +109,9 @@ INSERT INTO skill_usage_records
 SELECT u.id, NULL, 'claude-haiku-4-5', 3000, 2000, 5000, 0.2000, 'CNY', 'ok',
   '今天试了下用 Haiku 做批量 SEO 标题生成，100 条标题不到 1 块钱，速度也很快。小任务真的没必要上大模型。',
   NULL, NOW() - INTERVAL 3 DAY FROM users u WHERE u.email = 'u4@shaobuqi.com';
+
+-- 回填 model_id（老数据兼容）
+UPDATE skill_usage_records sur
+INNER JOIN ai_models am ON am.model_name = sur.model_name
+SET sur.model_id = am.id
+WHERE sur.model_id IS NULL;
