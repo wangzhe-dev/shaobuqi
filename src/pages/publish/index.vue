@@ -40,26 +40,40 @@
 				@statuschange="onEditorStatusChange"
 			/>
 
-			<!-- Media upload grid -->
-			<view class="media-grid">
-				<view v-for="(src, i) in mediaList" :key="i" class="m-cell">
-					<app-image :src="src" mode="aspectFill" class="m-img" />
-					<view class="m-del" @tap.stop="removeMedia(i)">
-						<text class="m-x">×</text>
+				<!-- Media upload grid -->
+				<view class="media-grid">
+					<view v-for="(src, i) in mediaList" :key="i" class="m-cell">
+						<app-image :src="src" mode="aspectFill" class="m-img" />
+						<view class="m-del" @tap.stop="removeMedia(i)">
+							<text class="m-x">×</text>
+						</view>
+					</view>
+					<view v-if="mediaList.length < 9" class="m-add" @tap="pickMedia">
+						<text class="m-plus">+</text>
+						<text class="m-lbl">图片/视频</text>
 					</view>
 				</view>
-				<view v-if="mediaList.length < 9" class="m-add" @tap="pickMedia">
-					<text class="m-plus">+</text>
-					<text class="m-lbl">图片/视频</text>
-				</view>
-			</view>
 
-				<!-- Scene selector -->
-				<view class="meta-section">
-					<view class="meta-row">
-						<text class="meta-label">分类</text>
-						<text v-if="!form.scene" class="meta-hint">选一个，让更多人发现</text>
+					<view class="meta-section brief-section">
+						<view class="meta-row brief-row">
+							<text class="meta-label">简介</text>
+							<text class="meta-hint">会展示在列表卡片，建议 30~90 字</text>
+						</view>
+						<uni-easyinput
+							class="brief-input"
+							type="textarea"
+							v-model="form.brief"
+							placeholder="请输入简介，帮助用户快速理解内容价值"
+							:maxlength="120"
+						/>
 					</view>
+
+					<!-- Scene selector -->
+					<view class="meta-section">
+						<view class="meta-row">
+							<text class="meta-label">分类</text>
+							<text v-if="!form.scene" class="meta-hint">选一个，让更多人发现</text>
+						</view>
 					<view class="scene-picker">
 						<uni-data-checkbox
 							v-model="form.scene"
@@ -70,14 +84,13 @@
 				</view>
 
 				<!-- Usage scenes input -->
-				<view id="section-tags" class="meta-section tags-section">
-					<view class="meta-row">
-						<text class="meta-label">使用场景</text>
-						<text class="meta-sub" :class="{ warn: form.tags.length >= TAG_LIMIT }">
-							{{ form.tags.length }}/{{ TAG_LIMIT }}
+					<view id="section-tags" class="meta-section tags-section">
+						<view class="meta-row">
+							<text class="meta-label">使用场景</text>
+							<text class="meta-sub" :class="{ warn: form.tags.length >= TAG_LIMIT }">
+								{{ form.tags.length }}/{{ TAG_LIMIT }}
 						</text>
 					</view>
-					<text class="tags-tip">可输入自定义标签，或点下面推荐项</text>
 					<view class="tags-wrap">
 						<view v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
 							<text class="tag-t">{{ tag }}</text>
@@ -101,25 +114,9 @@
 							<view v-for="tag in tagSuggestions" :key="tag" class="tag-sg" @tap="appendTag(tag)">
 								<text class="tag-sg-t">+ {{ tag }}</text>
 							</view>
+							</view>
 						</view>
 					</view>
-				</view>
-
-				<view class="meta-section brief-section">
-					<uni-section
-						title="简介"
-						sub-title="会展示在列表卡片，建议 30~90 字"
-						type="line"
-						padding
-					>
-						<uni-easyinput
-							type="textarea"
-							v-model="form.brief"
-							placeholder="请输入简介，帮助用户快速理解内容价值"
-							:maxlength="120"
-						/>
-					</uni-section>
-				</view>
 
 				<view class="body-gap" />
 			</scroll-view>
@@ -724,7 +721,24 @@ onShow(() => {
 /* ── meta sections ── */
 .meta-section { padding: 16rpx 28rpx 0; }
 .tags-section  { padding-bottom: 28rpx; }
-.brief-section { padding-top: 4rpx; }
+.brief-section { padding-top: 12rpx; }
+
+.brief-row {
+	align-items: flex-start;
+	gap: 20rpx;
+}
+
+.brief-row .meta-hint {
+	flex: 1;
+	text-align: right;
+	line-height: 1.5;
+}
+
+.brief-input {
+	:deep(.uni-easyinput__content-textarea) {
+		min-height: 168rpx;
+	}
+}
 
 .meta-row {
 	display: flex;
@@ -771,13 +785,6 @@ onShow(() => {
 }
 
 /* ── tags ── */
-.tags-tip {
-	display: block;
-	margin-bottom: 12rpx;
-	font-size: 22rpx;
-	color: rgba(0, 0, 0, 0.40);
-}
-
 .tags-wrap {
 	display: flex;
 	flex-wrap: wrap;
