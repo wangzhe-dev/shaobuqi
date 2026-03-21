@@ -10,10 +10,10 @@
 
 			<!-- 作者行 -->
 			<view class="author-row">
-				<view class="av" :style="{ background: post.authorColor }">
+				<view class="av" :style="{ background: post.authorColor }" @tap="toAuthor(post.authorId)">
 					<text class="av-t">{{ post.author[0] }}</text>
 				</view>
-				<view class="author-info">
+				<view class="author-info" @tap="toAuthor(post.authorId)">
 					<view class="name-row">
 						<text class="author-name">{{ post.author }}</text>
 						<view class="model-tag" :style="{ background: post.modelColor + '18' }">
@@ -23,7 +23,7 @@
 					</view>
 					<text class="post-time">{{ post.time }}</text>
 				</view>
-				<view class="follow-btn" :class="{ on: isFollowing }" @tap="toggleFollow">
+				<view v-if="canFollowAuthor" class="follow-btn" :class="{ on: isFollowing }" @tap="toggleFollow">
 					<text class="follow-t">{{ isFollowing ? '已关注' : '+ 关注' }}</text>
 				</view>
 			</view>
@@ -31,13 +31,19 @@
 			<!-- 正文 -->
 			<text class="body-text">{{ post.content }}</text>
 
+			<view v-if="post.skillId > 0" class="link-skill" @tap="toSkill(post.skillId)">
+				<text class="ls-label">关联 Skill</text>
+				<text class="ls-title">{{ post.skillTitle || '未命名 Skill' }}</text>
+				<text v-if="post.skillScene" class="ls-scene">{{ post.skillScene }}</text>
+			</view>
+
 			<!-- 图片九宫格 -->
 			<view
 				v-if="post.images && post.images.length"
 				class="img-grid"
 				:class="`gi-${post.images.length >= 3 ? (post.images.length > 3 ? 'many' : 3) : post.images.length}`"
 			>
-				<image
+				<app-image
 					v-for="(src, i) in post.images.slice(0, 9)" :key="i"
 					:src="src" class="gi-img" mode="aspectFill"
 					@tap="previewImg(post.images, i)"
@@ -45,78 +51,76 @@
 			</view>
 
 			<!-- 消耗数据卡 -->
-			<view class="burn-card">
-				<view class="burn-hd">
-					<view class="burn-hd-left">
-						<uni-icons type="fire-filled" size="15" color="#E45C1A" />
-						<text class="burn-hd-t">这次燃烧</text>
-					</view>
-					<text class="burn-hd-time">{{ post.time }}</text>
+			<view class="consume-card">
+				<view class="consume-head">
+					<text class="consume-title">消耗数据</text>
+					<text class="consume-time">{{ post.time }}</text>
 				</view>
-				<view class="burn-nums">
-					<view class="burn-num-item">
-						<text class="burn-cost">{{ post.cost }}</text>
-						<text class="burn-unit">元</text>
-					</view>
-					<view class="burn-num-sep" />
-					<view class="burn-num-item">
-						<text class="burn-tok">{{ post.tokens }}</text>
-						<text class="burn-unit">tokens</text>
-					</view>
-				</view>
-				<view class="burn-meta-row">
-					<view class="burn-meta-item">
-						<text class="bm-dot" :style="{ color: post.modelColor }">●</text>
-						<text class="bm-t">{{ post.model }}</text>
-					</view>
-					<text class="bm-sep">·</text>
-					<text class="bm-t">{{ post.duration }}</text>
-					<text class="bm-sep">·</text>
-					<text class="bm-t">{{ post.rounds }} 轮对话</text>
-				</view>
-			</view>
 
-			<!-- 感受 Chips -->
-			<view class="rxn-section">
-				<view class="rxn-header">
-					<text class="rxn-label">这次觉得</text>
+				<view class="consume-model-row">
+					<text class="consume-label">AI 模型</text>
+					<view class="consume-model-chip" :style="{ background: post.modelColor + '15' }">
+						<view class="consume-model-dot" :style="{ background: post.modelColor }" />
+						<text class="consume-model-text" :style="{ color: post.modelColor }">{{ post.model }}</text>
+					</view>
 				</view>
-				<view class="rxn-row">
+
+				<view class="consume-cost-row">
+					<view class="consume-cost-box">
+						<text class="consume-box-label">花费金额</text>
+						<text class="consume-box-value cost">{{ post.costText }}</text>
+					</view>
+					<view class="consume-cost-bar" />
+					<view class="consume-cost-box">
+						<text class="consume-box-label">Token 数量</text>
+						<text class="consume-box-value token">{{ post.tokens }}</text>
+					</view>
+				</view>
+
+				<view class="consume-foot">
+					<text v-if="post.skillScene" class="consume-scene">{{ post.skillScene }}</text>
 					<view
-						v-for="r in reactions" :key="r.key"
-						class="rxn-chip" :class="{ on: post.mood === r.key }"
-						:style="post.mood === r.key
-							? { background: r.bgColor, borderColor: r.borderColor }
+						class="consume-reaction"
+						:style="currentReaction
+							? { background: currentReaction.bgColor, borderColor: currentReaction.borderColor }
 							: {}"
-						@tap="setMood(r.key)"
 					>
-						<text class="rxn-em">{{ r.emoji }}</text>
-						<text class="rxn-t" :style="post.mood === r.key ? { color: r.activeColor } : {}">{{ r.text }}</text>
+						<view class="consume-reaction-inner">
+							<uni-icons
+								:type="currentReaction ? currentReaction.icon : 'info'"
+								size="14"
+								:color="currentReaction ? currentReaction.activeColor : '#9CA3AF'"
+							/>
+							<text
+								class="consume-reaction-text"
+								:style="currentReaction ? { color: currentReaction.activeColor } : {}"
+							>
+								{{ currentReaction ? currentReaction.text : '未标记' }}
+							</text>
+						</view>
+					</view>
+					<view class="consume-acts">
+						<view class="consume-act" :class="{ on: isLiked }" @tap="toggleLike">
+							<uni-icons
+								:type="isLiked ? 'heart-filled' : 'heart'"
+								size="16"
+								:color="isLiked ? '#C84634' : 'rgba(0,0,0,0.42)'"
+							/>
+							<text class="consume-act-n" :style="isLiked ? { color: '#C84634' } : {}">{{ post.likes }}</text>
+						</view>
+						<view class="consume-act" :class="{ on: isResonated }" @tap="toggleResonate">
+							<uni-icons
+								type="hand-up"
+								size="15"
+								:color="isResonated ? '#FF7A45' : 'rgba(0,0,0,0.42)'"
+							/>
+							<text class="consume-act-n" :style="isResonated ? { color: '#FF7A45' } : {}">{{ post.resonates }}</text>
+						</view>
 					</view>
 				</view>
 			</view>
 
 			<view class="h-divider" style="margin-top: 8rpx;" />
-
-			<!-- 互动统计（点数字滚动到评论区） -->
-			<view class="stat-row">
-				<view class="stat-item" @tap="toggleLike">
-					<text class="stat-n" :style="isLiked ? { color: '#C84634' } : {}">{{ post.likes }}</text>
-					<text class="stat-l">点赞</text>
-				</view>
-				<view class="stat-bar" />
-				<view class="stat-item" @tap="toggleResonate">
-					<text class="stat-n" :style="isResonated ? { color: '#FF7A45' } : {}">{{ post.resonates }}</text>
-					<text class="stat-l">我也是</text>
-				</view>
-				<view class="stat-bar" />
-				<view class="stat-item" @tap="scrollToComments">
-					<text class="stat-n">{{ post.comments }}</text>
-					<text class="stat-l">评论</text>
-				</view>
-			</view>
-
-			<view class="h-divider" />
 
 			<!-- 评论区 -->
 			<view id="section-comments" class="comments">
@@ -129,15 +133,7 @@
 					<view class="cmt-body">
 						<view class="cmt-hd">
 							<text class="cmt-name">{{ c.user }}</text>
-							<view v-if="c.model" class="cmt-model">
-								<text class="cmt-model-t">{{ c.model }}</text>
-							</view>
 							<text class="cmt-time">{{ c.time }}</text>
-						</view>
-						<view v-if="c.cost" class="cmt-burn">
-							<text class="cmt-burn-cost">{{ c.cost }}</text>
-							<text class="cmt-burn-sep">·</text>
-							<text class="cmt-burn-tok">{{ c.tokens }}</text>
 						</view>
 						<text class="cmt-txt">{{ c.content }}</text>
 						<view class="cmt-acts">
@@ -236,14 +232,15 @@ import {
 	meooFeedPost,
 	type FeedComment,
 	type FeedItem,
-	type FeedReaction,
 	unlikeFeedComment,
 	unlikeFeedPost,
 	unmeooFeedPost,
-	updateFeedReaction,
 } from '@/api/feed'
+import { followCreator, getCreatorProfile, unfollowCreator } from '@/api/skill'
+import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { normalizeImageUrl } from '@/utils/image-url'
 import { shareFeedPost } from '@/utils/share-post'
 
 type CommentItem = {
@@ -252,9 +249,6 @@ type CommentItem = {
 	userId: number
 	color: string
 	time: string
-	model: string | null
-	cost: string | null
-	tokens: string | null
 	content: string
 	likes: number
 	liked: boolean
@@ -287,15 +281,17 @@ const formatRelativeTime = (isoStr: string): string => {
 }
 
 const formatCost = (amount: string | null, currency: string): string => {
-	if (!amount) return '0.00'
-	const n = Number.parseFloat(amount)
-	if (!Number.isFinite(n)) return '0.00'
-	if (currency !== 'CNY') return n.toFixed(4)
-	return n.toFixed(2)
+	if (amount === null || amount === undefined || `${amount}` === '') return '--'
+	const n = Number.parseFloat(`${amount}`)
+	if (!Number.isFinite(n)) return '--'
+	const code = `${currency || 'CNY'}`.toUpperCase()
+	if (code === 'CNY') return `¥${n.toFixed(2)}`
+	if (code === 'USD') return `$${n.toFixed(4)}`
+	return `${code} ${n.toFixed(4)}`
 }
 
 const formatTokens = (total: number | null): string => {
-	if (!total) return '0'
+	if (total === null || total === undefined) return '--'
 	if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`
 	if (total >= 1_000) return `${(total / 1_000).toFixed(1)}K`
 	return String(total)
@@ -303,6 +299,7 @@ const formatTokens = (total: number | null): string => {
 
 const userStore = useUserStore()
 const currentPostId = ref(0)
+const currentUserId = computed(() => Number(userStore.userInfo?.id || 0))
 
 const isLiked = ref(false)
 const isResonated = ref(false)
@@ -317,49 +314,61 @@ const commentsPage = ref(1)
 const COMMENT_PAGE_SIZE = 20
 
 const reactions = [
-	{ key: 'worth', emoji: '✅', text: '值了', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)', borderColor: 'rgba(47,138,87,0.28)' },
-	{ key: 'ok', emoji: '🤔', text: '还行', activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)', borderColor: 'rgba(91,91,214,0.28)' },
-	{ key: 'regret', emoji: '😬', text: '后悔了', activeColor: '#E45C1A', bgColor: 'rgba(228,92,26,0.10)', borderColor: 'rgba(228,92,26,0.28)' },
-	{ key: 'addicted', emoji: '🔥', text: '上瘾了', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.10)', borderColor: 'rgba(255,122,69,0.28)' },
+	{ key: 'worth', icon: 'checkmarkempty', text: '超值', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)', borderColor: 'rgba(47,138,87,0.28)' },
+	{ key: 'ok', icon: 'info', text: '可接受', activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)', borderColor: 'rgba(91,91,214,0.28)' },
+	{ key: 'regret', icon: 'clear', text: '偏亏', activeColor: '#C84634', bgColor: 'rgba(200,70,52,0.10)', borderColor: 'rgba(200,70,52,0.28)' },
+	{ key: 'addicted', icon: 'fire-filled', text: '上头', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.10)', borderColor: 'rgba(255,122,69,0.28)' },
 ]
 
 const post = reactive({
 	id: '0',
+	authorId: 0,
+	isMine: false,
 	author: '匿名用户',
 	authorColor: '#5B5BD6',
 	time: '--',
 	model: '--',
 	modelColor: '#5B5BD6',
-	cost: '0.00',
-	tokens: '0',
-	duration: '--',
-	rounds: '--',
+	costText: '--',
+	tokens: '--',
 	content: '',
 	images: [] as string[],
+	skillId: 0,
+	skillTitle: '',
+	skillScene: '',
 	mood: '',
 	likes: 0,
 	comments: 0,
 	resonates: 0,
 })
 
+const currentReaction = computed(() => reactions.find((r) => r.key === post.mood) || null)
+
 const comments = ref<CommentItem[]>([])
 
 const ensureLogin = (action = '执行此操作') =>
 	requireLogin(userStore.token, action)
 
+const canFollowAuthor = computed(() => post.authorId > 0 && post.authorId !== currentUserId.value)
+
 const applyPost = (item: FeedItem) => {
 	post.id = `${item.id}`
+	post.authorId = Number(item.user.id || 0)
+	post.isMine = post.authorId > 0 && post.authorId === currentUserId.value
 	post.author = item.user.nickname || '匿名用户'
 	post.authorColor = item.user.displayColor || fallbackColor(item.user.id)
 	post.time = formatRelativeTime(item.createdAt)
 	post.model = item.modelName || '--'
 	post.modelColor = modelColor(post.model)
-	post.cost = formatCost(item.costAmount, item.currency)
+	post.costText = formatCost(item.costAmount, item.currency)
 	post.tokens = formatTokens(item.totalTokens)
-	post.duration = '--'
-	post.rounds = '--'
 	post.content = item.noteText || ''
-	post.images = Array.isArray(item.images) ? item.images : []
+	post.images = Array.isArray(item.images)
+		? item.images.map((src) => normalizeImageUrl(`${src || ''}`)).filter(Boolean)
+		: []
+	post.skillId = Number(item.skill?.id || 0)
+	post.skillTitle = `${item.skill?.title || ''}`.trim()
+	post.skillScene = `${item.skill?.scene || ''}`.trim()
 	post.mood = item.reaction || ''
 	post.likes = item.likes ?? 0
 	post.comments = item.comments ?? 0
@@ -375,18 +384,30 @@ const mapComment = (item: FeedComment): CommentItem => ({
 	userId: item.user.id,
 	color: item.user.displayColor || fallbackColor(item.user.id),
 	time: formatRelativeTime(item.createdAt),
-	model: null,
-	cost: null,
-	tokens: null,
 	content: item.content,
 	likes: item.likes ?? 0,
 	liked: !!item.liked,
 	parentId: item.parentId
 })
 
+const loadFollowState = async () => {
+	if (!canFollowAuthor.value) {
+		isFollowing.value = false
+		return
+	}
+
+	try {
+		const profile = await getCreatorProfile(post.authorId)
+		isFollowing.value = !!profile?.isFollowing
+	} catch {
+		isFollowing.value = false
+	}
+}
+
 const loadPost = async () => {
 	const detail = await getFeedPost(currentPostId.value)
 	applyPost(detail)
+	await loadFollowState()
 }
 
 const loadComments = async (reset: boolean) => {
@@ -427,20 +448,6 @@ onLoad((query: any) => {
 		})
 })
 
-/* ── 互动 ── */
-const setMood = async (key: string) => {
-	if (!ensureLogin('标记心情')) return
-	const prevMood = post.mood
-	const nextMood = prevMood === key ? '' : key
-	post.mood = nextMood
-	try {
-		const res = await updateFeedReaction(currentPostId.value, (nextMood || null) as FeedReaction | null)
-		post.mood = res.reaction || ''
-	} catch {
-		post.mood = prevMood
-	}
-}
-
 const toggleLike = async () => {
 	if (!ensureLogin('点赞')) return
 
@@ -480,7 +487,24 @@ const toggleResonate = async () => {
 
 const toggleFollow = () => {
 	if (!ensureLogin('关注作者')) return
-	isFollowing.value = !isFollowing.value
+	if (!canFollowAuthor.value) return
+
+	const prev = isFollowing.value
+	isFollowing.value = !prev
+
+	const doToggle = async () => {
+		try {
+			const result = isFollowing.value
+				? await followCreator(post.authorId)
+				: await unfollowCreator(post.authorId)
+			isFollowing.value = !!result?.isFollowing
+		} catch {
+			isFollowing.value = prev
+			uni.showToast({ title: '关注操作失败', icon: 'none' })
+		}
+	}
+
+	void doToggle()
 }
 
 const likeComment = async (c: CommentItem) => {
@@ -576,6 +600,16 @@ const sharePost = async () => {
 
 const previewImg = (images: string[], current: number) =>
 	uni.previewImage({ urls: images, current: images[current] })
+
+const toAuthor = (id: number) => {
+	if (!Number.isInteger(id) || id <= 0) return
+	uni.navigateTo({ url: `/pages/author/index?id=${id}` })
+}
+
+const toSkill = (id: number) => {
+	if (!Number.isInteger(id) || id <= 0) return
+	uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -635,6 +669,39 @@ const previewImg = (images: string[], current: number) =>
 	padding: 4rpx 28rpx 24rpx;
 }
 
+.link-skill {
+	margin: 0 28rpx 20rpx;
+	padding: 14rpx 18rpx;
+	border-radius: 14rpx;
+	background: rgba(91, 91, 214, 0.06);
+	display: flex;
+	align-items: center;
+	gap: 10rpx;
+
+	.ls-label {
+		font-size: 20rpx;
+		color: #5B5BD6;
+		font-weight: 700;
+		flex-shrink: 0;
+	}
+
+	.ls-title {
+		font-size: 22rpx;
+		color: #374151;
+		font-weight: 600;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.ls-scene {
+		font-size: 20rpx;
+		color: rgba(0,0,0,0.45);
+		flex-shrink: 0;
+	}
+}
+
 /* ── 图片九宫格 ── */
 .img-grid {
 	display: flex; flex-wrap: wrap; margin-bottom: 24rpx;
@@ -648,78 +715,166 @@ const previewImg = (images: string[], current: number) =>
 }
 
 /* ── 消耗数据卡 ── */
-.burn-card {
+.consume-card {
 	margin: 0 28rpx 24rpx;
-	background: rgba(228,92,26,0.04);
-	border: 1rpx solid rgba(228,92,26,0.12);
-	border-radius: 24rpx;
-	padding: 24rpx;
-	position: relative; overflow: hidden;
+	padding: 22rpx 22rpx 18rpx;
+	border-radius: 20rpx;
+	background: rgba(0,0,0,0.02);
+	border: 1rpx solid rgba(0,0,0,0.08);
+}
 
-	&::before {
-		content: ''; position: absolute;
-		left: 0; top: 0; bottom: 0; width: 6rpx;
-		background: linear-gradient(180deg, #FF7A45, #E45C1A);
-		border-radius: 24rpx 0 0 24rpx;
+.consume-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14rpx;
+}
+
+.consume-title {
+	font-size: 24rpx;
+	font-weight: 700;
+	color: rgba(0,0,0,0.58);
+}
+
+.consume-time {
+	font-size: 20rpx;
+	color: #9CA3AF;
+}
+
+.consume-model-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14rpx;
+}
+
+.consume-label {
+	font-size: 22rpx;
+	color: rgba(0,0,0,0.42);
+}
+
+.consume-model-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6rpx;
+	padding: 6rpx 12rpx;
+	border-radius: 100rpx;
+}
+
+.consume-model-dot {
+	width: 8rpx;
+	height: 8rpx;
+	border-radius: 50%;
+}
+
+.consume-model-text {
+	font-size: 20rpx;
+	font-weight: 600;
+}
+
+.consume-cost-row {
+	display: flex;
+	align-items: stretch;
+	background: rgba(0,0,0,0.03);
+	border-radius: 14rpx;
+	padding: 8rpx 10rpx;
+}
+
+.consume-cost-box {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 6rpx;
+	padding: 8rpx 10rpx;
+}
+
+.consume-box-label {
+	font-size: 20rpx;
+	color: rgba(0,0,0,0.35);
+}
+
+.consume-box-value {
+	font-size: 34rpx;
+	font-weight: 800;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+
+	&.cost { color: #E45C1A; }
+	&.token { color: #D6943A; }
+}
+
+.consume-cost-bar {
+	width: 1rpx;
+	background: rgba(0,0,0,0.08);
+	margin: 8rpx 6rpx;
+}
+
+.consume-foot {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12rpx;
+	margin-top: 14rpx;
+}
+
+.consume-scene {
+	font-size: 20rpx;
+	color: rgba(0,0,0,0.45);
+}
+
+.consume-reaction {
+	padding: 8rpx 14rpx;
+	border-radius: 100rpx;
+	background: rgba(0,0,0,0.04);
+	border: 1rpx solid transparent;
+}
+
+.consume-reaction-inner {
+	display: inline-flex;
+	align-items: center;
+	gap: 6rpx;
+}
+
+.consume-reaction-text {
+	font-size: 22rpx;
+	color: #9CA3AF;
+	font-weight: 700;
+}
+
+.consume-acts {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 10rpx;
+	padding: 6rpx;
+	border-radius: 100rpx;
+	background: rgba(0, 0, 0, 0.03);
+}
+
+.consume-act {
+	display: inline-flex;
+	align-items: center;
+	gap: 6rpx;
+	padding: 8rpx 14rpx;
+	border-radius: 100rpx;
+	background: rgba(255,255,255,0.92);
+
+	&.on {
+		background: rgba(0,0,0,0.04);
 	}
 }
 
-.burn-hd {
-	display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx;
-	.burn-hd-left { display: flex; align-items: center; gap: 8rpx; }
-	.burn-hd-t    { font-size: 24rpx; font-weight: 700; color: #E45C1A; }
-	.burn-hd-time { font-size: 20rpx; color: #9CA3AF; }
-}
-
-.burn-nums { display: flex; align-items: center; margin-bottom: 16rpx; }
-
-.burn-num-item { flex: 1; display: flex; align-items: baseline; gap: 6rpx; }
-
-.burn-cost { font-size: 52rpx; font-weight: 900; color: #E45C1A; letter-spacing: -1rpx; font-variant-numeric: tabular-nums; }
-.burn-tok  { font-size: 40rpx; font-weight: 800; color: #D6943A; letter-spacing: -1rpx; font-variant-numeric: tabular-nums; }
-.burn-unit { font-size: 20rpx; color: rgba(0,0,0,0.40); padding-bottom: 4rpx; }
-
-.burn-num-sep { width: 1rpx; height: 56rpx; background: rgba(228,92,26,0.15); margin: 0 24rpx; flex-shrink: 0; }
-
-.burn-meta-row { display: flex; align-items: center; gap: 8rpx; flex-wrap: wrap; }
-.burn-meta-item { display: flex; align-items: center; gap: 6rpx; }
-.bm-dot { font-size: 14rpx; }
-.bm-t   { font-size: 22rpx; color: rgba(0,0,0,0.55); font-weight: 500; }
-.bm-sep { font-size: 20rpx; color: rgba(0,0,0,0.20); }
-
-/* ── 感受 Chips ── */
-.rxn-section {
-	padding: 20rpx 28rpx 24rpx;
-}
-
-.rxn-header { margin-bottom: 14rpx; }
-.rxn-label  { font-size: 24rpx; color: rgba(0,0,0,0.40); font-weight: 500; }
-.rxn-row    { display: flex; gap: 10rpx; flex-wrap: wrap; }
-
-.rxn-chip {
-	display: flex; align-items: center; gap: 6rpx;
-	padding: 12rpx 20rpx; border-radius: 100rpx;
-	background: rgba(0,0,0,0.04); border: 1rpx solid transparent;
-	.rxn-em { font-size: 30rpx; line-height: 1; }
-	.rxn-t  { font-size: 24rpx; color: rgba(0,0,0,0.45); font-weight: 600; }
-	&.on .rxn-t { font-weight: 700; }
+.consume-act-n {
+	font-size: 22rpx;
+	line-height: 1.1;
+	font-weight: 700;
+	color: #1A1A2E;
+	font-variant-numeric: tabular-nums;
 }
 
 /* ── 分隔线 ── */
 .h-divider { height: 1rpx; background: rgba(0,0,0,0.06); margin: 0 28rpx; }
-
-/* ── 互动统计 ── */
-.stat-row { display: flex; align-items: center; padding: 24rpx 0; }
-
-.stat-item {
-	flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4rpx;
-	padding: 4rpx 0; border-radius: 16rpx;
-	&:active { background: rgba(0,0,0,0.04); }
-	.stat-n { font-size: 36rpx; font-weight: 800; color: #1A1A2E; transition: color 0.15s; }
-	.stat-l { font-size: 22rpx; color: #9CA3AF; }
-}
-
-.stat-bar { width: 1rpx; height: 48rpx; background: rgba(0,0,0,0.07); }
 
 /* ── 评论区 ── */
 .comments { padding: 24rpx 28rpx; }
@@ -744,19 +899,6 @@ const previewImg = (images: string[], current: number) =>
 	display: flex; align-items: center; gap: 10rpx; flex-wrap: wrap; margin-bottom: 8rpx;
 	.cmt-name { font-size: 26rpx; font-weight: 700; color: #1A1A2E; }
 	.cmt-time { font-size: 20rpx; color: #9CA3AF; margin-left: auto; }
-}
-
-.cmt-model {
-	background: rgba(94,115,138,0.10); padding: 3rpx 12rpx; border-radius: 10rpx;
-	.cmt-model-t { font-size: 18rpx; color: #5E738A; }
-}
-
-.cmt-burn {
-	display: inline-flex; align-items: center; gap: 8rpx;
-	background: rgba(228,92,26,0.07); border-radius: 10rpx; padding: 6rpx 14rpx; margin-bottom: 10rpx;
-	.cmt-burn-cost { font-size: 22rpx; font-weight: 700; color: #C84634; }
-	.cmt-burn-sep  { font-size: 18rpx; color: rgba(0,0,0,0.20); }
-	.cmt-burn-tok  { font-size: 22rpx; color: #E45C1A; }
 }
 
 .cmt-txt {

@@ -344,10 +344,10 @@
 	const activeBurnTab = ref('Skill')
 
 	const reactions = [
-		{ key: 'worth', icon: 'checkmarkempty', activeColor: '#2F8A57', text: '值了' },
-		{ key: 'ok', icon: 'info', activeColor: '#5B5BD6', text: '还行' },
-		{ key: 'regret', icon: 'closeempty', activeColor: '#9CA3AF', text: '后悔了' },
-		{ key: 'addicted', icon: 'fire-filled', activeColor: '#FF7A45', text: '上瘾了' },
+		{ key: 'worth', icon: 'checkmarkempty', activeColor: '#2F8A57', text: '超值' },
+		{ key: 'ok', icon: 'info', activeColor: '#5B5BD6', text: '可接受' },
+		{ key: 'regret', icon: 'clear', activeColor: '#C84634', text: '偏亏' },
+		{ key: 'addicted', icon: 'fire-filled', activeColor: '#FF7A45', text: '上头' },
 	]
 
 	const communityPosts = ref([

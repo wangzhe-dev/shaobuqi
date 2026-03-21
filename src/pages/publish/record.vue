@@ -84,7 +84,7 @@
 			<!-- Reactions -->
 			<view class="meta-section meta-section-btm">
 				<view class="meta-row">
-					<text class="meta-label">这次感觉</text>
+					<text class="meta-label">值不值</text>
 					<text class="meta-hint">可选</text>
 				</view>
 				<view class="rxn-row">
@@ -96,7 +96,12 @@
 							: {}"
 						@tap="toggleReaction(r.key)"
 					>
-						<text class="rxn-em">{{ r.emoji }}</text>
+						<uni-icons
+							class="rxn-ico"
+							:type="r.icon"
+							size="20"
+							:color="form.reaction === r.key ? r.activeColor : '#9CA3AF'"
+						/>
 						<text class="rxn-lab" :style="form.reaction === r.key ? { color: r.activeColor } : {}">
 							{{ r.text }}
 						</text>
@@ -169,17 +174,19 @@ const modelOptions = [
 ]
 
 const reactions = [
-	{ key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)',  borderColor: 'rgba(47,138,87,0.28)'  },
-	{ key: 'ok',       emoji: '🤔', text: '还行',  activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)',  borderColor: 'rgba(91,91,214,0.28)'  },
-	{ key: 'regret',   emoji: '😬', text: '后悔了', activeColor: '#E45C1A', bgColor: 'rgba(228,92,26,0.10)',  borderColor: 'rgba(228,92,26,0.28)'  },
-	{ key: 'addicted', emoji: '🔥', text: '上瘾了', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.10)', borderColor: 'rgba(255,122,69,0.28)' },
+	{ key: 'worth', icon: 'checkmarkempty', text: '超值', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.10)', borderColor: 'rgba(47,138,87,0.28)' },
+	{ key: 'ok', icon: 'info', text: '可接受', activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.10)', borderColor: 'rgba(91,91,214,0.28)' },
+	{ key: 'regret', icon: 'clear', text: '偏亏', activeColor: '#C84634', bgColor: 'rgba(200,70,52,0.10)', borderColor: 'rgba(200,70,52,0.28)' },
+	{ key: 'addicted', icon: 'fire-filled', text: '上头', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.10)', borderColor: 'rgba(255,122,69,0.28)' },
 ]
 
 const editorCtx     = ref<any>(null)
 const formats       = ref<Record<string, any>>({})
 const showFormatBar = ref(false)
+const publishing = ref(false)
 const userStore = useUserStore()
 const skillId = ref('')
+const FEED_POST_PUBLISHED_KEY = 'feed_post_published_v1'
 
 const form = reactive({
 	model:    '',
@@ -282,6 +289,7 @@ const goBack = () => {
 }
 
 const publish = () => {
+	if (publishing.value) return
 	if (!canPublish.value) {
 		uni.showToast({ title: '请选择模型并填写内容', icon: 'none' })
 		return
@@ -290,6 +298,13 @@ const publish = () => {
 	if (!requireLogin(userStore.token, '发布内容')) return
 
 	const doSubmit = async () => {
+		const noteText = form.text.trim()
+		if (noteText.length > 2000) {
+			uni.showToast({ title: '内容最多 2000 字', icon: 'none' })
+			return
+		}
+
+		publishing.value = true
 		uni.showLoading({ title: '发布中...' })
 		try {
 			const toNumber = (raw: string): number | undefined => {
@@ -309,33 +324,47 @@ const publish = () => {
 				totalTokens: toNumber(form.tokens),
 				costAmount: toNumber(form.cost),
 				reaction,
-				noteText: form.text.trim(),
+				noteText,
 				images: []
 			})
 
 			const usageRecordId = Number(feedPost?.id)
 			if (Number.isInteger(usageRecordId) && usageRecordId > 0 && form.images.length > 0) {
-				const imageUrls = await uploadFeedImages(usageRecordId, form.images)
-				await updateFeedPostImages(usageRecordId, { images: imageUrls })
+				try {
+					const imageUrls = await uploadFeedImages(usageRecordId, form.images)
+					await updateFeedPostImages(usageRecordId, { images: imageUrls })
+				} catch {
+					uni.showToast({ title: '图片上传失败，已发布文字内容', icon: 'none' })
+				}
 			}
 
-			if (skillId.value) {
-				await createSkillFeedback(skillId.value, {
-					status: reactionToStatus(form.reaction),
-					comment: form.text.trim(),
-					modelName: form.model,
-					totalTokens: toNumber(form.tokens),
-					costAmount: toNumber(form.cost),
-					isPublic: true
-				})
+			if (skillId.value && Number.isInteger(usageRecordId) && usageRecordId > 0) {
+				try {
+					await createSkillFeedback(skillId.value, {
+						status: reactionToStatus(form.reaction),
+						comment: noteText,
+						usageRecordId,
+						modelName: form.model,
+						totalTokens: toNumber(form.tokens),
+						costAmount: toNumber(form.cost),
+						isPublic: true
+					})
+				} catch {
+					// 记录已发布，Skill 反馈写入失败不影响主流程
+				}
 			}
+
+			uni.setStorageSync(FEED_POST_PUBLISHED_KEY, { id: usageRecordId, publishedAt: Date.now() })
 			uni.hideLoading()
 			uni.showToast({ title: '发布成功', icon: 'success' })
 			setTimeout(() => uni.navigateBack(), 800)
 		} catch {
 			uni.hideLoading()
+			uni.showToast({ title: '发布失败，请稍后重试', icon: 'none' })
+		} finally {
+			publishing.value = false
 		}
-	}
+		}
 
 	void doSubmit()
 }
@@ -559,15 +588,15 @@ onLoad((query: any) => {
 .rxn-chip {
 	flex: 1;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	gap: 8rpx;
 	padding: 18rpx 0;
 	border-radius: 18rpx;
 	background: rgba(0, 0, 0, 0.04);
 	border: 2rpx solid transparent;
 
-	.rxn-em  { font-size: 36rpx; }
+	.rxn-ico { flex-shrink: 0; }
 	.rxn-lab { font-size: 20rpx; color: rgba(0, 0, 0, 0.50); font-weight: 600; }
 	&.on .rxn-lab { font-weight: 700; }
 }

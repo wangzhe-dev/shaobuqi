@@ -31,7 +31,7 @@
       @change="onSwiperChange"
     >
       <swiper-item class="tab-pane">
-        <feed-post />
+        <feed-post ref="feedRef" />
       </swiper-item>
       <swiper-item class="tab-pane">
         <skill-feed @edge-swipe="onSkillEdgeSwipe" />
@@ -47,11 +47,19 @@ import SkillFeed from '@/components/skill-feed/index.vue'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
+const FEED_POST_PUBLISHED_KEY = 'feed_post_published_v1'
+const feedRef = ref<InstanceType<typeof FeedPost> | null>(null)
 
 onShow(() => {
   // #ifdef MP-WEIXIN
   ;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 0 })
   // #endif
+
+  const published = uni.getStorageSync(FEED_POST_PUBLISHED_KEY)
+  if (published?.id && typeof feedRef.value?.refresh === 'function') {
+    feedRef.value.refresh()
+    uni.removeStorageSync(FEED_POST_PUBLISHED_KEY)
+  }
 })
 
 const activeTab = ref(0)

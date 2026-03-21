@@ -66,6 +66,12 @@
           <!-- 正文 -->
           <text class="pc-body">{{ item.content }}</text>
 
+          <view v-if="item.skillId" class="pc-skill" @tap.stop="toSkill(item.skillId)">
+            <text class="pc-skill-label">Skill</text>
+            <text class="pc-skill-title line-1">{{ item.skillTitle }}</text>
+            <text v-if="item.skillScene" class="pc-skill-scene">{{ item.skillScene }}</text>
+          </view>
+
           <!-- 图片九宫格 -->
           <view
             v-if="item.images && item.images.length"
@@ -82,24 +88,34 @@
           <!-- 花费 + 感受 -->
           <view class="pc-meta-row">
             <view class="pc-spend">
-              <text class="pc-cost">¥{{ item.cost }}</text>
+              <text class="pc-cost">{{ item.costText }}</text>
               <text class="pc-cost-sep">·</text>
-              <text class="pc-tok">{{ item.tokens }} tokens</text>
+              <text class="pc-tok">{{ item.tokensText }}</text>
             </view>
             <view
               class="pc-rxn-pill"
-              :class="{ 'rxn-active': item.myReaction }"
-              :style="item.myReaction
-                ? { background: reactions.find(r => r.key === item.myReaction)?.bgColor,
-                    color: reactions.find(r => r.key === item.myReaction)?.activeColor }
+              :class="{ 'rxn-active': item.reaction, 'rxn-editable': item.isMine }"
+              :style="item.reaction
+                ? { background: reactions.find(r => r.key === item.reaction)?.bgColor,
+                    color: reactions.find(r => r.key === item.reaction)?.activeColor }
                 : {}"
-              @tap.stop="showReactions(item)"
+              @tap.stop="item.isMine ? showReactions(item) : undefined"
             >
+              <uni-icons
+                class="pc-rxn-icon"
+                :type="item.reaction ? (reactions.find(r => r.key === item.reaction)?.icon || 'info') : 'info'"
+                size="13"
+                :color="item.reaction ? reactions.find(r => r.key === item.reaction)?.activeColor : '#9CA3AF'"
+              />
               <text class="pc-rxn-t">
-                {{ item.myReaction ? reactions.find(r => r.key === item.myReaction)?.text : '感受' }}
+                {{ item.reaction ? reactions.find(r => r.key === item.reaction)?.text : '未标记' }}
               </text>
-              <uni-icons type="bottom" size="10"
-                :color="item.myReaction ? reactions.find(r => r.key === item.myReaction)?.activeColor : '#9CA3AF'" />
+              <uni-icons
+                v-if="item.isMine"
+                type="bottom"
+                size="10"
+                :color="item.reaction ? reactions.find(r => r.key === item.reaction)?.activeColor : '#9CA3AF'"
+              />
             </view>
           </view>
 
@@ -152,17 +168,17 @@
     <!-- 情绪反应弹层（在 scroll-view 外，fixed 定位才正确） -->
     <view v-if="rxnTarget" class="rxn-mask" @tap="rxnTarget = null">
       <view class="rxn-sheet" @tap.stop>
-        <text class="rxn-sheet-title">这次花得...</text>
+        <text class="rxn-sheet-title">这次值不值</text>
         <view class="rxn-options">
           <view
             v-for="r in reactions" :key="r.key"
             class="rxn-opt"
-            :class="{ 'rxn-opt-on': rxnTarget.myReaction === r.key }"
-            :style="rxnTarget.myReaction === r.key ? { background: r.bgColor, borderColor: r.borderColor } : {}"
+            :class="{ 'rxn-opt-on': rxnTarget.reaction === r.key }"
+            :style="rxnTarget.reaction === r.key ? { background: r.bgColor, borderColor: r.borderColor } : {}"
             @tap="pickReaction(r.key)"
           >
-            <text class="rxn-opt-emoji">{{ r.emoji }}</text>
-            <text class="rxn-opt-t" :style="rxnTarget.myReaction === r.key ? { color: r.activeColor } : {}">{{ r.text }}</text>
+            <uni-icons class="rxn-opt-icon" :type="r.icon" size="24" :color="rxnTarget.reaction === r.key ? r.activeColor : '#9CA3AF'" />
+            <text class="rxn-opt-t" :style="rxnTarget.reaction === r.key ? { color: r.activeColor } : {}">{{ r.text }}</text>
           </view>
         </view>
       </view>
@@ -177,13 +193,14 @@ import type { FeedItem, FeedReaction } from '@/api/feed'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
+import { normalizeImageUrl } from '@/utils/image-url'
 import { shareFeedPost } from '@/utils/share-post'
 
 const reactions = [
-  { key: 'worth',    emoji: '✅', text: '值了',  activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)',  borderColor: 'rgba(47,138,87,0.22)'  },
-  { key: 'ok',       emoji: '🤔', text: '还行',  activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.09)',  borderColor: 'rgba(91,91,214,0.22)'  },
-  { key: 'regret',   emoji: '😬', text: '后悔了', activeColor: '#E45C1A', bgColor: 'rgba(228,92,26,0.09)', borderColor: 'rgba(228,92,26,0.22)'  },
-  { key: 'addicted', emoji: '🔥', text: '上瘾了', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.09)',borderColor: 'rgba(255,122,69,0.22)' },
+  { key: 'worth', icon: 'checkmarkempty', text: '超值', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)', borderColor: 'rgba(47,138,87,0.22)' },
+  { key: 'ok', icon: 'info', text: '可接受', activeColor: '#5B5BD6', bgColor: 'rgba(91,91,214,0.09)', borderColor: 'rgba(91,91,214,0.22)' },
+  { key: 'regret', icon: 'clear', text: '偏亏', activeColor: '#C84634', bgColor: 'rgba(200,70,52,0.09)', borderColor: 'rgba(200,70,52,0.22)' },
+  { key: 'addicted', icon: 'fire-filled', text: '上头', activeColor: '#FF7A45', bgColor: 'rgba(255,122,69,0.09)', borderColor: 'rgba(255,122,69,0.22)' },
 ]
 
 // ── 数据格式化工具 ──
@@ -200,16 +217,17 @@ const formatTime = (isoStr: string): string => {
 }
 
 const formatCost = (amount: string | null, currency: string): string => {
-  if (!amount) return '0.00'
-  const n = parseFloat(amount)
-  if (isNaN(n)) return '0.00'
-  if (currency === 'CNY') return n.toFixed(2)
-  // 外币转显示（USD → CNY 估算，或直接显示美元符号）
-  return `$${n.toFixed(4)}`
+  if (amount === null || amount === undefined || `${amount}` === '') return '--'
+  const n = Number.parseFloat(`${amount}`)
+  if (!Number.isFinite(n)) return '--'
+  const code = `${currency || 'CNY'}`.toUpperCase()
+  if (code === 'CNY') return `¥${n.toFixed(2)}`
+  if (code === 'USD') return `$${n.toFixed(4)}`
+  return `${code} ${n.toFixed(4)}`
 }
 
 const formatTokens = (total: number | null): string => {
-  if (!total) return '0'
+  if (total === null || total === undefined) return '--'
   if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}M`
   if (total >= 1_000) return `${(total / 1_000).toFixed(1)}K`
   return String(total)
@@ -224,18 +242,22 @@ interface PostItem {
   author: string
   authorId: number
   authorColor: string
+  isMine: boolean
   model: string
   time: string
   content: string
   images: string[]
-  cost: string
-  tokens: string
+  costText: string
+  tokensText: string
+  skillId: number | null
+  skillTitle: string
+  skillScene: string
   likes: number
   comments: number
   meoo: number
   liked: boolean
   myMeoo: boolean
-  myReaction: string
+  reaction: string
 }
 
 const userStore = useUserStore()
@@ -243,24 +265,33 @@ const userStore = useUserStore()
 const ensureLogin = (action = '执行此操作') =>
   requireLogin(userStore.token, action)
 
-const mapApiPost = (item: FeedItem): PostItem => ({
-  id: item.id,
-  author: item.user.nickname,
-  authorId: item.user.id,
-  authorColor: item.user.displayColor || fallbackColor(item.user.id),
-  model: item.modelName,
-  time: formatTime(item.createdAt),
-  content: item.noteText,
-  images: item.images,
-  cost: formatCost(item.costAmount, item.currency),
-  tokens: formatTokens(item.totalTokens),
-  likes: item.likes ?? 0,
-  comments: item.comments ?? 0,
-  meoo: item.meoo ?? 0,
-  liked: !!item.liked,
-  myMeoo: !!item.myMeoo,
-  myReaction: item.reaction || '',
-})
+const mapApiPost = (item: FeedItem): PostItem => {
+  const tokenText = formatTokens(item.totalTokens)
+  return {
+    id: item.id,
+    author: item.user.nickname || '匿名用户',
+    authorId: item.user.id,
+    authorColor: item.user.displayColor || fallbackColor(item.user.id),
+    isMine: Number(userStore.userInfo?.id || 0) === item.user.id,
+    model: item.modelName || '--',
+    time: formatTime(item.createdAt),
+    content: item.noteText,
+    images: Array.isArray(item.images)
+      ? item.images.map((src) => normalizeImageUrl(`${src || ''}`)).filter(Boolean)
+      : [],
+    costText: formatCost(item.costAmount, item.currency),
+    tokensText: tokenText === '--' ? '--' : `${tokenText} tokens`,
+    skillId: item.skill?.id ?? null,
+    skillTitle: `${item.skill?.title || '未命名 Skill'}`.trim(),
+    skillScene: `${item.skill?.scene || ''}`.trim(),
+    likes: item.likes ?? 0,
+    comments: item.comments ?? 0,
+    meoo: item.meoo ?? 0,
+    liked: !!item.liked,
+    myMeoo: !!item.myMeoo,
+    reaction: item.reaction || '',
+  }
+}
 
 // ── 状态 ──
 const posts = ref<PostItem[]>([])
@@ -282,7 +313,8 @@ const onRefresh = async () => {
     const res = await loadPage(1)
     posts.value = res.list.map(mapApiPost)
     page.value = 1
-    noMore.value = res.pagination.page >= res.pagination.totalPages
+    const totalPages = Number(res?.pagination?.totalPages ?? 0)
+    noMore.value = totalPages <= 1
   } catch (err) {
     // 之前是静默失败，调试时难定位，这里保留列表并给出明确提示
     console.error('[feed-post] refresh failed:', err)
@@ -300,7 +332,7 @@ const onLoadMore = async () => {
     const res = await loadPage(nextPage)
     posts.value.push(...res.list.map(mapApiPost))
     page.value = nextPage
-    noMore.value = nextPage >= res.pagination.totalPages
+    noMore.value = nextPage >= Number(res?.pagination?.totalPages ?? 0)
   } catch (err) {
     console.error('[feed-post] load more failed:', err)
     uni.showToast({ title: '加载更多失败', icon: 'none' })
@@ -315,24 +347,26 @@ onMounted(onRefresh)
 // ── 情绪反应 ──
 const rxnTarget = ref<PostItem | null>(null)
 const showReactions = (item: PostItem) => {
-  if (!ensureLogin('标记感受')) return
+  if (!item.isMine) return
+  if (!ensureLogin('标记结果')) return
   rxnTarget.value = item
 }
 const pickReaction = async (key: string) => {
   const target = rxnTarget.value
   if (!target) return
 
-  const prevReaction = target.myReaction
+  const prevReaction = target.reaction
   const nextReaction = prevReaction === key ? '' : key
-  target.myReaction = nextReaction
+  target.reaction = nextReaction
   rxnTarget.value = null
 
   try {
     const result = await updateFeedReaction(target.id, (nextReaction || null) as FeedReaction | null)
-    target.myReaction = result.reaction || ''
+    target.reaction = result.reaction || ''
   } catch (err) {
     console.error('[feed-post] update reaction failed:', err)
-    target.myReaction = prevReaction
+    target.reaction = prevReaction
+    uni.showToast({ title: '仅可修改自己的感受', icon: 'none' })
   }
 }
 
@@ -388,6 +422,9 @@ const sharePost  = async (item: PostItem) => {
 
 const toPost   = (id: number) => uni.navigateTo({ url: `/pages/detail/post?id=${id}` })
 const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=${id}` })
+const toSkill  = (id: number) => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+
+defineExpose({ refresh: onRefresh })
 </script>
 
 <style lang="scss" scoped>
@@ -500,6 +537,36 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
   padding: 16rpx 24rpx 0;
 }
 
+.pc-skill {
+  margin: 14rpx 24rpx 0;
+  padding: 12rpx 16rpx;
+  border-radius: 14rpx;
+  background: rgba(91, 91, 214, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+
+  .pc-skill-label {
+    font-size: 20rpx;
+    color: #5B5BD6;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .pc-skill-title {
+    flex: 1;
+    font-size: 22rpx;
+    color: #374151;
+    font-weight: 600;
+  }
+
+  .pc-skill-scene {
+    font-size: 20rpx;
+    color: rgba(0,0,0,0.45);
+    flex-shrink: 0;
+  }
+}
+
 .pc-imgs {
   display: flex; flex-wrap: wrap; margin-top: 16rpx;
   &.gi-1 .pc-img { width: 100%; height: 360rpx; }
@@ -525,8 +592,10 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
   .pc-rxn-pill {
     display: flex; align-items: center; gap: 6rpx;
     background: rgba(0,0,0,0.04); border-radius: 100rpx; padding: 8rpx 16rpx;
+    .pc-rxn-icon { flex-shrink: 0; }
     .pc-rxn-t { font-size: 22rpx; color: #9CA3AF; font-weight: 500; }
     &.rxn-active .pc-rxn-t { font-weight: 600; }
+    &.rxn-editable { border: 1rpx solid rgba(0,0,0,0.08); }
   }
 }
 
@@ -581,6 +650,12 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
   height: calc(160rpx + env(safe-area-inset-bottom));
 }
 
+.line-1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @keyframes skShimmer {
   from { background-position: 200% 0; }
   to { background-position: -40% 0; }
@@ -614,7 +689,7 @@ const toAuthor = (id: number) => uni.navigateTo({ url: `/pages/author/index?id=$
         flex: 1; display: flex; flex-direction: column; align-items: center;
         gap: 10rpx; background: rgba(0,0,0,0.04);
         border: 2rpx solid transparent; border-radius: 20rpx; padding: 20rpx 0;
-        .rxn-opt-emoji { font-size: 40rpx; }
+        .rxn-opt-icon { line-height: 1; }
         .rxn-opt-t { font-size: 22rpx; color: #6B7280; font-weight: 600; }
         &.rxn-opt-on { border-color: currentColor; }
       }
