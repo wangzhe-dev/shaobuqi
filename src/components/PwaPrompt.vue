@@ -3,26 +3,25 @@
 	<!-- #ifdef H5 -->
 	<view>
 
-		<!-- ── 版本更新 Banner（顶部滑入）── -->
+		<!-- ── H5 强更新条（顶部）── -->
 		<view v-if="showUpdateBar" class="update-bar">
 			<view class="ub-inner">
 				<view class="ub-pulse" />
 				<view class="ub-text">
-					<text class="ub-title">发现新版本</text>
-					<text class="ub-desc">更新后体验更流畅</text>
+					<text class="ub-title">{{ updateBarTitle }}</text>
+					<text class="ub-desc">{{ updateBarDesc }}</text>
 				</view>
-				<view class="ub-btn" @tap="updateSW">
-					<text class="ub-btn-t">立即更新</text>
-				</view>
-				<view class="ub-close" @tap="dismissUpdate">
-					<text class="ub-close-t">×</text>
+				<view class="ub-btn" @tap="applyH5Update">
+					<text class="ub-btn-t">{{ applyingH5Update ? '更新中...' : '立即更新' }}</text>
 				</view>
 			</view>
 		</view>
 
 		<!-- ── 悬浮安装入口（左下角，不与 FAB 冲突）── -->
 		<view v-if="showInstallEntry" class="entry-pill" @tap="openInstallEntry">
-			<text class="ep-icon">{{ installEntryIcon }}</text>
+			<view class="ep-icon">
+				<uni-icons :type="installEntryIconType" :size="16" color="#FFFFFF" />
+			</view>
 			<text class="ep-text">{{ installEntryText }}</text>
 			<view class="ep-close" @tap.stop="closeInstallEntry">
 				<text class="ep-close-t">×</text>
@@ -55,10 +54,15 @@
 				</view>
 				<text class="modal-tip">{{ manualGuide.tip }}</text>
 				<view class="modal-actions">
-					<view class="btn-primary" @tap="handleGuideAction">
-						<text class="btn-primary-t">{{ manualGuide.actionText }}</text>
+					<template v-if="showInstallPrimaryAction">
+						<view class="btn-primary" @tap="handleInstallPrimaryAction">
+							<text class="btn-primary-t">{{ manualGuide.actionText }}</text>
+						</view>
+						<view class="btn-dismiss" @tap="dismissInstall"><text class="btn-dismiss-t">知道了</text></view>
+					</template>
+					<view v-else class="btn-primary" @tap="dismissInstall">
+						<text class="btn-primary-t">知道了</text>
 					</view>
-					<view class="btn-dismiss" @tap="dismissInstall"><text class="btn-dismiss-t">知道了</text></view>
 				</view>
 				<view class="modal-footer-note">
 					<text class="mfn-title">烧不起安装说明</text>
@@ -72,9 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useGuideStore } from '@/stores'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 // #ifdef H5
+import { fetchLatestH5Build, forceRefreshLatestH5, getCurrentH5Build, hasNewH5Build, type RemoteH5BuildInfo } from '@/utils/h5-update'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 // #endif
 
@@ -100,7 +105,11 @@ interface PwaWindow extends Window {
 }
 
 const showManualHint = ref(false)
+const a2hsDismissedForPage = ref(false)
 const guideStore = useGuideStore()
+const remoteH5Build = ref<RemoteH5BuildInfo | null>(null)
+const checkingH5Update = ref(false)
+const applyingH5Update = ref(false)
 
 const unifiedInstallNote = 'Android 设备可直接下载并安装烧不起安卓版；iPhone 设备请使用 Safari 打开本页并选择”添加到主屏幕”；若在微信内访问，请先通过”在浏览器打开”后再继续操作。'
 
@@ -129,6 +138,7 @@ const onVisibilityChange = () => {
 	if (document.visibilityState === 'visible') {
 		triggerSWUpdateCheck()
 		syncA2hsLayer()
+		void checkLatestH5Build()
 	}
 }
 
@@ -152,7 +162,21 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
 const needRefresh = ref(false)
 // #endif
 
-const showUpdateBar = computed(() => needRefresh.value && guideStore.activeLayer === 'sw_update')
+const currentH5Build = getCurrentH5Build()
+const hasRemoteH5Update = computed(() => hasNewH5Build(remoteH5Build.value))
+const showUpdateBar = computed(() => {
+	return guideStore.activeLayer === 'sw_update' && (needRefresh.value || hasRemoteH5Update.value)
+})
+const updateBarTitle = computed(() => {
+	if (hasRemoteH5Update.value) return '发现新版本'
+	return '检测到资源更新'
+})
+const updateBarDesc = computed(() => {
+	if (hasRemoteH5Update.value) {
+		return `当前页面版本较旧，需刷新到 v${remoteH5Build.value?.versionName || currentH5Build.versionName} 才能继续使用最新内容`
+	}
+	return '检测到新的 H5 资源，刷新后立即生效'
+})
 
 const getUserAgent = (): string => navigator.userAgent.toLowerCase()
 
@@ -187,6 +211,7 @@ const showInstallEntry = computed(() => {
 	return supportsInstallEntry() &&
 		!isInStandaloneMode() &&
 		!showManualHint.value &&
+		!a2hsDismissedForPage.value &&
 		guideStore.activeLayer === 'a2hs'
 })
 
@@ -197,11 +222,11 @@ const installEntryText = computed(() => {
 	return '查看说明'
 })
 
-const installEntryIcon = computed(() => {
-	if (isWeChat()) return '↗'
-	if (isIOS()) return '□'
-	if (isAndroid()) return '↓'
-	return '?'
+const installEntryIconType = computed(() => {
+	if (isWeChat()) return 'weixin'
+	if (isAndroid()) return 'download'
+	if (isIOS()) return isIOSSafari() ? 'home' : 'redo'
+	return 'info'
 })
 
 const androidApkUrl = computed(() => {
@@ -310,7 +335,6 @@ const manualGuide = computed<InstallGuide>(() => {
 				'选择“添加到主屏幕”'
 			],
 			actionText: isIOSSafari() ? '添加到主屏幕' : 'Safari 打开',
-			tip: '请使用“添加到主屏幕”，不是下载安卓安装包。',
 			action: isIOSSafari() ? 'ios-add-home' : 'ios-open-safari'
 		}
 	}
@@ -330,6 +354,35 @@ const manualGuide = computed<InstallGuide>(() => {
 	}
 })
 
+const showInstallPrimaryAction = computed(() => {
+	return manualGuide.value.action !== 'ios-open-safari' &&
+		manualGuide.value.action !== 'ios-add-home'
+})
+
+const syncUpdateLayer = () => {
+	if (needRefresh.value || hasRemoteH5Update.value) {
+		guideStore.requestLayer('sw_update')
+		return
+	}
+
+	guideStore.releaseLayer('sw_update')
+}
+
+const checkLatestH5Build = async () => {
+	if (checkingH5Update.value || applyingH5Update.value) return
+
+	checkingH5Update.value = true
+	try {
+		const latestBuild = await fetchLatestH5Build()
+		if (latestBuild) {
+			remoteH5Build.value = latestBuild
+		}
+	} finally {
+		checkingH5Update.value = false
+		syncUpdateLayer()
+	}
+}
+
 const syncA2hsLayer = () => {
 	if (isInStandaloneMode()) {
 		guideStore.markA2hsAccepted()
@@ -344,6 +397,12 @@ const syncA2hsLayer = () => {
 		return
 	}
 
+	if (a2hsDismissedForPage.value) {
+		guideStore.cancelLayer('a2hs')
+		showManualHint.value = false
+		return
+	}
+
 	if (guideStore.canShowA2hs()) {
 		guideStore.requestLayer('a2hs')
 		return
@@ -353,29 +412,21 @@ const syncA2hsLayer = () => {
 	showManualHint.value = false
 }
 
-const SW_DISMISSED_KEY = 'sbq_sw_update_dismissed'
-
-watch(() => needRefresh.value, (refreshing) => {
-	if (refreshing) {
-		// 本次 session 已关闭过，不再重复弹
-		let dismissed = false
-		try { dismissed = sessionStorage.getItem(SW_DISMISSED_KEY) === '1' } catch { /* ignore */ }
-		if (!dismissed) guideStore.requestLayer('sw_update')
-		return
-	}
-	guideStore.releaseLayer('sw_update')
-}, { immediate: true })
-
 watch(() => guideStore.activeLayer, (layer) => {
 	if (layer !== 'a2hs') showManualHint.value = false
 })
 
 watch(
+	() => [needRefresh.value, hasRemoteH5Update.value],
+	() => {
+		syncUpdateLayer()
+	},
+	{ immediate: true }
+)
+
+watch(
 	() => [
 		guideStore.onboardingDone,
-		guideStore.firstSkillCopyAt,
-		guideStore.a2hsDismissCount,
-		guideStore.a2hsNextEligibleAt,
 		guideStore.a2hsAcceptedAt
 	],
 	() => {
@@ -389,6 +440,7 @@ onMounted(() => {
 	triggerSWUpdateCheck()
 	syncA2hsLayer()
 	syncDeferredInstallPrompt()
+	void checkLatestH5Build()
 
 	if (typeof window.matchMedia === 'function') {
 		displayModeMedia = window.matchMedia('(display-mode: standalone)')
@@ -413,6 +465,7 @@ onMounted(() => {
 	onAppInstalled = () => {
 		deferredInstallPrompt = null
 		;(window as PwaWindow).__pwa_deferred_prompt = null
+		a2hsDismissedForPage.value = false
 		guideStore.markA2hsAccepted()
 		guideStore.cancelLayer('a2hs')
 		showManualHint.value = false
@@ -469,10 +522,34 @@ async function handleGuideAction() {
 	}
 }
 
-function dismissInstall() {
-	showManualHint.value = false
-	guideStore.markA2hsDismissed()
-	guideStore.releaseLayer('a2hs')
+async function handleInstallPrimaryAction() {
+	if (isAndroid()) {
+		if (deferredInstallPrompt) {
+			try {
+				await deferredInstallPrompt.prompt()
+				const { outcome } = await deferredInstallPrompt.userChoice
+				deferredInstallPrompt = null
+				;(window as PwaWindow).__pwa_deferred_prompt = null
+				if (outcome === 'accepted') {
+					a2hsDismissedForPage.value = false
+					guideStore.markA2hsAccepted()
+					guideStore.releaseLayer('a2hs')
+					showManualHint.value = false
+				}
+				return
+			} catch {
+				// 原生弹窗失败，降级走 APK 下载
+			}
+		}
+
+		a2hsDismissedForPage.value = true
+		showManualHint.value = false
+		guideStore.releaseLayer('a2hs')
+		navigateToDownloadPage()
+		return
+	}
+
+	await handleGuideAction()
 }
 
 async function openInstallEntry() {
@@ -483,7 +560,6 @@ async function openInstallEntry() {
 	}
 
 	if (isAndroid()) {
-		// Chrome Android 支持原生安装弹窗，优先走这条路
 		if (deferredInstallPrompt) {
 			try {
 				await deferredInstallPrompt.prompt()
@@ -491,26 +567,29 @@ async function openInstallEntry() {
 				deferredInstallPrompt = null
 				;(window as PwaWindow).__pwa_deferred_prompt = null
 				if (outcome === 'accepted') {
+					a2hsDismissedForPage.value = false
 					guideStore.markA2hsAccepted()
 					guideStore.releaseLayer('a2hs')
 				}
 				return
 			} catch {
-				// 原生弹窗失败，降级走 APK 下载
+				// 原生弹窗失败，降级走下载说明
 			}
 		}
-		guideStore.markA2hsDismissed()
-		guideStore.releaseLayer('a2hs')
-		navigateToDownloadPage()
-		return
 	}
 
 	showManualHint.value = true
 }
 
-function closeInstallEntry() {
+function dismissInstall() {
+	a2hsDismissedForPage.value = true
 	showManualHint.value = false
-	guideStore.markA2hsDismissed()
+	guideStore.releaseLayer('a2hs')
+}
+
+function closeInstallEntry() {
+	a2hsDismissedForPage.value = true
+	showManualHint.value = false
 	guideStore.releaseLayer('a2hs')
 }
 
@@ -520,10 +599,35 @@ function updateSW() {
 	// #endif
 }
 
-function dismissUpdate() {
-	try { sessionStorage.setItem(SW_DISMISSED_KEY, '1') } catch { /* ignore */ }
-	needRefresh.value = false
-	guideStore.releaseLayer('sw_update')
+async function applyH5Update() {
+	if (applyingH5Update.value) return
+
+	applyingH5Update.value = true
+
+	try {
+		const latestBuild = await fetchLatestH5Build()
+		if (latestBuild) {
+			remoteH5Build.value = latestBuild
+		}
+
+		if (hasRemoteH5Update.value && remoteH5Build.value) {
+			await forceRefreshLatestH5(remoteH5Build.value.buildId)
+			return
+		}
+
+		if (needRefresh.value) {
+			updateSW()
+			return
+		}
+
+		guideStore.releaseLayer('sw_update')
+		uni.showToast({ title: '当前已是最新版本', icon: 'none' })
+	} catch (err) {
+		console.error('[H5] 强制更新失败:', err)
+		uni.showToast({ title: '更新失败，请稍后重试', icon: 'none' })
+	} finally {
+		applyingH5Update.value = false
+	}
 }
 </script>
 
@@ -589,7 +693,14 @@ function dismissUpdate() {
 	background: var(--primary-color);
 	box-shadow: 0 8rpx 28rpx var(--primary-shadow);
 
-	.ep-icon { font-size: 26rpx; line-height: 1; }
+	.ep-icon {
+		width: 32rpx;
+		height: 32rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
 	.ep-text { font-size: 24rpx; font-weight: 700; color: #fff; }
 	.ep-close {
 		width: 34rpx;

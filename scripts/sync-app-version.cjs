@@ -6,6 +6,8 @@ const path = require('path')
 const projectRoot = path.resolve(__dirname, '..')
 const manifestPath = path.join(projectRoot, 'src/manifest.json')
 const appVersionPath = path.join(projectRoot, 'public/app-version.json')
+const h5VersionPath = path.join(projectRoot, 'public/h5-version.json')
+const generatedH5BuildPath = path.join(projectRoot, 'src/generated/h5-build.ts')
 
 const readJsonFile = (filePath, fallback = {}) => {
   if (!fs.existsSync(filePath)) return fallback
@@ -21,6 +23,11 @@ const readJsonFile = (filePath, fallback = {}) => {
 const writeJsonFile = (filePath, value) => {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
+}
+
+const writeTextFile = (filePath, value) => {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  fs.writeFileSync(filePath, value, 'utf8')
 }
 
 const normalizeVersionName = (value) => String(value || '').trim()
@@ -71,6 +78,9 @@ const existingConfig = readJsonFile(appVersionPath)
 const versionName = normalizeVersionName(manifestConfig.versionName)
 const versionCode = normalizeVersionCode(manifestConfig.versionCode)
 const publicBaseUrl = resolvePublicBaseUrl(existingConfig)
+const h5BuildId = String(process.env.H5_BUILD_ID || Date.now())
+const h5PublishedAt = String(process.env.H5_PUBLISHED_AT || new Date().toISOString())
+const h5ForceUpdate = normalizeBoolean(process.env.H5_FORCE_UPDATE, true)
 
 const defaultAndroidApkUrl = `${publicBaseUrl}/download/shaobuqi.apk`
 const androidNotes = normalizeNotes(
@@ -104,4 +114,28 @@ const nextConfig = {
 
 writeJsonFile(appVersionPath, nextConfig)
 
+const nextH5Version = {
+  versionName,
+  versionCode,
+  buildId: h5BuildId,
+  publishedAt: h5PublishedAt,
+  forceUpdate: h5ForceUpdate
+}
+
+writeJsonFile(h5VersionPath, nextH5Version)
+writeTextFile(
+  generatedH5BuildPath,
+  `export interface H5BuildInfo {
+  versionName: string
+  versionCode: number
+  buildId: string
+  publishedAt: string
+  forceUpdate: boolean
+}
+
+export const CURRENT_H5_BUILD: H5BuildInfo = ${JSON.stringify(nextH5Version, null, 2)} as const
+`
+)
+
 console.log(`[sync-app-version] ${path.relative(projectRoot, appVersionPath)} <= v${versionName} (${versionCode})`)
+console.log(`[sync-app-version] ${path.relative(projectRoot, h5VersionPath)} <= build ${h5BuildId}`)

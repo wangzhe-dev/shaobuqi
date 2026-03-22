@@ -2,7 +2,7 @@
     "name" : "烧不起",
     "appid" : "__UNI__9AA0242",
     "description" : "烧不起是一款面向提示语整理、保存、复用与快速调用的效率工具，帮助用户更高效地管理常用 Skill、优化 AI 交互流程，并在 H5、移动端等多场景下快速使用。",
-    "versionName" : "1.0.0",
+    "versionName" : "1.0.2",
     "versionCode" : "100",
     "transformPx" : false,
     "app-plus" : {
@@ -45,9 +45,7 @@
                     "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>",
                     "<uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\"/>",
                     "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>",
-                    "<uses-permission android:name=\"android.permission.INSTALL_PACKAGES\"/>",
-                    "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/>"
+                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ],
                 "permissionPhoneState" : {
                     "request" : "none",

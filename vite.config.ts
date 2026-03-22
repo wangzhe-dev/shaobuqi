@@ -71,6 +71,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       emitPublicAsset('public/download/index.html', 'download/index.html'),
       emitPublicAsset('public/app-version.json', 'app-version.json'),
+      emitPublicAsset('public/h5-version.json', 'h5-version.json'),
       uni(),
       AutoImport({
         imports: ['vue', 'vue-router', 'uni-app'],

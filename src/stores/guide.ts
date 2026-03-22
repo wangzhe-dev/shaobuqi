@@ -168,10 +168,7 @@ export const useGuideStore = defineStore(
 
     const canShowA2hs = () => {
       if (!onboardingDone.value) return false
-      if (!firstSkillCopyAt.value) return false
       if (a2hsAcceptedAt.value > 0) return false
-      if (a2hsDismissCount.value >= A2HS_MAX_DISMISS) return false
-      if (a2hsNextEligibleAt.value > Date.now()) return false
       return true
     }
 
