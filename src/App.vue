@@ -10,6 +10,7 @@
 
 	// #ifdef APP-PLUS
 	import { unregisterRequestPermissionTipsListener } from '@/uni_modules/uni-registerRequestPermissionTips'
+	import { checkAppUpdate } from '@/utils/app-update'
 	import { listenPermissionRequest } from '@/utils/app'
 	// #endif
 
@@ -22,12 +23,17 @@
 
 			// #ifdef APP-PLUS
 			listenPermissionRequest()
+			void checkAppUpdate()
 			// #endif
 		},
 
 		onShow() {
 			// #ifdef MP-WEIXIN
 			checkUpdate()
+			// #endif
+
+			// #ifdef APP-PLUS
+			void checkAppUpdate()
 			// #endif
 		},
 

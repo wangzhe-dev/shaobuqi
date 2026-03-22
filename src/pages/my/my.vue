@@ -161,7 +161,7 @@
             <uni-icons type="info-filled" color="#9CA3AF" size="17" />
           </view>
           <text class="settings-label">关于烧不起</text>
-          <text class="settings-hint">v1.0.0</text>
+          <text class="settings-hint">v{{ appVersionLabel }}</text>
           <uni-icons type="right" size="13" color="#C8CBD4" />
         </view>
 
@@ -252,7 +252,9 @@
 
 <script setup lang="ts">
 import { getMyCopies, getMyFavorites, getMyLikes, getMyProfile, getMySummary } from '@/api/me'
+import appManifest from '@/manifest.json'
 import { useUserStore } from '@/stores'
+import { checkAppUpdate, getCurrentAppVersionLabel } from '@/utils/app-update'
 import { getCurrentInstance } from 'vue'
 
 const instance = getCurrentInstance()
@@ -274,6 +276,8 @@ const dataSummary = reactive({
   like: '--',
   copy: '--'
 })
+
+const appVersionLabel = ref(String(appManifest.versionName || '1.0.0'))
 
 const resetProfile = () => {
   profile.name = '我'
@@ -379,6 +383,10 @@ onMounted(() => {
       cacheSize.value = ''
     }
   })
+
+  // #ifdef APP-PLUS
+  appVersionLabel.value = getCurrentAppVersionLabel()
+  // #endif
 })
 
 const goLogin = () => {
@@ -434,9 +442,29 @@ const clearCache = () => {
 }
 
 const showAbout = () => {
+  let appPlusMode = false
+  // #ifdef APP-PLUS
+  appPlusMode = true
+  // #endif
+
+  if (appPlusMode) {
+    uni.showModal({
+      title: '烧不起',
+      content: `版本 v${appVersionLabel.value}\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队`,
+      showCancel: true,
+      cancelText: '知道了',
+      confirmText: '检查更新',
+      confirmColor: '#5B5BD6',
+      success: ({ confirm }) => {
+        if (confirm) void checkAppUpdate({ manual: true })
+      }
+    })
+    return
+  }
+
   uni.showModal({
     title: '烧不起',
-    content: '版本 v1.0.0\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队',
+    content: `版本 v${appVersionLabel.value}\n\n记录 AI 消耗，共享高效 Skill。\n\n© 2025 烧不起团队`,
     showCancel: false,
     confirmText: '知道了',
     confirmColor: '#5B5BD6'

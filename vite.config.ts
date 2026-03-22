@@ -44,17 +44,17 @@ const sendProxyError = (res: ServerResponse<IncomingMessage>): void => {
   )
 }
 
-const emitDownloadPage = () => ({
-  name: 'emit-download-page',
+const emitPublicAsset = (sourceRelativePath: string, outputFileName: string) => ({
+  name: `emit-public-asset:${outputFileName}`,
   apply: 'build' as const,
   generateBundle() {
-    const sourcePath = resolve(process.cwd(), 'public/download/index.html')
+    const sourcePath = resolve(process.cwd(), sourceRelativePath)
     if (!existsSync(sourcePath)) return
 
     const source = readFileSync(sourcePath, 'utf8')
     this.emitFile({
       type: 'asset',
-      fileName: 'download/index.html',
+      fileName: outputFileName,
       source
     })
   }
@@ -69,7 +69,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      emitDownloadPage(),
+      emitPublicAsset('public/download/index.html', 'download/index.html'),
+      emitPublicAsset('public/app-version.json', 'app-version.json'),
       uni(),
       AutoImport({
         imports: ['vue', 'vue-router', 'uni-app'],

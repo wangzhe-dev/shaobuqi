@@ -95,6 +95,10 @@ interface BeforeInstallPromptEvent extends Event {
 	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+interface PwaWindow extends Window {
+	__pwa_deferred_prompt?: BeforeInstallPromptEvent | null
+}
+
 const showManualHint = ref(false)
 const guideStore = useGuideStore()
 
@@ -106,6 +110,11 @@ let displayModeHandler: ((event: MediaQueryListEvent) => void) | null = null
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null
 let onBeforeInstallPrompt: ((e: Event) => void) | null = null
 let onAppInstalled: (() => void) | null = null
+
+const syncDeferredInstallPrompt = () => {
+	const cachedPrompt = (window as PwaWindow).__pwa_deferred_prompt
+	if (cachedPrompt) deferredInstallPrompt = cachedPrompt
+}
 
 const triggerSWUpdateCheck = () => {
 	if (!('serviceWorker' in navigator)) return
@@ -379,6 +388,7 @@ onMounted(() => {
 	document.addEventListener('visibilitychange', onVisibilityChange)
 	triggerSWUpdateCheck()
 	syncA2hsLayer()
+	syncDeferredInstallPrompt()
 
 	if (typeof window.matchMedia === 'function') {
 		displayModeMedia = window.matchMedia('(display-mode: standalone)')
@@ -395,12 +405,14 @@ onMounted(() => {
 	onBeforeInstallPrompt = (e: Event) => {
 		e.preventDefault()
 		deferredInstallPrompt = e as BeforeInstallPromptEvent
+		;(window as PwaWindow).__pwa_deferred_prompt = deferredInstallPrompt
 	}
 	window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
 
 	// 用户通过任意方式完成安装后，收起引导入口
 	onAppInstalled = () => {
 		deferredInstallPrompt = null
+		;(window as PwaWindow).__pwa_deferred_prompt = null
 		guideStore.markA2hsAccepted()
 		guideStore.cancelLayer('a2hs')
 		showManualHint.value = false
@@ -477,6 +489,7 @@ async function openInstallEntry() {
 				await deferredInstallPrompt.prompt()
 				const { outcome } = await deferredInstallPrompt.userChoice
 				deferredInstallPrompt = null
+				;(window as PwaWindow).__pwa_deferred_prompt = null
 				if (outcome === 'accepted') {
 					guideStore.markA2hsAccepted()
 					guideStore.releaseLayer('a2hs')
