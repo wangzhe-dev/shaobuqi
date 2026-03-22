@@ -64,6 +64,31 @@
               </view>
               <text class="pc-time">{{ item.time }}</text>
             </view>
+            <view
+              class="pc-rxn-pill"
+              :class="{ 'rxn-active': item.reaction, 'rxn-editable': item.isMine }"
+              :style="item.reaction
+                ? { background: reactions.find((r:any) => r.key === item.reaction)?.bgColor,
+                    color: reactions.find((r:any) => r.key === item.reaction)?.activeColor }
+                : {}"
+              @tap.stop="item.isMine ? showReactions(item) : undefined"
+            >
+              <uni-icons
+                class="pc-rxn-icon"
+                :type="item.reaction ? (reactions.find((r:any) => r.key === item.reaction)?.icon || 'info') : 'info'"
+                size="13"
+                :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
+              />
+              <text class="pc-rxn-t">
+                {{ item.reaction ? reactions.find((r:any) => r.key === item.reaction)?.text : '未标记' }}
+              </text>
+              <uni-icons
+                v-if="item.isMine"
+                type="bottom"
+                size="10"
+                :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
+              />
+            </view>
           </view>
 
           <!-- 正文 -->
@@ -94,31 +119,10 @@
               <view class="pc-cost-inline">
                 <text class="pc-cost-main">花费</text>
                 <text class="pc-cost-main">{{ item.costText }}</text>
-              </view>
-              <view
-                class="pc-rxn-pill"
-                :class="{ 'rxn-active': item.reaction, 'rxn-editable': item.isMine }"
-                :style="item.reaction
-                  ? { background: reactions.find((r:any) => r.key === item.reaction)?.bgColor,
-                      color: reactions.find((r:any) => r.key === item.reaction)?.activeColor }
-                  : {}"
-                @tap.stop="item.isMine ? showReactions(item) : undefined"
-              >
-                <uni-icons
-                  class="pc-rxn-icon"
-                  :type="item.reaction ? (reactions.find((r:any) => r.key === item.reaction)?.icon || 'info') : 'info'"
-                  size="13"
-                  :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
-                />
-                <text class="pc-rxn-t">
-                  {{ item.reaction ? reactions.find((r:any) => r.key === item.reaction)?.text : '未标记' }}
-                </text>
-                <uni-icons
-                  v-if="item.isMine"
-                  type="bottom"
-                  size="10"
-                  :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
-                />
+                <text class="pc-token-text">{{ item.tokensText }}</text>
+                <view class="pc-token-tip" @tap.stop="showTokenHint(item)">
+                  <uni-icons type="info" size="13" color="#9CA3AF" />
+                </view>
               </view>
             </view>
 
@@ -133,9 +137,6 @@
               <view class="pc-act" @tap.stop="toPost(item.id)">
                 <uni-icons type="chat" size="15" color="#9CA3AF" />
                 <text class="pc-act-n">{{ item.comments }}</text>
-              </view>
-              <view class="pc-act" @tap.stop="sharePost(item)">
-                <uni-icons type="redo" size="15" color="#9CA3AF" />
               </view>
             </view>
           </view>
@@ -207,7 +208,6 @@ import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 import { normalizeImageUrl } from '@/utils/image-url'
-import { shareFeedPost } from '@/utils/share-post'
 
 const emit = defineEmits<{ goSkill: [] }>()
 
@@ -248,6 +248,12 @@ const formatTokens = (total: number | null): string => {
   return String(total)
 }
 
+const formatCountZh = (n: number): string => {
+  if (n >= 10_000) return `${(n / 10_000).toFixed(n >= 100_000 ? 0 : 1)}万`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}千`
+  return `${n}`
+}
+
 // 默认头像色阶（当 displayColor 为 null 时）
 const FALLBACK_COLORS = ['#5B5BD6', '#7C3AED', '#0891B2', '#059669', '#D6943A', '#C84634']
 const fallbackColor = (userId: number) => FALLBACK_COLORS[userId % FALLBACK_COLORS.length]
@@ -264,6 +270,7 @@ interface PostItem {
   images: string[]
   costText: string
   tokensText: string
+  totalTokens: number | null
   skillId: number | null
   skillTitle: string
   skillScene: string
@@ -300,6 +307,7 @@ const mapApiPost = (item: FeedItem): PostItem => {
       : [],
     costText: formatCost(item.costAmount, item.currency),
     tokensText: tokenText === '--' ? '--' : `${tokenText} tokens`,
+    totalTokens: item.totalTokens ?? null,
     skillId: item.skill?.id ?? null,
     skillTitle: `${item.skill?.title || '未命名 Skill'}`.trim(),
     skillScene: `${item.skill?.scene || ''}`.trim(),
@@ -448,12 +456,35 @@ const toggleMeoo = async (item: PostItem) => {
   }
 }
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
-const sharePost  = async (item: PostItem) => {
-  await shareFeedPost({
-    id: item.id,
-    author: item.author,
-    content: item.content,
-    imageUrl: item.images?.[0] || null,
+const showTokenHint = (item: PostItem) => {
+  const total = item.totalTokens
+  if (typeof total !== 'number' || !Number.isFinite(total) || total <= 0) {
+    uni.showModal({
+      title: 'Token 小说明',
+      content: 'Token 是模型处理文本的计量单位。中文场景下，1 个汉字通常约 1~2 Token。',
+      showCancel: false,
+      confirmText: '知道了',
+    })
+    return
+  }
+
+  const minChars = Math.round(total / 2)
+  const maxChars = Math.round(total)
+  let volumeHint = '接近一篇长文或小型报告的体量。'
+  if (total < 2_000) volumeHint = '大概是一篇短文到两篇短文的体量。'
+  else if (total < 20_000) volumeHint = '大概是一篇万字级文章的体量。'
+  else if (total >= 100_000) volumeHint = '已经是长文档级别的体量。'
+
+  uni.showModal({
+    title: 'Token 小说明',
+    content: [
+      'Token 是模型读写文本时的计量单位。',
+      '中文里通常 1 个汉字约 1~2 Token。',
+      `这条记录约 ${item.tokensText}，大致相当于 ${formatCountZh(minChars)}~${formatCountZh(maxChars)} 个汉字。`,
+      volumeHint,
+    ].join('\n'),
+    showCancel: false,
+    confirmText: '我知道了',
   })
 }
 
@@ -614,6 +645,10 @@ defineExpose({ refresh: onRefresh })
     }
     .pc-time { font-size: 20rpx; color: var(--text-muted); }
   }
+
+  .pc-rxn-pill {
+    margin-left: auto;
+  }
 }
 
 .pc-body {
@@ -695,6 +730,23 @@ defineExpose({ refresh: onRefresh })
   font-variant-numeric: tabular-nums;
 }
 
+.pc-token-text {
+  font-size: 22rpx;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pc-token-tip {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pc-rxn-pill {
   display: flex;
   align-items: center;
@@ -703,6 +755,7 @@ defineExpose({ refresh: onRefresh })
   border-radius: 100rpx;
   padding: 8rpx 16rpx;
   min-width: 0;
+  flex-shrink: 0;
 
   .pc-rxn-icon {
     flex-shrink: 0;
@@ -879,6 +932,7 @@ defineExpose({ refresh: onRefresh })
 
   .pc-bottom-row > * + * { margin-left: 12rpx; }
   .pc-cost-judge > * + * { margin-left: 8rpx; }
+  .pc-cost-inline > * + * { margin-left: 8rpx; }
   .pc-meta-row > * + * { margin-left: 16rpx; }
   .pc-spend > * + * { margin-left: 8rpx; }
   .pc-rxn-pill > * + * { margin-left: 6rpx; }

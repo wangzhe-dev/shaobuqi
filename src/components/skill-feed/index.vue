@@ -101,7 +101,7 @@
 
                 <!-- 作者 + 操作 -->
                 <view class="sc-foot">
-                  <view class="sc-author-wrap">
+                  <view class="sc-author-wrap" @tap.stop="toAuthor(skill.authorId)">
                     <view class="sc-av" :style="{ background: skill.authorColor }">
                       <text class="sc-av-t">{{ skill.author[0] }}</text>
                     </view>
@@ -533,6 +533,7 @@ const mapApiSkill = (item: any) => {
     copyCount: formatCount(copyCountNum),
     favoriteCount: formatCount(Number(item?.favoriteCount ?? item?.stats?.favoriteCount ?? 0)),
     author: creatorName,
+    authorId: `${item?.creator?.id || ''}`,
     authorColor: `${item?.creator?.displayColor || '#5B5BD6'}`,
     featured: item?.featured === true,
     isNew,
@@ -699,6 +700,10 @@ const shareSkill = async (skill: any) => {
   })
 }
 const toSkill = (id: string) => uni.navigateTo({ url: `/pages/detail/skill?id=${id}` })
+const toAuthor = (id: string) => {
+  if (!id) return
+  uni.navigateTo({ url: `/pages/author/index?id=${id}` })
+}
 const toSearch = () => uni.navigateTo({ url: '/pages/search/index' })
 const previewImg = (images: string[], current: number) => uni.previewImage({ urls: images, current: images[current] })
 
