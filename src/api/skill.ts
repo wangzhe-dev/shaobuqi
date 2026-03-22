@@ -306,7 +306,7 @@ export const unfollowCreator = (id: string | number) => {
 	return http.delete<{ targetId: number; isFollowing: boolean; changed: boolean }>(`/skills/creator/${id}/follow`)
 }
 
-export const getSkillTags = (params?: { keyword?: string; pageSize?: number }) => {
+export const getSkillTags = (params?: { keyword?: string; pageSize?: number; categoryId?: number }) => {
 	return http.get<Array<{ id: number; name: string; useCount: number }>>('/skills/meta/tags', params)
 }
 

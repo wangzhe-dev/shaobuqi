@@ -79,6 +79,8 @@
 							v-model="form.scene"
 							mode="tag"
 							:localdata="sceneOptions"
+							selectedColor="#5B5BD6"
+							selectedTextColor="#FFFFFF"
 						/>
 					</view>
 				</view>
@@ -93,8 +95,11 @@
 					</view>
 					<view class="tags-wrap">
 						<view v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
+							<text class="tag-hash">#</text>
 							<text class="tag-t">{{ tag }}</text>
-							<text class="tag-rm" @tap.stop="removeTag(i)">×</text>
+							<view class="tag-rm" @tap.stop="removeTag(i)">
+								<text class="tag-rm-t">×</text>
+							</view>
 						</view>
 						<input
 							v-if="form.tags.length < TAG_LIMIT"
@@ -181,29 +186,22 @@
 </template>
 
 <script setup lang="ts">
-import { createSkill, getSkillCategories, updateSkill } from '@/api/skill'
+import { createSkill, getSkillCategories, getSkillTags, updateSkill } from '@/api/skill'
 import { uploadImageFile, type UploadedImageMeta } from '@/api/upload'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
-import { computed, getCurrentInstance, nextTick, reactive, ref } from 'vue'
+import { computed, getCurrentInstance, nextTick, reactive, ref, watch } from 'vue'
 
 const SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 const FEED_PUBLISHED_KEY = 'skill_feed_published_v1'
 const TAG_LIMIT = 5
 const FALLBACK_SCENES = ['写作', '编程', '自媒体', '办公', '运营', '学习', '设计', '电商']
+
+// 分类列表（仅名称，用于 uni-data-checkbox）
 const SCENE_OPTIONS = ref<string[]>(FALLBACK_SCENES)
-const TAG_FALLBACK_SUGGESTIONS = ['入门', '提效', '模板', '案例', '复盘', '技巧']
-const TAG_SCENE_SUGGESTIONS: Record<string, string[]> = {
-	写作: ['标题', '文案', '润色', '提纲', '公众号'],
-	编程: ['调试', '重构', '脚手架', '性能', '接口'],
-	自媒体: ['选题', '脚本', '封面', '增长', '转化'],
-	办公: ['汇报', '周报', 'PPT', '表格', '邮件'],
-	运营: ['活动', '拉新', '留存', '投放', 'SOP'],
-	学习: ['笔记', '总结', '记忆', '刷题', '拆解'],
-	设计: ['配色', '排版', '海报', 'UI', '品牌'],
-	电商: ['详情页', '客服', '选品', '评价', '促销']
-}
+// 名称 → ID 的映射，用于按分类拉取标签建议
+const categoryMap = ref<Map<string, number>>(new Map())
 
 type PostForm = {
 	title: string
@@ -240,16 +238,12 @@ const sceneOptions = computed(() => {
 	return merged.map((v) => ({ text: v, value: v }))
 })
 
-const tagSuggestions = computed(() => {
-	const scene = form.scene.trim()
-	const base = TAG_SCENE_SUGGESTIONS[scene] || TAG_FALLBACK_SUGGESTIONS
-	return base
-		.map((v) => `${v}`.trim())
-		.filter(Boolean)
-		.filter((v, i, arr) => arr.indexOf(v) === i)
-		.filter((v) => !form.tags.includes(v))
-		.slice(0, 8)
-})
+// API 返回的原始标签名（按分类）
+const _tagSuggestionsRaw = ref<string[]>([])
+// 过滤掉已添加的，直接用于展示
+const tagSuggestions = computed(() =>
+	_tagSuggestionsRaw.value.filter((v) => !form.tags.includes(v)).slice(0, 8)
+)
 
 const stripHtml = (html: string) =>
 	html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
@@ -578,11 +572,26 @@ const doPublish = async () => {
 	}
 }
 
+// 分类变化时拉取对应标签建议
+watch(() => form.scene, async (scene) => {
+	_tagSuggestionsRaw.value = []
+	if (!scene) return
+	const catId = categoryMap.value.get(scene)
+	if (!catId) return
+	try {
+		const tags = await getSkillTags({ categoryId: catId, pageSize: 12 })
+		_tagSuggestionsRaw.value = tags.map((t) => t.name)
+	} catch {
+		// 静默失败，不阻塞表单
+	}
+})
+
 onMounted(async () => {
 	try {
 		const cats = await getSkillCategories()
 		if (Array.isArray(cats) && cats.length > 0) {
-			SCENE_OPTIONS.value = cats.map(c => c.name)
+			SCENE_OPTIONS.value = cats.map((c) => c.name)
+			categoryMap.value = new Map(cats.map((c) => [c.name, c.id]))
 		}
 	} catch {}
 })
@@ -753,34 +762,27 @@ onShow(() => {
 .meta-sub.warn { color: var(--orange-color); font-weight: 600; }
 
 /* ── scene picker ── */
+/* 颜色由 selectedColor / selectedTextColor prop 控制，:deep 仅覆盖形状布局 */
 .scene-picker {
 	margin-top: 2rpx;
 
 	:deep(.uni-data-checklist) { flex: initial; }
 	:deep(.checklist-group) { align-items: center; }
 
-	:deep(.checklist-box.is--tag) {
+	:deep(.uni-data-checklist .checklist-group .checklist-box.is--tag) {
 		height: 60rpx;
-		margin: 0 12rpx 10rpx 0;
+		margin: 0 12rpx 12rpx 0;
 		padding: 0 22rpx;
-		border-radius: 12rpx;
-		border: 1rpx solid rgba(0, 0, 0, 0.08);
-		background: rgba(0, 0, 0, 0.04);
+		border-radius: 999rpx !important;
 	}
 
-	:deep(.checklist-box.is--tag .checklist-text) {
-		font-size: 24rpx;
+	:deep(.uni-data-checklist .checklist-group .checklist-box.is--tag .checklist-text) {
+		font-size: 25rpx;
 		font-weight: 600;
-		color: rgba(0, 0, 0, 0.55);
 	}
 
-	:deep(.checklist-box.is--tag.is-checked) {
-		background: var(--primary-light-10);
-		border-color: rgba(91, 91, 214, 0.30);
-	}
-
-	:deep(.checklist-box.is--tag.is-checked .checklist-text) {
-		color: var(--primary-color);
+	:deep(.uni-data-checklist .checklist-group .checklist-box.is--tag.is-checked .checklist-text) {
+		font-weight: 700;
 	}
 }
 
@@ -795,15 +797,47 @@ onShow(() => {
 .tag-chip {
 	display: inline-flex;
 	align-items: center;
-	height: 56rpx;
-	padding: 0 16rpx;
-	border-radius: 10rpx;
-	background: var(--primary-light);
-	border: 1rpx solid rgba(91, 91, 214, 0.20);
-	gap: 6rpx;
+	height: 60rpx;
+	padding: 0 8rpx 0 16rpx;
+	border-radius: 999rpx;
+	background: rgba(91, 91, 214, 0.08);
+	border: 1.5rpx solid rgba(91, 91, 214, 0.28);
+	box-shadow: 0 2rpx 8rpx rgba(91, 91, 214, 0.10);
+	gap: 4rpx;
 
-	.tag-t  { font-size: 24rpx; color: var(--primary-color); font-weight: 600; }
-	.tag-rm { font-size: 28rpx; color: var(--primary-color); font-weight: 700; }
+	.tag-hash {
+		font-size: 23rpx;
+		color: rgba(91, 91, 214, 0.50);
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.tag-t {
+		font-size: 25rpx;
+		color: var(--primary-color);
+		font-weight: 700;
+		letter-spacing: 0.2rpx;
+	}
+
+	.tag-rm {
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 50%;
+		background: rgba(91, 91, 214, 0.12);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		margin-left: 4rpx;
+
+		.tag-rm-t {
+			font-size: 26rpx;
+			color: rgba(91, 91, 214, 0.65);
+			font-weight: 700;
+			line-height: 1;
+			margin-top: -1rpx;
+		}
+	}
 }
 
 .tag-inp {

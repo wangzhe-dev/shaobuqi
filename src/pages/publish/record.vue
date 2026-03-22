@@ -36,42 +36,24 @@
         <view class="meta-row">
           <text class="meta-label">AI 模型</text>
           <view class="meta-row-right">
-            <text v-if="!form.model" class="meta-hint">选一个</text>
+            <text v-if="form.model" class="meta-selected">{{ form.model }}</text>
+            <text v-else class="meta-hint">选一个</text>
             <text class="meta-link" @tap="openModelSheet">全部模型</text>
           </view>
         </view>
-        <view v-if="recentModels.length > 0" class="model-block">
-          <text class="model-block-t">最近使用</text>
-          <scroll-view class="scene-scroll" scroll-x :show-scrollbar="false">
-            <view class="scene-list">
-              <view
-                v-for="m in recentModels"
-                :key="modelViewKey('recent', m)"
-                class="scene-chip"
-                :class="{ on: isModelSelected(m) }"
-                @tap="pickModel(m)"
-              >
-                <text class="scene-chip-t">{{ m.modelName }}</text>
-              </view>
+        <scroll-view class="scene-scroll" scroll-x :show-scrollbar="false">
+          <view class="scene-list">
+            <view
+              v-for="m in recommendedModels"
+              :key="modelViewKey('recommend', m)"
+              class="scene-chip"
+              :class="{ on: isModelSelected(m) }"
+              @tap="pickModel(m)"
+            >
+              <text class="scene-chip-t">{{ m.modelName }}</text>
             </view>
-          </scroll-view>
-        </view>
-        <view class="model-block">
-          <text class="model-block-t">推荐模型</text>
-          <scroll-view class="scene-scroll" scroll-x :show-scrollbar="false">
-            <view class="scene-list">
-              <view
-                v-for="m in recommendedModels"
-                :key="modelViewKey('recommend', m)"
-                class="scene-chip"
-                :class="{ on: isModelSelected(m) }"
-                @tap="pickModel(m)"
-              >
-                <text class="scene-chip-t">{{ m.modelName }}</text>
-              </view>
-            </view>
-          </scroll-view>
-        </view>
+          </view>
+        </scroll-view>
       </view>
 
       <view class="divider" />
@@ -119,45 +101,86 @@
       <view class="body-gap" />
     </scroll-view>
 
-    <view v-if="showModelSheet" class="model-mask" @tap="closeModelSheet">
-      <view class="model-sheet" @tap.stop>
-        <view class="model-sheet-hd">
-          <text class="model-sheet-title">全部模型</text>
-          <text class="model-sheet-close" @tap="closeModelSheet">关闭</text>
+    <!-- 全部模型弹框 -->
+    <uni-popup
+      ref="modelPopup"
+      type="bottom"
+      border-radius="32rpx 32rpx 0 0"
+      background-color="var(--card-bg)"
+      :safe-area="true"
+      @change="onPopupChange"
+    >
+      <view class="ms-wrap">
+        <!-- 拖拽条 -->
+        <view class="ms-handle" />
+
+        <!-- 头部 -->
+        <view class="ms-hd">
+          <view class="ms-hd-left">
+            <text class="ms-title">全部模型</text>
+            <text class="ms-count">{{ groupedModelOptions.reduce((s, g) => s + g.items.length, 0) }} 个</text>
+          </view>
+          <view class="ms-close" @tap="closeModelSheet">
+            <text class="ms-close-t">×</text>
+          </view>
         </view>
-        <view class="model-search">
-          <uni-icons type="search" size="15" color="rgba(0,0,0,0.38)" />
-          <input
-            v-model="modelKeyword"
-            class="model-search-inp"
-            type="text"
-            placeholder="搜索模型名 / 厂商"
-            placeholder-class="model-search-ph"
-          />
+
+        <!-- 搜索栏 -->
+        <view class="ms-search-wrap">
+          <view class="ms-search">
+            <uni-icons type="search" size="15" color="#9CA3AF" />
+            <input
+              v-model="modelKeyword"
+              class="ms-search-inp"
+              type="text"
+              placeholder="搜索模型名 / 厂商"
+              placeholder-class="ms-search-ph"
+            />
+            <view v-if="modelKeyword" class="ms-search-clear" @tap="modelKeyword = ''">
+              <uni-icons type="closeempty" size="12" color="#9CA3AF" />
+            </view>
+          </view>
         </view>
-        <scroll-view class="model-sheet-body" scroll-y :show-scrollbar="false">
-          <view v-for="group in groupedModelOptions" :key="group.providerCode" class="model-group">
-            <text class="model-group-title">{{ group.providerName }}</text>
-            <view class="model-grid">
+
+        <!-- 模型列表 -->
+        <scroll-view
+          class="ms-body"
+          scroll-y
+          :show-scrollbar="false"
+          enhanced
+          :bounces="false"
+        >
+          <view v-for="group in groupedModelOptions" :key="group.providerCode" class="ms-group">
+            <view class="ms-group-hd">
+              <view class="ms-group-dot" />
+              <text class="ms-group-name">{{ group.providerName }}</text>
+              <text class="ms-group-cnt">{{ group.items.length }}</text>
+            </view>
+            <view class="ms-grid">
               <view
                 v-for="m in group.items"
                 :key="modelViewKey('all', m)"
-                class="model-cell"
+                class="ms-cell"
                 :class="{ on: isModelSelected(m) }"
                 @tap="pickModel(m, true)"
               >
-                <text class="model-cell-n">{{ m.modelName }}</text>
-                <text v-if="m.isRecommended" class="model-cell-tag">荐</text>
+                <text class="ms-cell-name">{{ m.modelName }}</text>
+                <view v-if="isModelSelected(m)" class="ms-cell-check">
+                  <text class="ms-cell-check-t">✓</text>
+                </view>
+                <text v-else-if="m.isRecommended" class="ms-cell-badge">荐</text>
               </view>
             </view>
           </view>
-          <view v-if="groupedModelOptions.length === 0" class="model-empty">
-            <text class="model-empty-t">暂无匹配模型</text>
+
+          <view v-if="groupedModelOptions.length === 0" class="ms-empty">
+            <text class="ms-empty-t">暂无匹配模型</text>
           </view>
-          <view class="model-sheet-gap" />
+
+          <view class="ms-gap" />
         </scroll-view>
       </view>
-    </view>
+    </uni-popup>
 
     <!-- Formatting bar (above bottom toolbar) -->
     <view v-if="showFormatBar" class="format-bar">
@@ -208,7 +231,7 @@
 <script setup lang="ts">
 import type { FeedReaction } from '@/api/feed'
 import { createFeedPost, updateFeedPostImages } from '@/api/feed'
-import { getModelList, getRecentModelList, type AiModelItem } from '@/api/model'
+import { getModelList, type AiModelItem } from '@/api/model'
 import { createSkillFeedback } from '@/api/skill'
 import { uploadImageFile } from '@/api/upload'
 import AppImage from '@/components/app-image/index.vue'
@@ -265,8 +288,8 @@ const userStore = useUserStore()
 const skillId = ref('')
 const FEED_POST_PUBLISHED_KEY = 'feed_post_published_v1'
 const modelCatalog = ref<AiModelItem[]>([])
-const recentModels = ref<AiModelItem[]>([])
-const showModelSheet = ref(false)
+
+const modelPopup = ref<any>(null)
 const modelKeyword = ref('')
 
 const form = reactive({
@@ -359,12 +382,16 @@ const pickModel = (model: AiModelItem, closeAfter = false) => {
 }
 
 const openModelSheet = () => {
-  showModelSheet.value = true
+  modelPopup.value?.open()
 }
 
 const closeModelSheet = () => {
-  showModelSheet.value = false
+  modelPopup.value?.close()
   modelKeyword.value = ''
+}
+
+const onPopupChange = (e: { show: boolean }) => {
+  if (!e.show) modelKeyword.value = ''
 }
 
 const loadModelCatalog = async () => {
@@ -376,18 +403,6 @@ const loadModelCatalog = async () => {
   }
 }
 
-const loadRecentModels = async () => {
-  if (!userStore.token) {
-    recentModels.value = []
-    return
-  }
-  try {
-    const list = await getRecentModelList({ limit: 8 })
-    recentModels.value = dedupeModels(Array.isArray(list) ? list : [])
-  } catch {
-    recentModels.value = []
-  }
-}
 
 const reactionToStatus = (reaction: string): 'success' | 'normal' | 'fail' => {
   if (reaction === 'worth' || reaction === 'addicted') return 'success'
@@ -561,12 +576,10 @@ const publish = () => {
 onLoad((query: any) => {
   skillId.value = `${query?.skillId || ''}`.replace(/[^0-9]/g, '')
   void loadModelCatalog()
-  void loadRecentModels()
 })
 
 onShow(() => {
   void loadModelCatalog()
-  if (userStore.token) void loadRecentModels()
 })
 </script>
 
@@ -772,6 +785,16 @@ onShow(() => {
   color: #C8CACC;
 }
 
+.meta-selected {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--primary-color);
+  max-width: 280rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .meta-row-right {
   display: inline-flex;
   align-items: center;
@@ -833,134 +856,229 @@ onShow(() => {
   }
 }
 
-/* ── model sheet ── */
-.model-mask {
-  position: fixed;
-  z-index: 120;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.34);
-  display: flex;
-  align-items: flex-end;
-}
-
-.model-sheet {
+/* ── model sheet (uni-popup 内容) ── */
+.ms-wrap {
   width: 100%;
-  max-height: 76vh;
-  background: var(--card-bg);
-  border-radius: 24rpx 24rpx 0 0;
   display: flex;
   flex-direction: column;
+  background: var(--card-bg);
+  border-radius: 32rpx 32rpx 0 0;
+  /* 最大高度由内容撑开，scroll-view 限高 */
 }
 
-.model-sheet-hd {
+/* 拖拽条 */
+.ms-handle {
+  width: 56rpx;
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.10);
+  margin: 14rpx auto 8rpx;
+  flex-shrink: 0;
+}
+
+/* 头部 */
+.ms-hd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 28rpx 14rpx;
+  padding: 8rpx 28rpx 16rpx;
 }
 
-.model-sheet-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--text-color);
-}
-
-.model-sheet-close {
-  font-size: 24rpx;
-  color: var(--text-gray);
-}
-
-.model-search {
-  margin: 0 28rpx 14rpx;
-  height: 68rpx;
-  border-radius: 14rpx;
-  background: rgba(0, 0, 0, 0.05);
+.ms-hd-left {
   display: flex;
-  align-items: center;
-  gap: 10rpx;
-  padding: 0 16rpx;
+  align-items: baseline;
+  gap: 12rpx;
 }
 
-.model-search-inp {
-  flex: 1;
-  font-size: 24rpx;
-  color: var(--text-color);
+.ms-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5rpx;
 }
 
-.model-search-ph {
+.ms-count {
+  font-size: 22rpx;
   color: var(--text-muted);
 }
 
-.model-sheet-body {
-  flex: 1;
-  min-height: 0;
-  padding: 0 28rpx;
-}
-
-.model-group {
-  padding: 12rpx 0;
-}
-
-.model-group-title {
-  display: block;
-  font-size: 22rpx;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.52);
-  margin-bottom: 10rpx;
-}
-
-.model-grid {
+.ms-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.055);
   display: flex;
-  flex-wrap: wrap;
-  gap: 10rpx;
-}
-
-.model-cell {
-  display: inline-flex;
   align-items: center;
-  gap: 8rpx;
-  min-height: 56rpx;
-  padding: 0 18rpx;
-  border-radius: 12rpx;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1rpx solid rgba(0, 0, 0, 0.08);
-}
+  justify-content: center;
+  flex-shrink: 0;
 
-.model-cell-n {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.60);
-}
-
-.model-cell-tag {
-  font-size: 18rpx;
-  color: var(--accent-color);
-  background: rgba(255, 122, 69, 0.15);
-  border-radius: 100rpx;
-  padding: 2rpx 8rpx;
-}
-
-.model-cell.on {
-  background: var(--primary-light-10);
-  border-color: rgba(91, 91, 214, 0.30);
-
-  .model-cell-n {
-    color: var(--primary-color);
+  .ms-close-t {
+    font-size: 32rpx;
+    color: var(--text-muted);
+    line-height: 1;
+    margin-top: -2rpx;
   }
 }
 
-.model-empty {
-  padding: 40rpx 0 28rpx;
-  text-align: center;
+/* 搜索栏容器（加水平 padding，让输入框有呼吸感） */
+.ms-search-wrap {
+  padding: 0 20rpx 16rpx;
 }
 
-.model-empty-t {
-  font-size: 22rpx;
+.ms-search {
+  height: 76rpx;
+  border-radius: 20rpx;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.045));
+  border: 1.5rpx solid rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 0 20rpx;
+}
+
+.ms-search-inp {
+  flex: 1;
+  font-size: 27rpx;
+  color: var(--text-primary);
+  height: 100%;
+  line-height: 76rpx;
+}
+
+.ms-search-ph { color: #C0C4CC; font-size: 27rpx; }
+
+.ms-search-clear {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 列表区（高度固定，内部滚动） */
+.ms-body {
+  height: 54vh;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+}
+
+/* 厂商分组 */
+.ms-group {
+  padding: 16rpx 0 12rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+
+  &:last-child { border-bottom: none; }
+}
+
+.ms-group-hd {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+}
+
+.ms-group-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--primary-color);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.ms-group-name {
+  font-size: 23rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.40);
+  letter-spacing: 0.3rpx;
+}
+
+.ms-group-cnt {
+  font-size: 20rpx;
+  color: rgba(0, 0, 0, 0.22);
+  margin-left: 2rpx;
+}
+
+/* 模型 chip 网格 */
+.ms-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.ms-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 60rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.035);
+  border: 1.5rpx solid rgba(0, 0, 0, 0.08);
+
+  .ms-cell-name {
+    font-size: 24rpx;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.52);
+  }
+
+  .ms-cell-badge {
+    font-size: 18rpx;
+    font-weight: 700;
+    color: var(--accent-color);
+    background: rgba(255, 122, 69, 0.12);
+    border-radius: 100rpx;
+    padding: 2rpx 10rpx;
+    line-height: 1.6;
+  }
+
+  .ms-cell-check {
+    width: 30rpx;
+    height: 30rpx;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .ms-cell-check-t {
+      font-size: 17rpx;
+      color: #fff;
+      font-weight: 900;
+      line-height: 1;
+    }
+  }
+
+  &.on {
+    background: rgba(91, 91, 214, 0.09);
+    border-color: rgba(91, 91, 214, 0.28);
+
+    .ms-cell-name {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+  }
+}
+
+/* 空状态 */
+.ms-empty {
+  padding: 80rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-empty-t {
+  font-size: 26rpx;
   color: var(--text-muted);
 }
 
-.model-sheet-gap {
-  height: calc(24rpx + env(safe-area-inset-bottom));
+/* 底部安全区留白 */
+.ms-gap {
+  height: 16rpx;
 }
 
 /* ── cost row ── */

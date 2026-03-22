@@ -523,7 +523,7 @@ async function handleGuideAction() {
 }
 
 async function handleInstallPrimaryAction() {
-	if (isAndroid()) {
+	if (isAndroid() && !isWeChat()) {
 		if (deferredInstallPrompt) {
 			try {
 				await deferredInstallPrompt.prompt()

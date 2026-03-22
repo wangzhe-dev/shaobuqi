@@ -1,6 +1,6 @@
 {
   "android": {
-    "versionName": "1.0.0",
+    "versionName": "1.0.2",
     "versionCode": 100,
     "apkUrl": "https://www.shaobuqi.com/download/shaobuqi.apk",
     "force": false,
@@ -10,7 +10,7 @@
     ]
   },
   "ios": {
-    "versionName": "1.0.0",
+    "versionName": "1.0.2",
     "versionCode": 100,
     "storeUrl": "",
     "force": false,

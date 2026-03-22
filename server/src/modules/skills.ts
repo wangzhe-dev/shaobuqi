@@ -144,6 +144,7 @@ type TagRow = RowDataPacket & {
   id: number
   name: string
   use_count: number
+  category_id: number | null
 }
 
 type SkillOwnerRow = RowDataPacket & {
@@ -404,7 +405,11 @@ const getFavoriteSkillIdSet = async (userId: number, skillIds: number[]): Promis
   return new Set(rows.map((row) => row.skill_id))
 }
 
-const ensureTagIds = async (conn: PoolConnection, tagNames: string[]): Promise<number[]> => {
+const ensureTagIds = async (
+  conn: PoolConnection,
+  tagNames: string[],
+  categoryId?: number | null
+): Promise<number[]> => {
   const normalized = normalizeTagNames(tagNames)
   if (normalized.length === 0) return []
 
@@ -426,11 +431,12 @@ const ensureTagIds = async (conn: PoolConnection, tagNames: string[]): Promise<n
     if (nameToId.has(name)) continue
 
     const slug = makeTagSlug(name)
+    // 新建 tag 时继承 skill 的分类；已存在的 tag 不覆盖（保留原有归属）
     const [insertResult] = await conn.execute<ResultSetHeader>(
-      `INSERT INTO tags (name, slug, use_count, status)
-      VALUES (?, ?, 0, 1)
+      `INSERT INTO tags (name, slug, use_count, status, category_id)
+      VALUES (?, ?, 0, 1, ?)
       ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), updated_at = NOW()`,
-      [name, slug]
+      [name, slug, categoryId ?? null]
     )
 
     nameToId.set(name, Number(insertResult.insertId))
@@ -455,7 +461,12 @@ const refreshTagUseCount = async (conn: PoolConnection, tagIds: number[]): Promi
   }
 }
 
-const replaceSkillTags = async (conn: PoolConnection, skillId: number, tagNames: string[]): Promise<void> => {
+const replaceSkillTags = async (
+  conn: PoolConnection,
+  skillId: number,
+  tagNames: string[],
+  categoryId?: number | null
+): Promise<void> => {
   const [oldRows] = await conn.query<RowDataPacket[]>(
     `SELECT tag_id
     FROM skill_tag_rel
@@ -467,7 +478,7 @@ const replaceSkillTags = async (conn: PoolConnection, skillId: number, tagNames:
 
   await conn.execute('DELETE FROM skill_tag_rel WHERE skill_id = ?', [skillId])
 
-  const newTagIds = await ensureTagIds(conn, tagNames)
+  const newTagIds = await ensureTagIds(conn, tagNames, categoryId)
 
   if (newTagIds.length > 0) {
     const placeholders = newTagIds.map(() => '(?, ?)').join(', ')
@@ -725,15 +736,29 @@ skillsRouter.get('/meta/categories', async (_req, res) => {
 skillsRouter.get('/meta/tags', async (req, res) => {
   const keyword = `${req.query.keyword ?? ''}`.trim()
   const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize ?? 20)))
+  const rawCategoryId = req.query.categoryId
+  const categoryId = rawCategoryId ? Number(rawCategoryId) : null
+
+  const where: string[] = ['status = 1']
+  const params: unknown[] = []
+
+  if (keyword) {
+    where.push('name LIKE ?')
+    params.push(`%${keyword}%`)
+  }
+
+  if (categoryId && Number.isInteger(categoryId) && categoryId > 0) {
+    where.push('category_id = ?')
+    params.push(categoryId)
+  }
 
   const rows = await queryRows<TagRow[]>(
     `SELECT id, name, use_count
     FROM tags
-    WHERE status = 1
-      AND (? = '' OR name LIKE ?)
+    WHERE ${where.join(' AND ')}
     ORDER BY use_count DESC, id DESC
     LIMIT ?`,
-    [keyword, `%${keyword}%`, pageSize]
+    [...params, pageSize]
   )
 
   sendSuccess(
@@ -1332,7 +1357,7 @@ skillsRouter.post('/', requireAuth, async (req, res) => {
       normalizeSkillImages(payload.coverImages),
       normalizeSkillImages(payload.contentImages)
     )
-    await replaceSkillTags(conn, newSkillId, payload.tags)
+    await replaceSkillTags(conn, newSkillId, payload.tags, payload.categoryId ?? null)
     await refreshUserPublishedSkillCount(conn, userId)
 
     return newSkillId
@@ -1415,7 +1440,9 @@ skillsRouter.put('/:id', requireAuth, async (req, res) => {
     }
 
     if ('tags' in payload) {
-      await replaceSkillTags(conn, skillId, payload.tags ?? [])
+      // 用本次请求生效的 category_id：如果同时更新了分类就取新值，否则沿用原有值
+      const effectiveCategoryId = 'categoryId' in payload ? (payload.categoryId ?? null) : (owner.category_id ?? null)
+      await replaceSkillTags(conn, skillId, payload.tags ?? [], effectiveCategoryId)
     }
 
     if ('coverImages' in payload || 'contentImages' in payload) {
