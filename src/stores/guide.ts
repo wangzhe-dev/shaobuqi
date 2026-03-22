@@ -100,11 +100,17 @@ export const useGuideStore = defineStore(
       activeLayer.value = next
     }
 
-    const requestLayer = (layer: GuideLayer) => {
+    const requestLayer = (layer: GuideLayer, immediate = false) => {
       if (activeLayer.value === layer) return
       if (pendingLayers.value.includes(layer)) return
 
       pendingLayers.value = uniqueLayers([...pendingLayers.value, layer])
+
+      // immediate 模式：跳过 routeStableAt 等待，直接激活（用于微信等必须优先展示的场景）
+      if (immediate) {
+        routeStableAt.value = 0
+      }
+
       flushLayerQueue()
     }
 
@@ -169,6 +175,15 @@ export const useGuideStore = defineStore(
     const canShowA2hs = () => {
       if (!onboardingDone.value) return false
       if (a2hsAcceptedAt.value > 0) return false
+      if (a2hsDismissCount.value >= A2HS_MAX_DISMISS) return false
+      if (a2hsNextEligibleAt.value > 0 && Date.now() < a2hsNextEligibleAt.value) return false
+      return true
+    }
+
+    // 微信专用：跳过 onboarding 门控和冷却期，每次进入都提醒（拉新阶段）
+    // session 内的去重由 PwaPrompt 的 a2hsDismissedForPage 负责
+    const canShowA2hsWeChat = () => {
+      if (a2hsAcceptedAt.value > 0) return false
       return true
     }
 
@@ -219,6 +234,7 @@ export const useGuideStore = defineStore(
       markA2hsDismissed,
       markA2hsAccepted,
       canShowA2hs,
+      canShowA2hsWeChat,
 
       resetGuideState,
     }

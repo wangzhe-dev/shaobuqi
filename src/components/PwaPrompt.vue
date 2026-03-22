@@ -384,6 +384,7 @@ const checkLatestH5Build = async () => {
 }
 
 const syncA2hsLayer = () => {
+	// 已安装为独立应用，不再引导
 	if (isInStandaloneMode()) {
 		guideStore.markA2hsAccepted()
 		guideStore.cancelLayer('a2hs')
@@ -391,18 +392,40 @@ const syncA2hsLayer = () => {
 		return
 	}
 
+	// 不支持的环境（桌面等）
 	if (!supportsInstallEntry()) {
 		guideStore.cancelLayer('a2hs')
 		showManualHint.value = false
 		return
 	}
 
+	// 本次页面已关闭过引导
 	if (a2hsDismissedForPage.value) {
 		guideStore.cancelLayer('a2hs')
 		showManualHint.value = false
 		return
 	}
 
+	// 用户已接受过（正式安装或主动确认）
+	if (guideStore.a2hsAcceptedAt > 0) {
+		guideStore.cancelLayer('a2hs')
+		showManualHint.value = false
+		return
+	}
+
+	// 微信内置浏览器：不受 onboardingDone 门控，但仍遵守 dismiss 冷却和次数上限，
+	// 跳过 routeStableAt 延迟直接激活
+	if (isWeChat()) {
+		if (guideStore.canShowA2hsWeChat()) {
+			guideStore.requestLayer('a2hs', true)
+		} else {
+			guideStore.cancelLayer('a2hs')
+			showManualHint.value = false
+		}
+		return
+	}
+
+	// 其他环境：需要 onboarding 完成后才显示
 	if (guideStore.canShowA2hs()) {
 		guideStore.requestLayer('a2hs')
 		return
@@ -584,12 +607,14 @@ async function openInstallEntry() {
 function dismissInstall() {
 	a2hsDismissedForPage.value = true
 	showManualHint.value = false
+	guideStore.markA2hsDismissed()
 	guideStore.releaseLayer('a2hs')
 }
 
 function closeInstallEntry() {
 	a2hsDismissedForPage.value = true
 	showManualHint.value = false
+	guideStore.markA2hsDismissed()
 	guideStore.releaseLayer('a2hs')
 }
 
