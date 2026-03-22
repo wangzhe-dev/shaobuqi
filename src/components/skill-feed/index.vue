@@ -26,7 +26,8 @@
       <scroll-view class="list-scroll" scroll-y :show-scrollbar="false" :refresher-enabled="refresherEnabled"
         refresher-default-style="black" :refresher-triggered="pullTriggered" lower-threshold="100"
         @touchstart="onListGestureStart" @touchmove="onListGestureMove" @touchend="onListGestureEnd"
-        @touchcancel="onGestureCancel" @refresherrefresh="() => onRefresh(true)" @scrolltolower="onLoadMore">
+        @touchcancel="onGestureCancel" @refresherrefresh="onPullRefresh" @refresherrestore="onRefresherRestore"
+        @refresherabort="onRefresherRestore" @scrolltolower="onLoadMore">
         <view v-if="showSkeleton" class="skill-list skill-skeleton-list">
           <view v-for="n in 4" :key="`skill-skeleton-${n}`" class="skill-card sk-skill-card">
             <view class="sc-badge-row">
@@ -151,13 +152,14 @@
 <script setup lang="ts">
 import { copySkill as copySkillApi, getSkillCategories, getSkillDetail, getSkillList } from '@/api/skill'
 import AppImage from '@/components/app-image/index.vue'
-import { useUserStore } from '@/stores'
+import { useGuideStore, useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 import { normalizeImageUrl } from '@/utils/image-url'
 import { shareSkillItem } from '@/utils/share-skill'
 
 const emit = defineEmits<{ edgeSwipe: [dir: 'left' | 'right'] }>()
 const userStore = useUserStore()
+const guideStore = useGuideStore()
 
 const RECOMMEND_TAB_KEY = 'recommend'
 const SCENE_TAB_PREFIX = 'scene:'
@@ -186,8 +188,9 @@ const activeSort = ref(RECOMMEND_TAB_KEY)
 const sortBarScrollIntoView = ref(`${SORT_TAB_ID_PREFIX}0`)
 
 const SWIPE_X_THRESHOLD = 56
-const SWIPE_Y_LIMIT = 80
 const SWIPE_LOCK_DISTANCE = 10
+const SWIPE_LOCK_BIAS_X = 6
+const HORIZONTAL_SWIPE_Y_LIMIT = 28
 const SWIPE_MAX_DURATION = 1200
 const SORT_TAP_MOVE_THRESHOLD = 8
 const SORT_TAP_SUPPRESS_MS = 180
@@ -239,13 +242,22 @@ const clearCarouselTimer = () => {
 const refresherEnabled = ref(true)
 const pullTriggered = ref(false)
 
+const enableRefresher = () => {
+  if (!refresherEnabled.value) refresherEnabled.value = true
+}
+
+const disableRefresherForHorizontalSwipe = () => {
+  if (refreshing.value || pullTriggered.value) return
+  refresherEnabled.value = false
+}
+
 const resetGesture = () => {
   gestureSource = ''
   gestureLock = ''
   touchStartX = 0
   touchStartY = 0
   touchStartAt = 0
-  refresherEnabled.value = true
+  enableRefresher()
 }
 
 const resetCarouselState = () => {
@@ -293,6 +305,7 @@ const onGestureStart = (e: any, source: 'sort' | 'list') => {
   const touch = e.touches?.[0]
   if (!touch) return
   touching = true
+  enableRefresher()
   gestureSource = source
   gestureLock = ''
   touchStartX = touch.clientX
@@ -314,11 +327,17 @@ const onGestureMove = (e: any) => {
 
   if (!gestureLock) {
     if (absX < SWIPE_LOCK_DISTANCE && absY < SWIPE_LOCK_DISTANCE) return
-    gestureLock = absX > absY ? 'horizontal' : 'vertical'
-    if (gestureLock === 'horizontal') refresherEnabled.value = false
+    gestureLock = absX > (absY + SWIPE_LOCK_BIAS_X) ? 'horizontal' : 'vertical'
+    if (gestureLock === 'horizontal') disableRefresherForHorizontalSwipe()
   }
 
-  if (gestureLock !== 'horizontal' || absY > SWIPE_Y_LIMIT) return
+  if (gestureLock !== 'horizontal') return
+  if (absY > HORIZONTAL_SWIPE_Y_LIMIT) {
+    gestureLock = 'vertical'
+    startReboundAnimation()
+    enableRefresher()
+    return
+  }
 
   if (typeof e.preventDefault === 'function') e.preventDefault()
   updateDragState(dx)
@@ -339,7 +358,7 @@ const onGestureEnd = (e: any, source: 'sort' | 'list') => {
   const dy = touch.clientY - touchStartY
   const dt = Date.now() - touchStartAt
   const isHorizontal = gestureLock === 'horizontal' || Math.abs(dx) > Math.abs(dy)
-  const passedThreshold = Math.abs(dx) > SWIPE_X_THRESHOLD && Math.abs(dy) < SWIPE_Y_LIMIT
+  const passedThreshold = Math.abs(dx) > SWIPE_X_THRESHOLD && Math.abs(dy) < HORIZONTAL_SWIPE_Y_LIMIT
   const inDuration = dt <= SWIPE_MAX_DURATION
 
   if (isHorizontal && passedThreshold && inDuration) {
@@ -407,6 +426,32 @@ const noMore = ref(false)
 const page = ref(1)
 const PAGE_SIZE = 10
 const showSkeleton = computed(() => refreshing.value && skills.value.length === 0)
+const PULL_REFRESH_MIN_DURATION = 260
+const PULL_REFRESH_RELEASE_DELAY = 80
+
+let pullTriggeredAt = 0
+let pullTriggeredSeq = 0
+
+const wait = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms) })
+
+const markPullTriggered = () => {
+  pullTriggeredSeq += 1
+  pullTriggeredAt = Date.now()
+  pullTriggered.value = true
+  enableRefresher()
+  return pullTriggeredSeq
+}
+
+const settlePullTriggered = async (seq: number) => {
+  if (!pullTriggered.value) return
+  const elapsed = Date.now() - pullTriggeredAt
+  if (elapsed < PULL_REFRESH_MIN_DURATION) {
+    await wait(PULL_REFRESH_MIN_DURATION - elapsed)
+  }
+  await wait(PULL_REFRESH_RELEASE_DELAY)
+  if (seq !== pullTriggeredSeq) return
+  pullTriggered.value = false
+}
 
 const formatCount = (value: number | null | undefined) => {
   const n = Number(value ?? 0)
@@ -530,9 +575,11 @@ const injectPublishedSkill = () => {
 }
 
 const onRefresh = async (isPull = false) => {
+  if (isPull) markPullTriggered()
+  if (refreshing.value) return
+
   resetCarouselState()
   refreshing.value = true
-  if (isPull) pullTriggered.value = true
 
   try {
     await loadSkillsFromApi(true)
@@ -543,11 +590,23 @@ const onRefresh = async (isPull = false) => {
   }
 
   refreshing.value = false
+  const settleSeq = pullTriggeredSeq
+  await settlePullTriggered(settleSeq)
+  enableRefresher()
+}
+
+const onPullRefresh = () => {
+  void onRefresh(true)
+}
+
+const onRefresherRestore = () => {
+  pullTriggeredSeq += 1
   pullTriggered.value = false
+  enableRefresher()
 }
 
 onMounted(() => {
-  onRefresh()
+  void onRefresh()
   getSkillCategories().then(cats => {
     if (Array.isArray(cats) && cats.length > 0) {
       const nextScenes = cats
@@ -567,7 +626,7 @@ onMounted(() => {
 defineExpose({ refreshPublished: injectPublishedSkill })
 
 const onLoadMore = async () => {
-  if (loading.value || noMore.value) return
+  if (refreshing.value || loading.value || noMore.value) return
   loading.value = true
 
   try {
@@ -628,6 +687,7 @@ const copySkill = async (skill: any) => {
   } catch {
     // ignore API record error in UI action
   }
+  guideStore.markFirstSkillCopy()
   uni.showToast({ title: '已复制 Skill', icon: 'success' })
 }
 const shareSkill = async (skill: any) => {

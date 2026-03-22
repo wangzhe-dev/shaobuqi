@@ -10,6 +10,7 @@ import uniapi from './utils/common/uniapi'
 import quill from 'quill'
 import { createVNode, render } from 'vue'
 import PwaPrompt from './components/PwaPrompt.vue'
+import { useGuideStore } from './stores'
 // #endif
 
 // #ifdef MP-WEIXIN
@@ -61,6 +62,27 @@ export const createApp = () => {
 	const store = Pinia.createPinia()
 	store.use(createUnistorage())
 	app.use(store)
+
+	// #ifdef H5
+	// 统一控制引导弹层的路由稳定窗口，避免路由切换时连续弹层
+	if (typeof window !== 'undefined') {
+		const guideStore = useGuideStore(store)
+		const w = window as Window & { __shaobuqiGuideLifecycleBound?: boolean }
+
+		const markRouteStableLater = () => guideStore.markRouteChanged()
+
+		if (!w.__shaobuqiGuideLifecycleBound) {
+			w.__shaobuqiGuideLifecycleBound = true
+			window.addEventListener('hashchange', markRouteStableLater, { passive: true })
+			window.addEventListener('popstate', markRouteStableLater, { passive: true })
+			document.addEventListener('visibilitychange', () => {
+				if (document.visibilityState === 'visible') markRouteStableLater()
+			})
+		}
+
+		markRouteStableLater()
+	}
+	// #endif
 
 	// uni工具类函数
 	app.use(uniapi)

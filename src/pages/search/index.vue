@@ -176,7 +176,7 @@
 
 <script setup lang="ts">
 import { copySkill, getSkillCategories, getSkillList, getSkillTags, type SkillListItem, type SkillListQuery } from '@/api/skill'
-import { useUserStore } from '@/stores'
+import { useGuideStore, useUserStore } from '@/stores'
 import { normalizeImageUrl } from '@/utils/image-url'
 
 const DEFAULT_HOT_TAGS = ['AI写作', '效率提升', '副业', '设计', '职场', '编程', '学习方法', '创作']
@@ -192,6 +192,7 @@ const PAGE_SIZE = 20
 const INPUT_SEARCH_DEBOUNCE_MS = 320
 const SEARCH_HISTORY_KEY = 'skill_search_recent_v1'
 const userStore = useUserStore()
+const guideStore = useGuideStore()
 
 type SearchSkillCard = {
 	id: string
@@ -494,6 +495,7 @@ const useSkill = async (skill: any) => {
 					? { sourceChannel: 'search', usage: { modelName } }
 					: { sourceChannel: 'search' }
 			)
+			guideStore.markFirstSkillCopy()
 		} catch {}
 	}
 	toSkill(skill.id)

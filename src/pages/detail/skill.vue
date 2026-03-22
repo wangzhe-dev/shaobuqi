@@ -236,12 +236,13 @@
 	</template>
 
 <script setup lang="ts">
-	import { copySkill as copySkillApi, createSkillFeedback, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
+import { copySkill as copySkillApi, createSkillFeedback, favoriteSkill, followCreator, getCreatorProfile, getSkillDetail, unfavoriteSkill, unfollowCreator } from '@/api/skill'
 import AppImage from '@/components/app-image/index.vue'
-import { useUserStore } from '@/stores'
+import { useGuideStore, useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 import { normalizeImageUrl } from '@/utils/image-url'
 		const userStore = useUserStore()
+		const guideStore = useGuideStore()
 		const PUBLISHED_SKILL_PREVIEW_KEY = 'latest_published_skill_v1'
 
 	const pageLoading = ref(true)
@@ -533,27 +534,29 @@ import { normalizeImageUrl } from '@/utils/image-url'
 		void loadSkillDetail(rawId || currentSkillId.value, !hasPreloaded)
 	})
 
-	const copySkill = () => {
-		if (!requireLogin(userStore.token, '复制 Skill')) return
-		uni.setClipboardData({
-			data: skill.value.fullPrompt || '',
-			success: () => {
-				uni.showToast({ title: '已复制 Skill', icon: 'success' })
-				void tryRecordCopy('detail', resolveCurrentSkillModelName())
-			}
-		})
-	}
+		const copySkill = () => {
+			if (!requireLogin(userStore.token, '复制 Skill')) return
+			uni.setClipboardData({
+				data: skill.value.fullPrompt || '',
+				success: () => {
+					uni.showToast({ title: '已复制 Skill', icon: 'success' })
+					guideStore.markFirstSkillCopy()
+					void tryRecordCopy('detail', resolveCurrentSkillModelName())
+				}
+			})
+		}
 
-	const copyAll = () => {
-		if (!requireLogin(userStore.token, '复制 Skill')) return
-		uni.setClipboardData({
-			data: skill.value.fullPrompt || '',
-			success: () => {
-				uni.showToast({ title: '已复制全部内容', icon: 'success' })
-				void tryRecordCopy('copy_all', resolveCurrentSkillModelName())
-			}
-		})
-	}
+		const copyAll = () => {
+			if (!requireLogin(userStore.token, '复制 Skill')) return
+			uni.setClipboardData({
+				data: skill.value.fullPrompt || '',
+				success: () => {
+					uni.showToast({ title: '已复制全部内容', icon: 'success' })
+					guideStore.markFirstSkillCopy()
+					void tryRecordCopy('copy_all', resolveCurrentSkillModelName())
+				}
+			})
+		}
 
 	const previewSkillImage = (images: string[], idx: number) => {
 		if (!images || !images.length) return
@@ -697,6 +700,7 @@ import { normalizeImageUrl } from '@/utils/image-url'
 						: { sourceChannel: 'similar' }
 				)
 			} catch {}
+			guideStore.markFirstSkillCopy()
 		}
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })
 	}

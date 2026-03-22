@@ -333,11 +333,12 @@
 <script setup lang="ts">
 	import { getCurrentInstance } from 'vue'
 	import { copySkill as copySkillApi, getSkillDetail, getSkillList, getTrends } from '@/api/skill'
-	import { useUserStore } from '@/stores'
+	import { useGuideStore, useUserStore } from '@/stores'
 	import { requireLogin } from '@/utils/auth-guard'
 
 	const instance = getCurrentInstance()
 	const userStore = useUserStore()
+	const guideStore = useGuideStore()
 	onShow(() => {
 		;(uni as any).getTabBar(instance?.proxy)?.setData({ selected: 1 })
 	})
@@ -679,6 +680,7 @@
 				)
 			} catch {}
 		}
+		guideStore.markFirstSkillCopy()
 		uni.showToast({ title: '已复制 Skill', icon: 'success' })
 	}
 </script>

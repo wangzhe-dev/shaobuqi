@@ -277,9 +277,10 @@ const ORDER_BY_MAP: Record<string, string> = {
   recommend: 's.week_uses DESC, s.total_uses DESC, s.copy_count DESC, s.publish_at DESC',
   newest: 's.publish_at DESC, s.id DESC',
   mostCopy: 's.copy_count DESC, s.publish_at DESC',
-  lowestToken: '(s.avg_total_tokens IS NULL), s.avg_total_tokens ASC, s.publish_at DESC',
+  lowestToken:
+    '(COALESCE(s.avg_total_tokens, usage_agg.avg_total_tokens) IS NULL), COALESCE(s.avg_total_tokens, usage_agg.avg_total_tokens) ASC, s.publish_at DESC',
   bestValue:
-    '(COALESCE(s.success_rate, 0) * LOG10(COALESCE(s.copy_count, 0) + 10) / GREATEST(COALESCE(s.avg_total_tokens, 1), 1)) DESC, s.publish_at DESC',
+    '(COALESCE(s.success_rate, 0) * LOG10(COALESCE(s.copy_count, 0) + 10) / GREATEST(COALESCE(s.avg_total_tokens, usage_agg.avg_total_tokens, 1), 1)) DESC, s.publish_at DESC',
   highRate: 'COALESCE(s.success_rate, 0) DESC, s.copy_count DESC, s.publish_at DESC'
 }
 
@@ -941,7 +942,7 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
       s.favorite_count,
       s.feedback_count,
       s.success_rate,
-      s.avg_total_tokens,
+      COALESCE(s.avg_total_tokens, usage_agg.avg_total_tokens) AS avg_total_tokens,
       s.recommended_model_name,
       s.common_model_name,
       u.id AS creator_id,
@@ -967,6 +968,14 @@ skillsRouter.get('/', optionalAuth, async (req, res) => {
     FROM skills s
     INNER JOIN users u ON u.id = s.creator_id
     LEFT JOIN categories c ON c.id = s.category_id
+    LEFT JOIN (
+      SELECT
+        ur.skill_id,
+        ROUND(AVG(ur.total_tokens)) AS avg_total_tokens
+      FROM skill_usage_records ur
+      WHERE ur.skill_id IS NOT NULL
+      GROUP BY ur.skill_id
+    ) usage_agg ON usage_agg.skill_id = s.id
     WHERE ${whereSql}
     ORDER BY ${orderBy}
     LIMIT ? OFFSET ?`,

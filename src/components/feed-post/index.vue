@@ -12,6 +12,8 @@
       @refresherrefresh="onRefresh"
       @scrolltolower="onLoadMore"
     >
+      <slot name="header" />
+
       <view v-if="showSkeleton" class="feed-wrap feed-skeleton-wrap">
         <view v-for="n in 4" :key="`post-skeleton-${n}`" class="post-card sk-post-card">
           <view class="pc-hd">
@@ -44,7 +46,8 @@
       </view>
 
       <view class="feed-wrap">
-        <view v-for="item in posts" :key="item.id" class="post-card" @tap="toPost(item.id)">
+        <view v-for="(item, idx) in posts" :key="item.id" class="feed-entry">
+          <view class="post-card" @tap="toPost(item.id)">
 
           <!-- 作者行 -->
           <view class="pc-hd">
@@ -85,48 +88,44 @@
             />
           </view>
 
-          <!-- 花费 + 感受 -->
-          <view class="pc-meta-row">
-            <view class="pc-spend">
-              <text class="pc-cost">{{ item.costText }}</text>
-              <text class="pc-cost-sep">·</text>
-              <text class="pc-tok">{{ item.tokensText }}</text>
+          <!-- 花费 + 操作（单行） -->
+          <view class="pc-bottom-row">
+            <view class="pc-cost-judge">
+              <view class="pc-cost-inline">
+                <text class="pc-cost-main">花费</text>
+                <text class="pc-cost-main">{{ item.costText }}</text>
+              </view>
+              <view
+                class="pc-rxn-pill"
+                :class="{ 'rxn-active': item.reaction, 'rxn-editable': item.isMine }"
+                :style="item.reaction
+                  ? { background: reactions.find((r:any) => r.key === item.reaction)?.bgColor,
+                      color: reactions.find((r:any) => r.key === item.reaction)?.activeColor }
+                  : {}"
+                @tap.stop="item.isMine ? showReactions(item) : undefined"
+              >
+                <uni-icons
+                  class="pc-rxn-icon"
+                  :type="item.reaction ? (reactions.find((r:any) => r.key === item.reaction)?.icon || 'info') : 'info'"
+                  size="13"
+                  :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
+                />
+                <text class="pc-rxn-t">
+                  {{ item.reaction ? reactions.find((r:any) => r.key === item.reaction)?.text : '未标记' }}
+                </text>
+                <uni-icons
+                  v-if="item.isMine"
+                  type="bottom"
+                  size="10"
+                  :color="item.reaction ? reactions.find((r:any)=> r.key === item.reaction)?.activeColor : '#9CA3AF'"
+                />
+              </view>
             </view>
-            <view
-              class="pc-rxn-pill"
-              :class="{ 'rxn-active': item.reaction, 'rxn-editable': item.isMine }"
-              :style="item.reaction
-                ? { background: reactions.find(r => r.key === item.reaction)?.bgColor,
-                    color: reactions.find(r => r.key === item.reaction)?.activeColor }
-                : {}"
-              @tap.stop="item.isMine ? showReactions(item) : undefined"
-            >
-              <uni-icons
-                class="pc-rxn-icon"
-                :type="item.reaction ? (reactions.find(r => r.key === item.reaction)?.icon || 'info') : 'info'"
-                size="13"
-                :color="item.reaction ? reactions.find(r => r.key === item.reaction)?.activeColor : '#9CA3AF'"
-              />
-              <text class="pc-rxn-t">
-                {{ item.reaction ? reactions.find(r => r.key === item.reaction)?.text : '未标记' }}
-              </text>
-              <uni-icons
-                v-if="item.isMine"
-                type="bottom"
-                size="10"
-                :color="item.reaction ? reactions.find(r => r.key === item.reaction)?.activeColor : '#9CA3AF'"
-              />
-            </view>
-          </view>
 
-          <!-- 操作栏 -->
-          <view class="pc-acts">
-            <view class="pc-meoo" :class="{ 'meoo-on': item.myMeoo }" @tap.stop="toggleMeoo(item)">
-              <uni-icons type="hand-up" size="13" :color="item.myMeoo ? '#FF7A45' : '#6B7280'" />
-              <text class="pc-meoo-t" :style="item.myMeoo ? { color: '#FF7A45' } : {}">我也是</text>
-              <text class="pc-meoo-n">{{ item.meoo }}</text>
-            </view>
             <view class="pc-act-grp">
+              <view class="pc-act pc-meoo-icon" @tap.stop="toggleMeoo(item)">
+                <uni-icons type="hand-up" size="15" :color="item.myMeoo ? '#FF7A45' : '#9CA3AF'" />
+              </view>
               <view class="pc-act" @tap.stop="toggleLike(item)">
                 <uni-icons :type="item.liked ? 'heart-filled' : 'heart'" size="15" :color="item.liked ? '#E45C1A' : '#9CA3AF'" />
                 <text class="pc-act-n" :style="item.liked ? { color: '#E45C1A' } : {}">{{ item.likes }}</text>
@@ -141,6 +140,20 @@
             </view>
           </view>
 
+          </view>
+
+          <view
+            v-if="bridgeVisible && (idx + 1) % BRIDGE_INTERVAL === 0"
+            class="bridge-card"
+          >
+            <view class="bridge-main" @tap="openSkillFromBridge">
+              <text class="bridge-text">看完消耗想上手？去 Skill 区直接复用现成提示词。</text>
+            </view>
+            <text class="bridge-link" @tap="openSkillFromBridge">去 Skill 区</text>
+            <view class="bridge-close" @tap="dismissBridge">
+              <uni-icons type="closeempty" size="14" color="rgba(0,0,0,0.45)" />
+            </view>
+          </view>
         </view>
       </view>
 
@@ -188,13 +201,15 @@
 </template>
 
 <script setup lang="ts">
-import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost, updateFeedReaction } from '@/api/feed'
 import type { FeedItem, FeedReaction } from '@/api/feed'
+import { getFeed, likeFeedPost, meooFeedPost, unlikeFeedPost, unmeooFeedPost, updateFeedReaction } from '@/api/feed'
 import AppImage from '@/components/app-image/index.vue'
 import { useUserStore } from '@/stores'
 import { requireLogin } from '@/utils/auth-guard'
 import { normalizeImageUrl } from '@/utils/image-url'
 import { shareFeedPost } from '@/utils/share-post'
+
+const emit = defineEmits<{ goSkill: [] }>()
 
 const reactions = [
   { key: 'worth', icon: 'checkmarkempty', text: '超值', activeColor: '#2F8A57', bgColor: 'rgba(47,138,87,0.09)', borderColor: 'rgba(47,138,87,0.22)' },
@@ -261,6 +276,10 @@ interface PostItem {
 }
 
 const userStore = useUserStore()
+const BRIDGE_INTERVAL = 10
+const BRIDGE_DISMISS_KEY = 'feed_skill_bridge_dismiss_until_v1'
+const BRIDGE_RESHOW_AFTER_MS = 7 * 24 * 60 * 60 * 1000
+const bridgeVisible = ref(true)
 
 const ensureLogin = (action = '执行此操作') =>
   requireLogin(userStore.token, action)
@@ -341,8 +360,26 @@ const onLoadMore = async () => {
   }
 }
 
+const loadBridgeState = () => {
+  const raw = Number(uni.getStorageSync(BRIDGE_DISMISS_KEY) || 0)
+  bridgeVisible.value = !Number.isFinite(raw) || raw <= Date.now()
+}
+
+const dismissBridge = () => {
+  const until = Date.now() + BRIDGE_RESHOW_AFTER_MS
+  uni.setStorageSync(BRIDGE_DISMISS_KEY, until)
+  bridgeVisible.value = false
+}
+
+const openSkillFromBridge = () => {
+  emit('goSkill')
+}
+
 // 首次加载
-onMounted(onRefresh)
+onMounted(() => {
+  loadBridgeState()
+  void onRefresh()
+})
 
 // ── 情绪反应 ──
 const rxnTarget = ref<PostItem | null>(null)
@@ -445,6 +482,12 @@ defineExpose({ refresh: onRefresh })
   gap: 20rpx;
 }
 
+.feed-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
 .feed-skeleton-wrap {
   .sk-post-card {
     padding-bottom: 16rpx;
@@ -501,6 +544,48 @@ defineExpose({ refresh: onRefresh })
   background: var(--card-bg);
   border-radius: 20rpx;
   overflow: hidden;
+}
+
+.bridge-card {
+  margin: 0 6rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  background: rgba(91, 91, 214, 0.05);
+  border: 1rpx solid rgba(91, 91, 214, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.bridge-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.bridge-text {
+  display: block;
+  font-size: 23rpx;
+  color: var(--text-gray);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bridge-link {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.bridge-close {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pc-hd {
@@ -576,6 +661,92 @@ defineExpose({ refresh: onRefresh })
   &.gi-3, &.gi-many { gap: 4rpx; padding: 0 24rpx;
     .pc-img { width: calc(33.33% - 3rpx); height: 200rpx; border-radius: 10rpx; }
   }
+}
+
+.pc-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  padding: 14rpx 16rpx 18rpx 24rpx;
+  margin-top: 14rpx;
+  border-top: 1rpx solid rgba(0,0,0,0.05);
+}
+
+.pc-cost-judge {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.pc-cost-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.pc-cost-main {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--orange-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-rxn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: rgba(0,0,0,0.04);
+  border-radius: 100rpx;
+  padding: 8rpx 16rpx;
+  min-width: 0;
+
+  .pc-rxn-icon {
+    flex-shrink: 0;
+  }
+
+  .pc-rxn-t {
+    font-size: 22rpx;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &.rxn-active .pc-rxn-t {
+    font-weight: 600;
+  }
+
+  &.rxn-editable {
+    border: 1rpx solid rgba(0,0,0,0.08);
+  }
+}
+
+.pc-act-grp {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4rpx;
+  flex-shrink: 0;
+}
+
+.pc-act {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 10rpx 12rpx;
+}
+
+.pc-act-n {
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
+.pc-meoo-icon {
+  padding-left: 10rpx;
+  padding-right: 10rpx;
 }
 
 .pc-meta-row {
@@ -700,11 +871,14 @@ defineExpose({ refresh: onRefresh })
 /* 低版本微信 WebView 对 flex gap 支持不完整，做一层 margin 降级 */
 @supports not (gap: 1px) {
   .feed-wrap > * + * { margin-top: 20rpx; }
+  .feed-entry > * + * { margin-top: 12rpx; }
 
   .pc-hd > * + * { margin-left: 16rpx; }
   .pc-name-row > * + * { margin-left: 10rpx; }
   .pc-model > * + * { margin-left: 6rpx; }
 
+  .pc-bottom-row > * + * { margin-left: 12rpx; }
+  .pc-cost-judge > * + * { margin-left: 8rpx; }
   .pc-meta-row > * + * { margin-left: 16rpx; }
   .pc-spend > * + * { margin-left: 8rpx; }
   .pc-rxn-pill > * + * { margin-left: 6rpx; }

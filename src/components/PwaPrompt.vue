@@ -4,7 +4,7 @@
 	<view>
 
 		<!-- ── 版本更新 Banner（顶部滑入）── -->
-		<view v-if="needRefresh" class="update-bar">
+		<view v-if="showUpdateBar" class="update-bar">
 			<view class="ub-inner">
 				<view class="ub-pulse" />
 				<view class="ub-text">
@@ -72,7 +72,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useGuideStore } from '@/stores'
 // #ifdef H5
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 // #endif
@@ -89,14 +90,22 @@ interface InstallGuide {
 	action: GuideAction
 }
 
+interface BeforeInstallPromptEvent extends Event {
+	prompt(): Promise<void>
+	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 const showManualHint = ref(false)
-const dismissTick = ref(0)
+const guideStore = useGuideStore()
 
-const GUIDE_DISMISS_PREFIX = 'pwa-guide-dismissed-v2'
-
-const unifiedInstallNote = 'Android 设备可直接下载并安装烧不起安卓版；iPhone 设备请使用 Safari 打开本页并选择“添加到主屏幕”；若在微信内访问，请先通过“在浏览器打开”后再继续操作。'
+const unifiedInstallNote = 'Android 设备可直接下载并安装烧不起安卓版；iPhone 设备请使用 Safari 打开本页并选择”添加到主屏幕”；若在微信内访问，请先通过”在浏览器打开”后再继续操作。'
 
 let pwaUpdateTimer: ReturnType<typeof window.setInterval> | null = null
+let displayModeMedia: MediaQueryList | null = null
+let displayModeHandler: ((event: MediaQueryListEvent) => void) | null = null
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null
+let onBeforeInstallPrompt: ((e: Event) => void) | null = null
+let onAppInstalled: (() => void) | null = null
 
 const triggerSWUpdateCheck = () => {
 	if (!('serviceWorker' in navigator)) return
@@ -108,7 +117,10 @@ const triggerSWUpdateCheck = () => {
 }
 
 const onVisibilityChange = () => {
-	if (document.visibilityState === 'visible') triggerSWUpdateCheck()
+	if (document.visibilityState === 'visible') {
+		triggerSWUpdateCheck()
+		syncA2hsLayer()
+	}
 }
 
 // ── SW 更新检测（使用 workbox-window 避免时序竞争）──
@@ -119,7 +131,7 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
 		if (!registration) return
 		// 主动触发一次检查（移动端浏览器不一定每次打开都检查）
 		registration.update()
-		// 每30分钟检查一次（针对长时间后台挂起后唤醒的情况）
+		// 每5分钟检查一次（针对长时间后台挂起后唤醒的情况）
 		if (pwaUpdateTimer) window.clearInterval(pwaUpdateTimer)
 		pwaUpdateTimer = window.setInterval(() => {
 			if (!registration.installing && navigator.onLine) registration.update()
@@ -131,6 +143,8 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
 const needRefresh = ref(false)
 // #endif
 
+const showUpdateBar = computed(() => needRefresh.value && guideStore.activeLayer === 'sw_update')
+
 const getUserAgent = (): string => navigator.userAgent.toLowerCase()
 
 const isInStandaloneMode = (): boolean => {
@@ -140,7 +154,11 @@ const isInStandaloneMode = (): boolean => {
 	)
 }
 
-const isIOS = (): boolean => /iphone|ipad|ipod/i.test(getUserAgent())
+const isIOS = (): boolean => {
+	if (/iphone|ipad|ipod/i.test(getUserAgent())) return true
+	// iPadOS 13+ 桌面模式 UA 伪装成 Mac Safari，用 maxTouchPoints 区分
+	return /macintosh/i.test(getUserAgent()) && navigator.maxTouchPoints > 1
+}
 const isAndroid = (): boolean => /android/i.test(getUserAgent())
 
 const isWeChat = (): boolean => /micromessenger/i.test(getUserAgent())
@@ -156,32 +174,11 @@ const supportsInstallEntry = (): boolean => {
 	return isWeChat() || isIOS() || isAndroid()
 }
 
-const getGuideDismissKey = (action: GuideAction): string => `${GUIDE_DISMISS_PREFIX}:${action}`
-
-const isGuideDismissed = (action: GuideAction): boolean => {
-	try { return localStorage.getItem(getGuideDismissKey(action)) === '1' } catch { return false }
-}
-
-const setGuideDismissed = (action: GuideAction) => {
-	try { localStorage.setItem(getGuideDismissKey(action), '1') } catch { /* noop */ }
-	dismissTick.value += 1
-}
-
-const clearGuideDismissed = (action: GuideAction) => {
-	try { localStorage.removeItem(getGuideDismissKey(action)) } catch { /* noop */ }
-	dismissTick.value += 1
-}
-
-const currentGuideDismissed = computed(() => {
-	void dismissTick.value
-	return isGuideDismissed(manualGuide.value.action)
-})
-
 const showInstallEntry = computed(() => {
 	return supportsInstallEntry() &&
 		!isInStandaloneMode() &&
 		!showManualHint.value &&
-		!currentGuideDismissed.value
+		guideStore.activeLayer === 'a2hs'
 })
 
 const installEntryText = computed(() => {
@@ -204,8 +201,12 @@ const androidApkUrl = computed(() => {
 })
 
 const navigateToDownloadPage = () => {
-	const apk = androidApkUrl.value
-	window.location.assign(`/download/?apk=${encodeURIComponent(apk)}`)
+	const a = document.createElement('a')
+	a.href = androidApkUrl.value
+	a.rel = 'noopener noreferrer'
+	document.body.appendChild(a)
+	a.click()
+	document.body.removeChild(a)
 }
 
 const copyCurrentUrl = async (): Promise<boolean> => {
@@ -320,21 +321,91 @@ const manualGuide = computed<InstallGuide>(() => {
 	}
 })
 
-function scheduleGuideHint() {
-	if (!supportsInstallEntry()) return
-	window.setTimeout(() => {
-		if (!isInStandaloneMode() && !isGuideDismissed(manualGuide.value.action)) {
-			showManualHint.value = true
-		}
-	}, 1400)
+const syncA2hsLayer = () => {
+	if (isInStandaloneMode()) {
+		guideStore.markA2hsAccepted()
+		guideStore.cancelLayer('a2hs')
+		showManualHint.value = false
+		return
+	}
+
+	if (!supportsInstallEntry()) {
+		guideStore.cancelLayer('a2hs')
+		showManualHint.value = false
+		return
+	}
+
+	if (guideStore.canShowA2hs()) {
+		guideStore.requestLayer('a2hs')
+		return
+	}
+
+	guideStore.cancelLayer('a2hs')
+	showManualHint.value = false
 }
+
+const SW_DISMISSED_KEY = 'sbq_sw_update_dismissed'
+
+watch(() => needRefresh.value, (refreshing) => {
+	if (refreshing) {
+		// 本次 session 已关闭过，不再重复弹
+		let dismissed = false
+		try { dismissed = sessionStorage.getItem(SW_DISMISSED_KEY) === '1' } catch { /* ignore */ }
+		if (!dismissed) guideStore.requestLayer('sw_update')
+		return
+	}
+	guideStore.releaseLayer('sw_update')
+}, { immediate: true })
+
+watch(() => guideStore.activeLayer, (layer) => {
+	if (layer !== 'a2hs') showManualHint.value = false
+})
+
+watch(
+	() => [
+		guideStore.onboardingDone,
+		guideStore.firstSkillCopyAt,
+		guideStore.a2hsDismissCount,
+		guideStore.a2hsNextEligibleAt,
+		guideStore.a2hsAcceptedAt
+	],
+	() => {
+		syncA2hsLayer()
+	},
+	{ immediate: true }
+)
 
 onMounted(() => {
 	document.addEventListener('visibilitychange', onVisibilityChange)
 	triggerSWUpdateCheck()
+	syncA2hsLayer()
 
-	if (isInStandaloneMode()) return
-	if (!isGuideDismissed(manualGuide.value.action)) scheduleGuideHint()
+	if (typeof window.matchMedia === 'function') {
+		displayModeMedia = window.matchMedia('(display-mode: standalone)')
+		displayModeHandler = () => { syncA2hsLayer() }
+
+		if (typeof displayModeMedia.addEventListener === 'function') {
+			displayModeMedia.addEventListener('change', displayModeHandler)
+		} else if (typeof displayModeMedia.addListener === 'function') {
+			displayModeMedia.addListener(displayModeHandler)
+		}
+	}
+
+	// Chrome Android：拦截原生安装提示，延迟到用户点击时再触发
+	onBeforeInstallPrompt = (e: Event) => {
+		e.preventDefault()
+		deferredInstallPrompt = e as BeforeInstallPromptEvent
+	}
+	window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+
+	// 用户通过任意方式完成安装后，收起引导入口
+	onAppInstalled = () => {
+		deferredInstallPrompt = null
+		guideStore.markA2hsAccepted()
+		guideStore.cancelLayer('a2hs')
+		showManualHint.value = false
+	}
+	window.addEventListener('appinstalled', onAppInstalled)
 })
 
 onUnmounted(() => {
@@ -342,6 +413,21 @@ onUnmounted(() => {
 	if (pwaUpdateTimer) {
 		window.clearInterval(pwaUpdateTimer)
 		pwaUpdateTimer = null
+	}
+	if (displayModeMedia && displayModeHandler) {
+		if (typeof displayModeMedia.removeEventListener === 'function') {
+			displayModeMedia.removeEventListener('change', displayModeHandler)
+		} else if (typeof displayModeMedia.removeListener === 'function') {
+			displayModeMedia.removeListener(displayModeHandler)
+		}
+	}
+	if (onBeforeInstallPrompt) {
+		window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+		onBeforeInstallPrompt = null
+	}
+	if (onAppInstalled) {
+		window.removeEventListener('appinstalled', onAppInstalled)
+		onAppInstalled = null
 	}
 })
 
@@ -373,21 +459,46 @@ async function handleGuideAction() {
 
 function dismissInstall() {
 	showManualHint.value = false
-	setGuideDismissed(manualGuide.value.action)
+	guideStore.markA2hsDismissed()
+	guideStore.releaseLayer('a2hs')
 }
 
-function openInstallEntry() {
+async function openInstallEntry() {
+	// 微信内（含 Android）：引导去外部浏览器，不直接下载
+	if (isWeChat()) {
+		showManualHint.value = true
+		return
+	}
+
 	if (isAndroid()) {
+		// Chrome Android 支持原生安装弹窗，优先走这条路
+		if (deferredInstallPrompt) {
+			try {
+				await deferredInstallPrompt.prompt()
+				const { outcome } = await deferredInstallPrompt.userChoice
+				deferredInstallPrompt = null
+				if (outcome === 'accepted') {
+					guideStore.markA2hsAccepted()
+					guideStore.releaseLayer('a2hs')
+				}
+				return
+			} catch {
+				// 原生弹窗失败，降级走 APK 下载
+			}
+		}
+		guideStore.markA2hsDismissed()
+		guideStore.releaseLayer('a2hs')
 		navigateToDownloadPage()
 		return
 	}
-	clearGuideDismissed(manualGuide.value.action)
+
 	showManualHint.value = true
 }
 
 function closeInstallEntry() {
 	showManualHint.value = false
-	setGuideDismissed(manualGuide.value.action)
+	guideStore.markA2hsDismissed()
+	guideStore.releaseLayer('a2hs')
 }
 
 function updateSW() {
@@ -397,7 +508,9 @@ function updateSW() {
 }
 
 function dismissUpdate() {
+	try { sessionStorage.setItem(SW_DISMISSED_KEY, '1') } catch { /* ignore */ }
 	needRefresh.value = false
+	guideStore.releaseLayer('sw_update')
 }
 </script>
 

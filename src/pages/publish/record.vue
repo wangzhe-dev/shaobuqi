@@ -589,6 +589,14 @@ onShow(() => {
   flex-shrink: 0;
 }
 
+/* #ifndef H5 */
+.top-bar {
+  padding-top: calc(20rpx + constant(safe-area-inset-top));
+  padding-top: calc(20rpx + env(safe-area-inset-top));
+}
+
+/* #endif */
+
 /* #ifdef H5 */
 .top-bar {
   padding-top: calc(20rpx + var(--h5-safe-area-inset-top, 0px));
