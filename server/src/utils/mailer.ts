@@ -1,18 +1,53 @@
 import nodemailer from 'nodemailer'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST || 'smtp.qq.com',
-  port: Number(process.env.MAIL_PORT || 465),
-  secure: (process.env.MAIL_SECURE ?? 'true') === 'true',
-  auth: {
-    user: process.env.MAIL_USER || '',
-    pass: process.env.MAIL_PASS || ''
+type MailProvider = '163' | 'gmail' | 'custom'
+
+const providerConfigs: Record<MailProvider, { host: string; port: number }> = {
+  '163':   { host: 'smtp.163.com',  port: 465 },
+  gmail:   { host: 'smtp.gmail.com', port: 465 },
+  custom:  { host: process.env.MAIL_HOST || '', port: Number(process.env.MAIL_PORT || 465) }
+}
+
+function createTransporter(provider: MailProvider) {
+  const { host, port } = providerConfigs[provider]
+
+  let user: string
+  let pass: string
+
+  if (provider === '163') {
+    user = process.env.MAIL_163_USER || process.env.MAIL_USER || ''
+    pass = process.env.MAIL_163_PASS || process.env.MAIL_PASS || ''
+  } else if (provider === 'gmail') {
+    user = process.env.SMTP_GMAIL_USER || ''
+    pass = process.env.SMTP_GMAIL_PASS || ''
+  } else {
+    user = process.env.MAIL_USER || ''
+    pass = process.env.MAIL_PASS || ''
   }
-})
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: true,
+    auth: { user, pass }
+  })
+}
+
+function getActiveProvider(): MailProvider {
+  const p = (process.env.MAIL_PROVIDER || '163').toLowerCase()
+  if (p === 'gmail') return 'gmail'
+  if (p === 'custom') return 'custom'
+  return '163'
+}
 
 export async function sendVerifyCode(to: string, code: string) {
+  const provider = getActiveProvider()
+  const transporter = createTransporter(provider)
+
   const fromName = process.env.MAIL_FROM_NAME || '烧不起'
-  const fromAddr = process.env.MAIL_USER || ''
+  const fromAddr = provider === 'gmail'
+    ? (process.env.SMTP_GMAIL_USER || '')
+    : (process.env.MAIL_163_USER || process.env.MAIL_USER || '')
 
   await transporter.sendMail({
     from: `"${fromName}" <${fromAddr}>`,

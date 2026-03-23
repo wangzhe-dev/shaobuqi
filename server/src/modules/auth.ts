@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import bcrypt from 'bcrypt'
+import { randomInt } from 'node:crypto'
 import { z } from 'zod'
 import { execWrite, queryRows } from '../db'
 import { signAccessToken } from '../utils/jwt'
@@ -7,33 +8,44 @@ import { sendError, sendSuccess } from '../utils/response'
 import { mapUser, type UserRow } from './shared'
 import { sendVerifyCode } from '../utils/mailer'
 
+const ALLOWED_EMAIL_DOMAINS = new Set(['qq.com', '163.com', 'gmail.com', 'outlook.com', 'foxmail.com'])
+
+const emailField = z
+  .string()
+  .trim()
+  .email({ message: '邮箱格式不正确' })
+  .refine(
+    (v) => ALLOWED_EMAIL_DOMAINS.has(v.split('@')[1]?.toLowerCase() ?? ''),
+    { message: '不支持该邮箱域名' }
+  )
+
 const loginSchema = z.object({
   identifier: z.string().trim().min(1),
   password: z.string().min(6)
 })
 
 const sendCodeSchema = z.object({
-  email: z.string().trim().email({ error: '邮箱格式不正确' })
+  email: emailField
 })
 
 const registerSchema = z.object({
-  email: z.string().trim().email({ error: '邮箱格式不正确' }),
+  email: emailField,
   code: z.string().length(6, '验证码为6位'),
   password: z.string().min(6, '密码至少6位'),
   nickname: z.string().trim().min(1).max(20).optional()
 })
 
 const resetPasswordSchema = z.object({
-  email: z.string().trim().email({ error: '邮箱格式不正确' }),
+  email: emailField,
   code: z.string().length(6, '验证码为6位'),
   password: z.string().min(6, '密码至少6位')
 })
 
-// 内存验证码存储：email -> { code, expiresAt }
-const codeStore = new Map<string, { code: string; expiresAt: number }>()
+// 内存验证码存储：email -> { code, expiresAt, failCount }
+const codeStore = new Map<string, { code: string; expiresAt: number; failCount: number }>()
 
 // 重置密码验证码独立存储，与注册码隔离
-const resetCodeStore = new Map<string, { code: string; expiresAt: number }>()
+const resetCodeStore = new Map<string, { code: string; expiresAt: number; failCount: number }>()
 
 // 定期清理过期验证码
 setInterval(() => {
@@ -81,8 +93,12 @@ authRouter.post('/login/password', async (req, res) => {
   )
 
   const user = users[0]
-  if (!user || user.status !== 1) {
-    sendError(res, '账号不存在或已禁用', 401)
+  if (!user) {
+    sendError(res, '账号或密码错误', 401)
+    return
+  }
+  if (user.status !== 1) {
+    sendError(res, '账号已禁用，请联系管理员', 401)
     return
   }
 
@@ -123,8 +139,8 @@ authRouter.post('/send-code', async (req, res) => {
     return
   }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000))
-  codeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000 })
+  const code = randomInt(100000, 1000000).toString()
+  codeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000, failCount: 0 })
 
   try {
     await sendVerifyCode(email, code)
@@ -152,7 +168,13 @@ authRouter.post('/register', async (req, res) => {
     return
   }
   if (stored.code !== code) {
-    sendError(res, '验证码错误', 400)
+    stored.failCount += 1
+    if (stored.failCount >= 5) {
+      codeStore.delete(email)
+      sendError(res, '验证码错误次数过多，请重新获取', 400)
+    } else {
+      sendError(res, '验证码错误', 400)
+    }
     return
   }
   codeStore.delete(email)
@@ -174,6 +196,11 @@ authRouter.post('/register', async (req, res) => {
      VALUES (?, ?, ?, 1, 0, 0, NOW(), NOW())`,
     [email, passwordHash, defaultNickname]
   )
+
+  if (!result.insertId) {
+    sendError(res, '注册失败，请稍后重试', 500)
+    return
+  }
 
   const users = await queryRows<UserRow[]>(
     `SELECT id, mobile, email, password_hash, nickname, avatar_url, bio, display_color, status,
@@ -219,8 +246,8 @@ authRouter.post('/send-reset-code', async (req, res) => {
     return
   }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000))
-  resetCodeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000 })
+  const code = randomInt(100000, 1000000).toString()
+  resetCodeStore.set(email, { code, expiresAt: Date.now() + 5 * 60_000, failCount: 0 })
 
   try {
     await sendVerifyCode(email, code)
@@ -249,7 +276,13 @@ authRouter.post('/reset-password', async (req, res) => {
     return
   }
   if (stored.code !== code) {
-    sendError(res, '验证码错误', 400)
+    stored.failCount += 1
+    if (stored.failCount >= 5) {
+      resetCodeStore.delete(email)
+      sendError(res, '验证码错误次数过多，请重新获取', 400)
+    } else {
+      sendError(res, '验证码错误', 400)
+    }
     return
   }
   resetCodeStore.delete(email)

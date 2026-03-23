@@ -301,7 +301,8 @@ const userStore = useUserStore()
 const EMAIL_REG = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i
 const CODE_REG = /^\d{6}$/
 const ICP_RECORD = '京ICP备2025111493号-2'
-const EMAIL_DOMAINS = ['qq.com', '163.com', 'gmail.com', '126.com', 'outlook.com', 'foxmail.com']
+const EMAIL_DOMAINS = ['qq.com', '163.com', 'gmail.com', 'outlook.com', 'foxmail.com']
+const ALLOWED_EMAIL_DOMAINS = new Set(EMAIL_DOMAINS)
 const STORAGE_KEY_EMAIL = 'sbq_last_email'
 
 const liquidCards = [
@@ -352,7 +353,12 @@ const forgotForm = reactive({ email: '', code: '', password: '', confirmPassword
 
 // ---- 工具函数 ----
 const normalizeEmail = (value: string) => value.trim().toLowerCase()
-const isValidEmail = (value: string) => EMAIL_REG.test(normalizeEmail(value))
+const isValidEmail = (value: string) => {
+	const email = normalizeEmail(value)
+	if (!EMAIL_REG.test(email)) return false
+	const domain = email.split('@')[1] ?? ''
+	return ALLOWED_EMAIL_DOMAINS.has(domain)
+}
 
 // ---- 校验计算属性 ----
 const loginEmailValid = computed(() => isValidEmail(loginForm.email))
@@ -545,6 +551,7 @@ const clearEmail = () => {
 
 const switchMode = (registerMode: boolean) => {
 	if (loading.value) return
+	if (emailBlurTimer) { clearTimeout(emailBlurTimer); emailBlurTimer = null }
 	isRegister.value = registerMode
 	isForgot.value = false
 	focusedField.value = ''
@@ -653,8 +660,8 @@ const doLogin = async () => {
 	} catch (err: any) {
 		loginFailCount.value += 1
 		const msg = typeof err === 'string' ? err : (err?.message || '')
-		if (/账号不存在|已禁用/i.test(msg)) loginServerTip.value = '账号不存在或已禁用，请检查后重试'
-		else if (/密码/i.test(msg)) loginServerTip.value = '密码错误，请重新输入'
+		if (/已禁用/i.test(msg)) loginServerTip.value = '账号已禁用，请联系管理员'
+		else loginServerTip.value = '账号或密码错误，请重新输入'
 	} finally {
 		loading.value = false
 	}
@@ -784,6 +791,7 @@ const submit = () => {
 }
 
 const enterForgot = () => {
+	if (emailBlurTimer) { clearTimeout(emailBlurTimer); emailBlurTimer = null }
 	// 预填登录页邮箱
 	if (loginForm.email) forgotForm.email = loginForm.email
 	forgotForm.code = ''

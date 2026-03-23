@@ -106,7 +106,10 @@
 
 						<view class="skill-content-panel">
 							<rich-text v-if="promptHtmlNodes" class="scp-rich" :nodes="promptHtmlNodes" />
-							<text v-else class="scp-text">{{ skill.fullPrompt }}</text>
+							<text v-else-if="skill.fullPrompt" class="scp-text">{{ skill.fullPrompt }}</text>
+							<view v-else class="scp-empty">
+								<text class="scp-empty-t">Prompt 内容待完善</text>
+							</view>
 						</view>
 					</view>
 				<!-- 6. 评论区 -->
@@ -968,6 +971,17 @@ import { normalizeImageUrl } from '@/utils/image-url'
 				border-radius: 26rpx;
 				padding: 28rpx;
 				border: 1rpx solid rgba(255,255,255,0.06);
+
+				.scp-empty {
+					padding: 40rpx 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.scp-empty-t {
+					font-size: 24rpx;
+					color: rgba(255,255,255,0.20);
+				}
 			}
 
 			.scp-text,
