@@ -9,7 +9,7 @@ export interface H5BuildInfo {
 export const CURRENT_H5_BUILD: H5BuildInfo = {
   "versionName": "1.0.2",
   "versionCode": 100,
-  "buildId": "1774165773778",
-  "publishedAt": "2026-03-22T07:49:33.778Z",
+  "buildId": "1774269428072",
+  "publishedAt": "2026-03-23T12:37:08.072Z",
   "forceUpdate": true
 } as const
