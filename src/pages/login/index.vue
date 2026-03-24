@@ -321,7 +321,7 @@ const isRegister = ref(false)
 const isForgot = ref(false)
 const focusedField = ref('')
 const loading = ref(false)
-const agreed = ref(false) // 默认未勾选，需用户主动同意
+const agreed = ref(true) // 默认已同意用户协议
 const loginServerTip = ref('')
 const loginFailCount = ref(0)
 

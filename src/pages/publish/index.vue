@@ -502,8 +502,16 @@ const resetForm = () => {
 }
 
 const goBack = () => {
+	const back = () => {
+		const pages = getCurrentPages()
+		if (pages.length > 1) {
+			uni.navigateBack()
+		} else {
+			uni.switchTab({ url: '/pages/index/index' })
+		}
+	}
 	if (!hasContent.value) {
-		uni.navigateBack()
+		back()
 		return
 	}
 	uni.showModal({
@@ -511,7 +519,7 @@ const goBack = () => {
 		content: '内容未保存，离开后将丢失',
 		confirmText: '离开',
 		confirmColor: '#E45C1A',
-		success: (res) => { if (res.confirm) uni.navigateBack() }
+		success: (res) => { if (res.confirm) back() }
 	})
 }
 
